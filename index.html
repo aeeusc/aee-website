@@ -1,3 +1,9 @@
+<!--
+  REPLACES index.html at the repo root (not the one in public/).
+  This is your real index.html with one addition: the GitHub Pages
+  SPA-routing redirect script, inserted into <head>. Everything else
+  is unchanged from your current file.
+-->
 <!doctype html>
 <html lang="en">
   <head>
@@ -5,6 +11,25 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>aee-website</title>
+    <script>
+      // GitHub Pages SPA-routing fix, part 2 of 2 (see public/404.html
+      // for part 1). Reverses the redirect 404.html performs, turning
+      // https://aeeusc.github.io/aee-website/?/login back into a normal
+      // browser history entry at .../aee-website/login BEFORE React
+      // Router reads the URL. Must run before src/main.jsx.
+      (function (l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search.slice(1).split('&').map(function (s) {
+            return s.replace(/~and~/g, '&');
+          }).join('?');
+          window.history.replaceState(
+            null,
+            null,
+            l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      })(window.location);
+    </script>
   </head>
   <body>
     <div id="root"></div>
