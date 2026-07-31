@@ -1,0 +1,201 @@
+// src/pages/Login.jsx
+//
+// The login page. Collects email + password, calls the backend, and
+// on success redirects to the homepage.
+//
+// Styled to match the real homepage mock (aee_homepage_mock_3.html) —
+// see Signup.jsx for the shared design-token notes.
+
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { login } from '../lib/api';
+
+export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [status, setStatus] = useState('idle'); // idle | submitting | error
+  const [errorMessage, setErrorMessage] = useState('');
+  const navigate = useNavigate();
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setStatus('submitting');
+    setErrorMessage('');
+
+    try {
+      await login(email, password);
+      // Success — send them back to the homepage using React Router
+      // navigation (not a full page reload).
+      navigate('/');
+    } catch (err) {
+      setStatus('error');
+      setErrorMessage(err.message);
+    }
+  }
+
+  return (
+    <div style={styles.page}>
+      {/* Same "return to home" pattern as Signup.jsx — a real link via
+          React Router, so visitors don't have to rely on the browser's
+          back button to leave this page. */}
+      <Link to="/" style={styles.backLink}>← Back to home</Link>
+
+      <div style={styles.card}>
+        <h1 style={styles.heading}>Log in</h1>
+
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <label style={styles.label}>
+            Email
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={styles.input}
+              placeholder="you@example.com"
+            />
+          </label>
+
+          <label style={styles.label}>
+            Password
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={styles.input}
+              placeholder="Your password"
+            />
+          </label>
+
+          {status === 'error' && (
+            <p style={styles.error}>{errorMessage}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={status === 'submitting'}
+            style={{ ...styles.pill, ...styles.pillButton }}
+          >
+            {status === 'submitting' ? 'Logging in…' : 'Log In'}
+          </button>
+        </form>
+
+        <p style={styles.footerText}>
+          Don't have an account? <Link to="/signup" style={styles.inlineLink}>Sign up</Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Design tokens copied directly from aee_homepage_mock_3.html's :root
+// block — kept identical to Signup.jsx so the two pages feel like one
+// consistent flow.
+const colors = {
+  navy950: '#0A0E1A',
+  navy900: '#101830',
+  navy800: '#16213E',
+  slate: '#94A3B8',
+  slateLight: '#C9D4E4',
+  ink: '#0B0F1A',
+  white: '#FFFFFF',
+  line: 'rgba(255,255,255,.16)',
+};
+
+const styles = {
+  page: {
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: colors.navy950,
+    padding: '24px',
+    position: 'relative',
+  },
+  backLink: {
+    position: 'absolute',
+    top: '32px',
+    left: '40px',
+    color: 'rgba(255,255,255,.85)',
+    textDecoration: 'none',
+    fontSize: '15px',
+    fontWeight: 500,
+    fontFamily: "'Inter', -apple-system, sans-serif",
+  },
+  card: {
+    width: '100%',
+    maxWidth: '420px',
+    border: `1px solid ${colors.line}`,
+    background: 'transparent',
+    borderRadius: '16px',
+    padding: '40px 32px',
+  },
+  heading: {
+    fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif",
+    fontWeight: 700,
+    color: colors.white,
+    fontSize: '28px',
+    letterSpacing: '-.02em',
+    marginBottom: '24px',
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '18px',
+  },
+  label: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    fontFamily: "'Inter', -apple-system, sans-serif",
+    color: colors.slate,
+    fontSize: '14px',
+  },
+  input: {
+    background: 'rgba(255,255,255,.05)',
+    border: `1px solid ${colors.line}`,
+    borderRadius: '10px',
+    padding: '12px 16px',
+    color: colors.white,
+    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontSize: '15px',
+    outline: 'none',
+  },
+  pill: {
+    background: colors.white,
+    color: colors.navy950,
+    borderRadius: '999px',
+    padding: '13px 22px',
+    fontSize: '15px',
+    fontWeight: 600,
+    fontFamily: "'Inter', -apple-system, sans-serif",
+    textDecoration: 'none',
+    display: 'inline-block',
+    textAlign: 'center',
+    border: 'none',
+    cursor: 'pointer',
+  },
+  pillButton: {
+    marginTop: '8px',
+    width: '100%',
+  },
+  error: {
+    color: '#F87171',
+    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontSize: '14px',
+    margin: 0,
+  },
+  footerText: {
+    marginTop: '24px',
+    fontFamily: "'Inter', -apple-system, sans-serif",
+    color: colors.slate,
+    fontSize: '14px',
+    textAlign: 'center',
+  },
+  inlineLink: {
+    color: colors.white,
+    textDecoration: 'underline',
+  },
+};

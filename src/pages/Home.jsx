@@ -1,288 +1,376 @@
+// src/pages/Home.jsx
+//
+// The real homepage, ported section-by-section from aee_homepage_mock_3.html
+// into working React. Every interactive behavior from the mock (nav scroll
+// shadow, word-by-word About reveal, stat count-up, logo marquee loop,
+// Design Teams accordion, Board 3D coverflow carousel) is reimplemented
+// here with React state/hooks instead of the mock's vanilla DOM scripting.
+//
+// One addition beyond the mock: a hamburger + fullscreen mobile menu.
+// The mock only ever targeted desktop (it just hides .nav-links under
+// 900px with nothing to replace it) — the real site needs working mobile
+// nav, so this ports the current site's hamburger pattern into the new
+// visual design.
 import { useEffect, useRef, useState } from "react";
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
+import { Link } from "react-router-dom";
 import "./Home.css";
-import { objectPosition } from "three/tsl";
 
-// ─── Three.js scene ──────────────────────────────────────────────────────────
+// vite.config.js sets `base: '/aee-website/'` (needed so GitHub Pages,
+// which serves this site from a /aee-website/ subpath, can resolve
+// assets). Vite exposes that same value at runtime as import.meta.env.BASE_URL
+// — in dev it's just '/', in the production build it's '/aee-website/'.
+// A plain "/logo.svg" string ignores that and always points at the site
+// root, which 404s in dev too (dev also serves the app under /aee-website/
+// to match prod). Every image path below goes through this helper instead
+// so it resolves correctly in both npm run dev and the built site.
+const asset = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;
 
-function AtomCanvas() {
-  const mountRef = useRef(null);
+// ─── Data ─────────────────────────────────────────────────────────────────
+
+const NAV_LINKS = [
+  { label: "About", href: "#about" },
+  { label: "Design Teams", href: "#teams", caret: true },
+  { label: "Board", href: "#board" },
+];
+
+const PARTNERS = [
+  { name: "Langan", logo: asset("/logos/langan.png"), href: "https://www.langan.com" },
+  { name: "Arup", logo: asset("/logos/arup.png"), href: "https://www.arup.com" },
+  { name: "Bloom Energy", logo: asset("/logos/bloomenergy.png"), href: "https://www.bloomenergy.com" },
+  { name: "CalWave", logo: asset("/logos/calwave.png"), href: "https://calwave.org" },
+  { name: "Graymatter Robotics", logo: asset("/logos/graymatterrobotics.png"), href: "https://www.graymatter-robotics.com" },
+  { name: "KPFF", logo: asset("/logos/kpff.png"), href: "https://www.kpff.com" },
+  { name: "NREL", logo: asset("/logos/nrel.png"), href: "https://www.nrel.gov" },
+  { name: "SGH", logo: asset("/logos/sgh.png"), href: "https://www.sgh.com" },
+  { name: "Vatn Systems", logo: asset("/logos/vatn.png"), href: "https://www.vatnsystems.com" },
+];
+
+const TEAMS = [
+  {
+    key: "wind",
+    title: "Collegiate Wind Competition Team",
+    meta: "U.S. DEPT. OF ENERGY · NATIONAL COMPETITION",
+    img: asset("/images/wind.webp"),
+    desc: "Our Collegiate Wind Competition Team designs and builds small-scale wind turbines to compete in the U.S. Department of Energy's national competition. Students gain hands-on experience in aerodynamic design, structural analysis, and energy systems engineering.",
+  },
+  {
+    key: "marine",
+    title: "Marine Energy Collegiate Competition Team",
+    meta: "U.S. DEPT. OF ENERGY · NATIONAL COMPETITION",
+    img: asset("/images/marine.jpg"),
+    desc: "We are currently prototyping our Oscillating Water Column (OWC), which utilizes incoming waves to pressurize a column of air, spinning a turbine and generating electricity for battery storage. We are currently exploring the technologies behind underwater data centers, desalination facilities, and remote coastal communities.",
+  },
+  {
+    key: "hydro",
+    title: "Hydropower Collegiate Competition Team",
+    meta: "U.S. DEPT. OF ENERGY · NATIONAL COMPETITION",
+    img: asset("/images/hydro.jpg"),
+    desc: "HCC is a design competition aimed at creating low impact hydropower energy source using existing infrastructure. We are looking to use a Pumped Storage Hydropower system that could serve regions of California typically excluded from renewable energy initiatives.",
+  },
+  {
+    key: "solar",
+    title: "Solar Table Initiative Team",
+    meta: "CAMPUS INITIATIVE · INDUSTRY-MENTORED",
+    img: asset("/images/solar.jpg"),
+    desc: "The Solar Tables Initiative is working hard to bring 100% student designed outdoor tables with solar-powered charging capabilities to the USC community. We are designing our tables from the ground up with industry and manufacturer mentorship.",
+  },
+];
+
+const BOARD = [
+  { n: "Mitch Kirby", r: "President & Founder", img: asset("/eboard/mitchkirby.jpg"), li: "https://www.linkedin.com/in/mitchell-kirby/" },
+  { n: "Alexandra Somodi", r: "Vice President & Brand Director", img: asset("/eboard/alexandrasomodi.png"), li: "https://www.linkedin.com/in/alexandra-somodi/" },
+  { n: "David Moseley", r: "Design Team Coordinator", img: asset("/eboard/davidmoseley.jpg"), li: "https://www.linkedin.com/in/davidmmoseley/" },
+  { n: "Jordyn Wetherbee", r: "Executive Coordinator & CWC PM", img: asset("/eboard/jordynwetherbee.jpg"), li: "https://www.linkedin.com/in/jordyn-wetherbee/" },
+  { n: "James Hiemstra", r: "Director of Finance", img: asset("/eboard/jameshiemstra.jpg"), li: "https://www.linkedin.com/in/james-hiemstra-78b9872a1/" },
+  { n: "Reeth Kawad", r: "Senior Advisor", img: asset("/eboard/reethkawad.jpg"), li: "https://www.linkedin.com/in/reethkawad/" },
+  { n: "Chloe Flannigan", r: "Director of Membership", img: asset("/eboard/chloeflannigan.jpg"), li: "https://www.linkedin.com/in/chloe-flannigan-0950a2237/" },
+  { n: "Helena Heckmann", r: "Director of Events", img: asset("/eboard/helenaheckmann.jpg"), li: "https://www.linkedin.com/in/helena-heckmann/" },
+  { n: "Jainam Jain", r: "Director of Outreach & CWC PM", img: asset("/eboard/jainamjain.png"), li: "https://www.linkedin.com/in/jainam-jain-937a13214/" },
+  { n: "Ellis Fertig", r: "ShadeLA PM & Director of Policy", img: asset("/eboard/ellisfertig.jpg"), li: "https://www.linkedin.com/in/ellis-fertig-4512b232b/" },
+  { n: "Sam Gold", r: "ShadeLA PM & Asst. Director of Policy", img: asset("/eboard/samgold.jpg"), li: "https://www.linkedin.com/in/sam-j-gold/" },
+  { n: "Alex Bartolomei", r: "MECC PM", img: asset("/eboard/alexbartolomei.jpg"), li: "https://www.linkedin.com/in/alexbartolomei/" },
+  { n: "Alex Geschwill", r: "HCC PM", img: asset("/eboard/alexgeschwill.jpg"), li: "https://www.linkedin.com/in/alexandra-geschwill/" },
+  { n: "Daniela Lopez Escalante", r: "Asst. Director of Brand", img: asset("/eboard/daniela.jpg"), li: "https://www.linkedin.com/in/daniela-lopez-escalante-839a4038a/" },
+];
+
+const STATS = [
+  { count: 90, suffix: "+", label: "active members" },
+  { count: 3, suffix: "", label: <>nationally competing design&nbsp;teams</> },
+  { count: 9, suffix: "", label: "policy consortium organizations" },
+];
+
+const STATEMENT = "We put student engineers at the center of the energy transition.";
+
+// ─── Nav + mobile menu ──────────────────────────────────────────────────────
+
+function Nav() {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const mount = mountRef.current;
-    const W = mount.clientWidth;
-    const H = mount.clientHeight;
-
-    const scene = new THREE.Scene();
-    scene.background = null;
-
-    const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 1000);
-    camera.position.set(0, 0, 25);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(W, H);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    mount.appendChild(renderer.domElement);
-
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.enableZoom = false;
-    controls.enablePan = false;
-    controls.target.set(0, 0, 0);
-    controls.update();
-
-    scene.add(new THREE.AmbientLight(0xffffff, 1));
-    const dir = new THREE.DirectionalLight(0xffffff, 1.5);
-    dir.position.set(5, 10, 7);
-    scene.add(dir);
-
-    const atomGroup = new THREE.Group();
-    atomGroup.position.set(0, -2, 0);
-    scene.add(atomGroup);
-
-    const ringMat = new THREE.MeshStandardMaterial({
-      color: 0x3C596F,
-      emissive: new THREE.Color(0x1a3f7a),
-      emissiveIntensity: 1.2,
-      roughness: 0.2,
-      metalness: 0.0,
-      transparent: true,
-      opacity: 0.6,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-
-    [[0, 0], [Math.PI / 3, 0], [0, Math.PI / 3]].forEach(([rx, ry]) => {
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(4, 0.15, 32, 100), ringMat);
-      ring.rotation.x = rx;
-      ring.rotation.y = ry;
-      atomGroup.add(ring);
-    });
-
-    const boltStatic = new THREE.Group();
-    boltStatic.position.set(0, -2, 0);
-    scene.add(boltStatic);
-
-    const loader = new SVGLoader();
-    loader.load(
-      "/bolt_v2.svg",
-      (data) => {
-        const boltGroup = new THREE.Group();
-        const mat = new THREE.MeshStandardMaterial({
-          color: 0x47668A,
-          emissive: new THREE.Color(0x47668A),
-          emissiveIntensity: 1.0,
-          transparent: true,
-          opacity: 0.5,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
-          side: THREE.DoubleSide,
-          roughness: 0.2,
-          metalness: 0.0,
-        });
-        for (const path of data.paths) {
-          for (const shape of SVGLoader.createShapes(path)) {
-            const geom = new THREE.ExtrudeGeometry(shape, {
-              depth: 10,
-              bevelEnabled: false,
-              curveSegments: 24,
-            });
-            geom.center();
-            boltGroup.add(new THREE.Mesh(geom, mat));
-          }
-        }
-        boltGroup.rotation.x = Math.PI;
-        boltGroup.scale.setScalar(0.035);
-        boltGroup.position.set(0, 0, 0);
-        boltStatic.add(boltGroup);
-      },
-      undefined,
-      (e) => console.error("SVG load error:", e)
-    );
-
-    atomGroup.rotation.y = 0.2;
-    atomGroup.rotation.x = 0.1;
-
-    let animId;
-    function animate() {
-      animId = requestAnimationFrame(animate);
-      atomGroup.rotation.y += 0.008;
-      controls.update();
-      renderer.render(scene, camera);
+    function onScroll() {
+      setScrolled(window.scrollY > 40);
     }
-    animate();
-
-    function onResize() {
-      const w = mount.clientWidth;
-      const h = mount.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    }
-    window.addEventListener("resize", onResize);
-
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("resize", onResize);
-      controls.dispose();
-      renderer.dispose();
-      if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
-    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  return <div ref={mountRef} style={{ width: "100%", height: "100%", filter: "blur(2px)" }} />;
+  // Lock body scroll while the mobile menu is open.
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
+  return (
+    <>
+      <nav className={`site-nav${scrolled ? " scrolled" : ""}`}>
+        <a className="wordmark" href="#">
+          <img src={asset("/logo.svg")} alt="AEE logo" />
+          <span className="aee">AEE</span>
+          <span className="atusc">at USC</span>
+        </a>
+
+        <div className="nav-links">
+          {NAV_LINKS.map(({ label, href, caret }) => (
+            <a key={label} href={href}>
+              {label}
+              {caret && <span className="caret">▾</span>}
+            </a>
+          ))}
+        </div>
+
+        <div className="nav-ctas">
+          <a className="contact" href="mailto:aeeusc@gmail.com">Contact</a>
+          <Link className="pill pill-ghost" to="/login">Log In</Link>
+          <a className="pill" href="https://forms.gle/vSFAnuKfpKV3GFfJ6" target="_blank" rel="noopener noreferrer">
+            Get Involved
+          </a>
+        </div>
+
+        <button
+          className={`hamburger${menuOpen ? " open" : ""}`}
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
+        >
+          <span /><span /><span />
+        </button>
+      </nav>
+
+      <div className={`mobile-menu${menuOpen ? " open" : ""}`}>
+        {NAV_LINKS.map(({ label, href }) => (
+          <a key={label} href={href} onClick={() => setMenuOpen(false)}>
+            {label}
+          </a>
+        ))}
+        <Link to="/login" onClick={() => setMenuOpen(false)}>Log In</Link>
+        <a href="https://forms.gle/vSFAnuKfpKV3GFfJ6" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>
+          Get Involved
+        </a>
+      </div>
+    </>
+  );
 }
 
-// ─── About Section ───────────────────────────────────────────────────────────
+// ─── Hero ───────────────────────────────────────────────────────────────────
 
-const stats = [
-  { number: "90+", label: "active members" },
-  { number: "3", label: "nationally competing design teams" },
-  { number: "9", label: "policy consortium organizations" },
-];
+function Hero() {
+  return (
+    <section className="hero">
+      <div className="hero-bg">
+        <img src={asset("/hero-wave.jpg")} alt="" />
+      </div>
+      <div className="hero-scrim" />
+      <div className="hero-content">
+        <h1>The Hub For<br />Energy At USC.</h1>
+        <p className="hero-sub">
+          USC's hub for energy and sustainability — nationally competing design teams,
+          real policy work, and a launchpad for clean-energy careers.
+        </p>
+      </div>
+      <div className="hero-bottom">
+        <div className="cta-row">
+          <a className="pill lg" href="https://forms.gle/vSFAnuKfpKV3GFfJ6" target="_blank" rel="noopener noreferrer">
+            Get Involved
+          </a>
+          <a className="ghost" href="mailto:aeeusc@gmail.com">Contact</a>
+        </div>
+      </div>
+      <div className="scroll-hint">SCROLL</div>
+    </section>
+  );
+}
 
-const partners = [
-  { name: "Langan", logo: "/logos/langan.png" },
-  { name: "Arup", logo: "/logos/arup.png" },
-  { name: "Bloom Energy", logo: "/logos/bloomenergy.png" },
-  { name: "CalWave", logo: "/logos/calwave.png" },
-  { name: "Graymatter Robotics", logo: "/logos/graymatterrobotics.png" },
-  { name: "KPFF", logo: "/logos/kpff.png" },
-  { name: "NREL", logo: "/logos/nrel.png" },
-  { name: "SGH", logo: "/logos/sgh.png" },
-  { name: "Vatn Systems", logo: "/logos/vatn.png" },
-];
+// ─── About (word reveal + stat count-up) ───────────────────────────────────
+
+function StatementReveal({ text }) {
+  const ref = useRef(null);
+  const [on, setOn] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach((e) => { if (e.isIntersecting) setOn(true); }),
+      { threshold: 0.4 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const words = text.split(" ");
+
+  return (
+    <div ref={ref} className={`statement${on ? " on" : ""}`}>
+      {words.map((word, i) => (
+        <span key={i}>
+          <span className="w" style={{ transitionDelay: `${i * 55}ms` }}>{word}</span>
+          {i < words.length - 1 ? " " : ""}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function StatCounter({ count, suffix, label }) {
+  const ref = useRef(null);
+  const [display, setDisplay] = useState(0);
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ease = (t) => 1 - Math.pow(1 - t, 3);
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting && !startedRef.current) {
+          startedRef.current = true;
+          const t0 = performance.now();
+          const dur = 1400;
+          const tick = (now) => {
+            const p = Math.min(1, (now - t0) / dur);
+            setDisplay(Math.round(ease(p) * count));
+            if (p < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        }
+      }),
+      { threshold: 0.5 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [count]);
+
+  return (
+    <div className="stat">
+      <div ref={ref} className="num">{display}{suffix}</div>
+      <div className="cap">{label}</div>
+    </div>
+  );
+}
 
 function About() {
   return (
-    <section id="about" style={styles.aboutSection}>
-      <h2 style={styles.aboutHeading}>About</h2>
-      <div style={styles.statsRow}>
-        {stats.map(({ number, label }) => (
-          <div key={label} className="stat-card" style={styles.statCard}>
-            <span style={styles.statNumber}>{number}</span>
-            <span style={styles.statLabel}>{label}</span>
-          </div>
+    <section className="about" id="about">
+      <div className="label">ABOUT</div>
+      <StatementReveal text={STATEMENT} />
+      <p className="about-body">
+        Entirely student-led in USC's Sonny Astani Department — leading initiatives in
+        sustainable design, policy, and professional development.
+      </p>
+
+      <div className="stats">
+        {STATS.map((s, i) => (
+          <StatCounter key={i} count={s.count} suffix={s.suffix} label={s.label} />
         ))}
       </div>
-      <p style={styles.aboutText}>
-        We are an entirely student-led group, leading initiatives in sustainable design, policy,
-        and professional development. AEE-USC strives to educate and empower students to
-        pursue careers in all aspects of energy efficiency and sustainability.
-      </p>
-      <p style={styles.aboutText}>
-        Our organization operates within the Sonny Astani Department of Civil and
-        Environmental Engineering at the University of Southern California. We are open to
-        students of all years and majors! Anyone who is interested in the world of
-        energy is encouraged to join our organization!
-      </p>
-      <h3 style={styles.connectionsHeading}>Our Connections</h3>
-      <div className="logos-grid" style={styles.logosGrid}>
-        {partners.map(({ name, logo }) => (
-          <div key={name} style={styles.logoPlaceholder}>
-            <img
-              src={logo}
-              alt={name}
-              style={{ height: "40px", objectFit: "contain", filter: "brightness(0) invert(1)" }}
-            />
-          </div>
-        ))}
+
+      <div className="orb-wrap">
+        <svg className="sphere" viewBox="0 0 440 440">
+          <g transform="translate(220,220)">
+            <circle r="190" stroke="rgba(148,163,184,.5)" />
+            <ellipse rx="190" ry="66" stroke="rgba(148,163,184,.38)" />
+            <ellipse rx="190" ry="66" stroke="rgba(148,163,184,.32)" transform="rotate(60)" />
+            <ellipse rx="190" ry="66" stroke="rgba(255,255,255,.5)" transform="rotate(120)" />
+            <ellipse rx="126" ry="190" stroke="rgba(148,163,184,.28)" />
+            <ellipse rx="55" ry="190" stroke="rgba(148,163,184,.22)" />
+          </g>
+        </svg>
       </div>
     </section>
   );
 }
 
-// ─── Design Teams Section ────────────────────────────────────────────────────
+// ─── Connections (logo marquee) ─────────────────────────────────────────────
 
-const teams = [
-  {
-    key: "wind",
-    title: "Collegiate Wind Competition Team",
-    image: "/images/wind.webp",
-    description:
-      "Our Collegiate Wind Competition Team designs and builds small-scale wind turbines to compete in the U.S. Department of Energy's national competition. Students gain hands-on experience in aerodynamic design, structural analysis, and energy systems engineering.",
-  },
-  {
-    key: "marine",
-    title: "Marine Energy Collegiate Competition Team",
-    image: "/images/marine.jpg",
-    description:
-      "We are currently prototyping our Oscillating Water Column (OWC), which utilizes incoming waves to pressurize a column of air, spinning a turbine and generating electricity for battery storage. We are currently exploring the technologies behind underwater data centers, desalination facilities, and remote coastal communities.",
-  },
-  {
-    key: "hydro",
-    title: "Hydropower Collegiate Competition Team",
-    image: "/images/hydro.jpg",
-    description:
-      "HCC is a design competition aimed at creating low impact hydropower energy source using existing infrastructure. We are looking to use a Pumped Storage Hydropower system that could serve regions of California typically excluded from renewable energy initiatives.",
-  },
-  {
-    key: "solar",
-    title: "Solar Table Initiative Team",
-    image: "/images/solar.jpg",
-    description:
-      "The Solar Tables Initiative is working hard to bring 100% student designed outdoor tables with solar-powered charging capabilities to the USC community. We are designing our tables from the ground up with industry and manufacturer mentorship.",
-  },
-];
-
-function DesignTeams() {
-  const [active, setActive] = useState(null);
+function Connections() {
+  // Render the partner list twice back-to-back so the CSS animation
+  // (translateX(-50%) looping) reads as a seamless, infinite scroll —
+  // same trick the mock did via `track.innerHTML += track.innerHTML`.
+  const items = [...PARTNERS, ...PARTNERS];
 
   return (
-    <section id="design-teams" style={styles.dtSection}>
-      <h2 style={styles.dtHeading}>Design Teams</h2>
-      <div className="dt-grid"style={styles.dtGrid}>
-        {teams.map((team) => {
-          const isActive = active === team.key;
-          const isInactive = active !== null && !isActive;
+    <section className="connections">
+      <div className="label">OUR CONNECTIONS</div>
+      <div className="marquee">
+        <div className="track">
+          {items.map(({ name, logo, href }, i) => (
+            <a key={`${name}-${i}`} className="logo-box" href={href} target="_blank" rel="noopener noreferrer">
+              <img src={logo} alt={name} />
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Design Teams (accordion) ───────────────────────────────────────────────
+
+function DesignTeams() {
+  const [openKey, setOpenKey] = useState(null);
+  const hasOpen = openKey !== null;
+
+  function toggle(key) {
+    setOpenKey((cur) => (cur === key ? null : key));
+  }
+
+  return (
+    <section className="teams" id="teams">
+      <div className="label">DESIGN TEAMS</div>
+      <div className={`dt-grid${hasOpen ? " has-open" : ""}`}>
+        {TEAMS.map((team) => {
+          const isOpen = openKey === team.key;
           return (
             <div
               key={team.key}
-              className={isActive ? "dt-card active" : "dt-card" }
-              onClick={() => setActive(isActive ? null : team.key)}
-              style={{
-                ...styles.dtCard,
-                flex: isActive ? "3.5" : isInactive ? "0.5" : "1",
-              }}
+              className={`dt-card${isOpen ? " open" : ""}`}
+              onClick={() => toggle(team.key)}
             >
-              <img
-                src={team.image}
-                alt={team.title}
-                style={{
-                  ...styles.dtCardImg,
-                  filter: isInactive ? "brightness(0.25)" : "brightness(0.45)",
-                }}
-              />
+              <img className="bg" src={team.img} alt={team.title} />
+              <div className="grad" />
+              <div className="tt"><span>{team.title}</span></div>
               <div
-              className="dt-title"
-                style={{
-                  ...styles.dtVerticalTitle,
-                  opacity: isActive ? 0 : 1,
-                  transition: "opacity 0.25s ease",
-                }}
+                className="dt-close"
+                onClick={(e) => { e.stopPropagation(); setOpenKey(null); }}
               >
-                {team.title}
+                ✕
               </div>
-              <div
-                style={{
-                  ...styles.dtExpandedContent,
-                  opacity: isActive ? 1 : 0,
-                  pointerEvents: isActive ? "auto" : "none",
-                  transition: "opacity 0.4s ease 0.2s",
-                }}
-              >
-                <h3 style={styles.dtExpandedTitle}>{team.title}</h3>
-                <p style={styles.dtExpandedDesc}>{team.description}</p>
-                {/* <button
-                  style={styles.dtLearnMore}
+              <div className="exp">
+                <h3>{team.title}</h3>
+                <div className="meta">{team.meta}</div>
+                <p>{team.desc}</p>
+                <a
+                  className="ghost sm"
+                  href="https://forms.gle/vSFAnuKfpKV3GFfJ6"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  onMouseEnter={(e) => { e.target.style.background = "rgba(255,255,255,0.15)"; }}
-                  onMouseLeave={(e) => { e.target.style.background = "transparent"; }}
                 >
-                  Learn More →
-                </button> */}
+                  Join this team
+                </a>
               </div>
             </div>
           );
@@ -292,578 +380,174 @@ function DesignTeams() {
   );
 }
 
-// ─── E-Board Section ─────────────────────────────────────────────────────────
+// ─── Board (3D coverflow carousel) ──────────────────────────────────────────
 
-const boardMembers = [
-  { name: "Mitch Kirby", role: "President & Founder", photo: "/eboard/mitchkirby.jpg", linkedin: "https://www.linkedin.com/in/mitchell-kirby/" },
-  { name: "Alexandra Somodi", role: "Vice President & Brand Director", photo: "/eboard/alexandrasomodi.png", linkedin: "https://www.linkedin.com/in/alexandra-somodi/" },
-  { name: "David Moseley", role: "Design Team Coordinator", photo: "/eboard/davidmoseley.jpg", linkedin: "https://www.linkedin.com/in/davidmmoseley/" },
-  { name: "Jordyn Wetherbee", role: "Executive Coordinator & CWC PM", photo: "/eboard/jordynwetherbee.jpg", linkedin: "https://www.linkedin.com/in/jordyn-wetherbee/" },
-  { name: "James Hiemstra", role: "Director of Finance", photo: "/eboard/jameshiemstra.jpg", linkedin: "https://www.linkedin.com/in/james-hiemstra-78b9872a1/" },
-  { name: "Reeth Kawad", role: "Senior Advisor", photo: "/eboard/reethkawad.jpg", linkedin: "https://www.linkedin.com/in/reethkawad/" },
-  { name: "Chloe Flannigan", role: "Director of Membership", photo: "/eboard/chloeflannigan.jpg", linkedin: "https://www.linkedin.com/in/chloe-flannigan-0950a2237/" },
-  { name: "Helena Heckmann", role: "Director of Events", photo: "/eboard/helenaheckmann.jpg", linkedin: "https://www.linkedin.com/in/helena-heckmann/" },
-  { name: "Jainam Jain", role: "Director of Outreach & CWC PM", photo: "/eboard/jainamjain.png", linkedin: "https://www.linkedin.com/in/jainam-jain-937a13214/" },
-  { name: "Ellis Fertig", role: "ShadeLA PM & Director of Policy", photo: "/eboard/ellisfertig.jpg", linkedin: "https://www.linkedin.com/in/ellis-fertig-4512b232b/" },
-  { name: "Sam Gold", role: "ShadeLA PM & Asst. Director of Policy", photo: "/eboard/samgold.jpg", linkedin: "https://www.linkedin.com/in/sam-j-gold/" },
-  { name: "Alex Bartolomei", role: "MECC PM", photo: "/eboard/alexbartolomei.jpg", linkedin: "https://www.linkedin.com/in/alexbartolomei/" },
-  { name: "Alex Geschwill", role: "HCC PM", photo: "/eboard/alexgeschwill.jpg", linkedin: "https://www.linkedin.com/in/alexandra-geschwill/" },
-  { name: "Daniela Lopez Escalante", role: "Asst. Director of Brand", photo: "/eboard/daniela.jpg", linkedin: "https://www.linkedin.com/in/daniela-lopez-escalante-839a4038a/" },
-];
+function Board() {
+  const [active, setActive] = useState(0);
+  const [infoVisible, setInfoVisible] = useState(true);
+  const N = BOARD.length;
 
-function EBoardCard({ member }) {
-  const [hovered, setHovered] = useState(false);
-
-  const cardStyle = {
-    ...styles.ebCard,
-    transform: hovered ? "scale(1.03)" : "scale(1)",
-    boxShadow: hovered ? "0 8px 32px rgba(0,0,0,0.35)" : "none",
-    transition: "transform 0.25s ease, box-shadow 0.25s ease",
-    cursor: member.linkedin ? "pointer" : "default",
-  };
-
-  const content = (
-    <div
-    className="eb-card"
-      style={cardStyle}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div className="eb-photo-wrap" style={{ position: "relative", width: "120px", height: "120px", flexShrink: 0, width: "120px", height: "120px" }}>
-        {member.photo ? (
-          <img src={member.photo} alt={member.name} style={styles.ebPhoto} className="eb-photo" />
-        ) : (
-          <div style={styles.ebPhotoPlaceholder} />
-        )}
-        <div style={{
-          position: "absolute",
-          inset: 0,
-          background: "rgba(29, 48, 71, 0.45)",
-          opacity: hovered ? 0 : 1,
-          transition: "opacity 0.25s ease",
-        }} />
-      </div>
-      <div style={styles.ebInfo}>
-        {member.name && <span style={styles.ebName}>{member.name}</span>}
-        {member.role && <span style={styles.ebRole}>{member.role}</span>}
-      </div>
-    </div>
-  );
-
-  if (member.linkedin) {
-    return (
-      <a href={member.linkedin} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-        {content}
-      </a>
-    );
+  function goTo(i) {
+    const next = ((i % N) + N) % N;
+    setActive(next);
   }
-  return content;
-}
 
-function EBoard() {
+  // Fade the name/role/links out, swap, then fade back in — mirrors the
+  // mock's setTimeout-based crossfade.
+  useEffect(() => {
+    setInfoVisible(false);
+    const t = setTimeout(() => setInfoVisible(true), 160);
+    return () => clearTimeout(t);
+  }, [active]);
+
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.key === "ArrowLeft") goTo(active - 1);
+      if (e.key === "ArrowRight") goTo(active + 1);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active]);
+
+  const current = BOARD[active];
+
   return (
-    <section id="e-board" style={styles.ebSection}>
-      <h2 style={styles.ebHeading}>E-Board</h2>
-      <div className="eb-grid" style={styles.ebGrid}>
-        {boardMembers.map((member, i) => (
-          <EBoardCard key={i} member={member} />
-        ))}
+    <section className="board" id="board">
+      <div className="label">BOARD</div>
+      <div className="cf-stage">
+        <div className="cf-arrow left" onClick={() => goTo(active - 1)} role="button" aria-label="Previous">‹</div>
+        <div className="cf-arrow right" onClick={() => goTo(active + 1)} role="button" aria-label="Next">›</div>
+        {BOARD.map((m, j) => {
+          let o = (j - active) % N;
+          if (o > N / 2) o -= N;
+          if (o < -N / 2) o += N;
+          const ao = Math.abs(o);
+          const style = {
+            transform: `translateX(${o * 205}px) translateZ(${-ao * 150}px) rotateY(${o > 0 ? -16 : o < 0 ? 16 : 0}deg)`,
+            filter: o === 0 ? "none" : "brightness(.38)",
+            opacity: ao > 3 ? 0 : 1,
+            pointerEvents: ao > 3 ? "none" : "auto",
+            zIndex: 20 - ao,
+          };
+          return (
+            <div
+              key={m.n}
+              className="cf-card"
+              style={style}
+              onClick={() => { if (j !== active) goTo(j); }}
+            >
+              <img src={m.img} alt={m.n} />
+              <div className="cf-grad" />
+              <div className="cf-name" style={{ opacity: o === 0 ? 0 : 1 }}>{m.n}</div>
+            </div>
+          );
+        })}
       </div>
+      <div className="cf-info" style={{ opacity: infoVisible ? 1 : 0 }}>
+        <div className="n">{current.n}</div>
+        <div className="r">{current.r}</div>
+        <div className="links">
+          <a href={current.li} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">in</a>
+          <a href="mailto:aeeusc@gmail.com" aria-label="Email">@</a>
+        </div>
+      </div>
+      <div className="board-note" />
     </section>
   );
 }
 
-// ─── Footer ───────────────────────────────────────────────────────────────────
+// ─── Footer ─────────────────────────────────────────────────────────────────
 
 function Footer() {
   return (
-    <footer className="footer" style={footerStyles.footer}>
-      <div className="footer-left" style={footerStyles.left}>
-        {[
-          { label: "Instagram", href: "https://www.instagram.com/aeeusc" },
-          { label: "LinkedIn", href: "https://www.linkedin.com/company/association-of-energy-engineers-usc/?viewAsMember=true" },
-          { label: "Slack", href: "https://docs.google.com/forms/d/e/1FAIpQLSde2ldtrVXhxu5plBeN3wLRApQoZtVfj8l0FhG_rllde9MKyw/viewform" },
-          { label: "Newsletter", href: "https://forms.gle/2sbFAdnC5oxf3q2t6" },
-        ].map(({ label, href }) => (
-          <a key={label} href={href} target="_blank" rel="noopener noreferrer" style={footerStyles.link}>
-            {label}
-          </a>
-        ))}
-      </div>
-      <div style={footerStyles.center}>
-        <img src="/logo.svg" alt="AEE" style={footerStyles.logo} />
-      </div>
-      <div className="footer-right" style={footerStyles.right}>
-        © 2026 AEE at USC
+    <footer>
+      <div className="foot-inner">
+        <div className="news-row">
+          <div>
+            <div className="nr-t">JOIN THE COMMUNITY</div>
+            <div className="nr-s">Get updates on events, competitions, and opportunities.</div>
+          </div>
+          <form
+            className="news-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              window.open("https://forms.gle/2sbFAdnC5oxf3q2t6", "_blank", "noopener");
+            }}
+          >
+            <input type="email" placeholder="your@email.com" required />
+            <button type="submit">Subscribe</button>
+          </form>
+        </div>
+
+        <div className="foot-main">
+          <div className="foot-brand">
+            <div className="fb-logo">
+              <img src={asset("/logo.svg")} alt="" />
+              <span>AEE at USC</span>
+            </div>
+            <p>USC's hub for all things energy and sustainability.</p>
+            <div className="based">Based at USC · Los Angeles, CA</div>
+            <div className="socials">
+              <a href="https://www.instagram.com/aeeusc" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                <svg viewBox="0 0 24 24">
+                  <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" />
+                  <circle cx="12" cy="12" r="4.4" />
+                  <circle cx="17.6" cy="6.4" r="1.1" fill="rgba(255,255,255,.8)" stroke="none" />
+                </svg>
+              </a>
+              <a
+                href="https://www.linkedin.com/company/association-of-energy-engineers-usc/?viewAsMember=true"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+              >
+                <svg viewBox="0 0 24 24">
+                  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-13h4v1.5" />
+                  <rect x="2" y="9" width="4" height="12" />
+                  <circle cx="4" cy="4" r="2" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <div className="foot-cols">
+            <div className="fcol">
+              <div className="fc-t">PAGES</div>
+              <a href="#about">About</a>
+              <a href="#teams">Design Teams</a>
+              <a href="#board">Board</a>
+            </div>
+            <div className="fcol">
+              <div className="fc-t">CONNECT</div>
+              <a href="https://docs.google.com/forms/d/e/1FAIpQLSde2ldtrVXhxu5plBeN3wLRApQoZtVfj8l0FhG_rllde9MKyw/viewform" target="_blank" rel="noopener noreferrer">Slack</a>
+              <a href="https://forms.gle/2sbFAdnC5oxf3q2t6" target="_blank" rel="noopener noreferrer">Newsletter</a>
+              <a href="mailto:aeeusc@gmail.com">Contact</a>
+              <a href="https://forms.gle/vSFAnuKfpKV3GFfJ6" target="_blank" rel="noopener noreferrer">Get Involved</a>
+            </div>
+          </div>
+        </div>
+
+        <div className="legal">
+          <div className="copy">© 2026 AEE at USC. All rights reserved.</div>
+        </div>
       </div>
     </footer>
   );
 }
 
-const footerStyles = {
-  footer: {
-    width: "100%",
-    padding: "1rem 1rem",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderTop: "1px solid rgba(100, 160, 255, 0.2)",
-    boxSizing: "border-box",
-  },
-  left: {
-    display: "flex",
-    gap: "2rem",
-    flex: 1,
-  },
-  link: {
-    fontFamily: "'Barlow', sans-serif",
-    fontSize: "clamp(1rem, 2vw, 3rem)",
-    color: "rgba(255,255,255,0.6)",
-    textDecoration: "none",
-  },
-  center: {
-    flex: 1,
-    display: "flex",
-    justifyContent: "center",
-  },
-  logo: {
-    height: "60px",
-    objectFit: "contain",
-    filter: "brightness(0) invert(1)",
-  },
-  right: {
-    flex: 1,
-    textAlign: "right",
-    fontFamily: "'Barlow', sans-serif",
-    fontSize: "clamp(1rem, 2vw, 3rem)",
-    color: "rgba(255,255,255,0.4)",
-  },
-};
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Page ───────────────────────────────────────────────────────────────────
 
 export default function Home() {
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [menuOpen, setMenuOpen] = useState(false);
-  useEffect(() => {
-    function onScroll() {
-      const progress = Math.min(window.scrollY / window.innerHeight, 1);
-      setScrollProgress(progress);
-    }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  const heroBlur = scrollProgress * 12;
-  const heroOpacity = 1 - scrollProgress;
-
   return (
-    <div style={styles.page}>
-
-      <nav style={styles.nav}>
-  <div className="desktop-nav-links" style={{ display: "flex", gap: "2.5rem" }}>
-    {[
-      { label: "About", href: "#about" },
-      { label: "Design Teams", href: "#design-teams" },
-      { label: "E-Board", href: "#e-board" },
-    ].map(({ label, href }) => (
-      <a key={label} href={href} style={styles.navLink}>{label}</a>
-    ))}
-  </div>
-  <button
-    className={`hamburger ${menuOpen ? "open" : ""}`}
-    onClick={() => setMenuOpen(!menuOpen)}
-  >
-    <span /><span /><span />
-  </button>
-</nav>
-
-{/* Mobile fullscreen menu */}
-<div className={`mobile-menu ${menuOpen ? "open" : ""}`}>
-  {[
-    { label: "About", href: "#about" },
-    { label: "Design Teams", href: "#design-teams" },
-    { label: "E-Board", href: "#e-board" },
-  ].map(({ label, href }) => (
-    <a key={label} href={href} onClick={() => setMenuOpen(false)}>{label}</a>
-  ))}
-</div>
-
-      <div
-        style={{
-          ...styles.hero,
-          filter: `blur(${heroBlur}px)`,
-          opacity: heroOpacity,
-        }}
-      >
-        <div className="aura-1" />
-        <div className="aura-2" />
-
-        <div style={styles.heroText}>
-          <h1 style={styles.heading}>AEE at USC</h1>
-          <p style={styles.sub}>
-            USC's hub for all things
-            <br />
-            energy and sustainability.
-          </p>
-
-          <div className="hero-buttons" style={{ display: "flex", gap: "1rem", marginTop: "2rem", pointerEvents: "auto" }}>
-            <a
-              href="https://forms.gle/vSFAnuKfpKV3GFfJ6"
-              style={{
-                fontFamily: "'Barlow', sans-serif",
-                fontSize: "clamp(1rem, 2vw, 1.6rem)",
-                fontWeight: "400",
-                color: "#1a2744",
-                background: "#ffffff",
-                padding: "0.85rem 2rem",
-                borderRadius: "6px",
-                textDecoration: "none",
-                letterSpacing: "0.01em",
-              }}
-            >
-              Get Involved!
-            </a>
-            <a
-              href="mailto:aeeusc@gmail.com"
-              style={{
-                fontFamily: "'Barlow', sans-serif",
-                fontSize: "clamp(1rem, 2vw, 1.6rem)",
-                fontWeight: "400",
-                color: "#ffffff",
-                background: "transparent",
-                border: "2px solid rgba(255,255,255,0.6)",
-                padding: "0.85rem 2rem",
-                borderRadius: "6px",
-                textDecoration: "none",
-                letterSpacing: "0.01em",
-              }}
-            >
-              Contact
-            </a>
-          </div>
-        </div>
-
-        <AtomCanvas />
-      </div>
-
-      <div style={{ height: "100vh" }} />
-
-      <div style={styles.aboutWrapper}>
-        <About />
-        <DesignTeams />
-        <EBoard />
-        <Footer />
-      </div>
+    <div className="home-page">
+      <Nav />
+      <Hero />
+      <About />
+      <Connections />
+      <DesignTeams />
+      <Board />
+      <Footer />
     </div>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
-const styles = {
-  page: {
-    width: "100vw",
-    background: "#1a2744",
-    fontFamily: "'Barlow', sans-serif",
-    color: "#ffffff",
-  },
-  nav: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100%",
-    display: "flex",
-    justifyContent: "flex-end",
-    gap: "2.5rem",
-    padding: "1.25rem 3rem",
-    zIndex: 200,
-    backdropFilter: "blur(8px)",
-    boxSizing: "border-box",
-  },
-  navLink: {
-    color: "#ffffff",
-    textDecoration: "none",
-    fontSize: "clamp(0.8rem, 2vw, 2.5rem)",
-    fontFamily: "'Barlow', sans-serif",
-    letterSpacing: "0.01em",
-  },
-  hero: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100vh",
-    zIndex: 1,
-    transition: "filter 0.05s linear, opacity 0.05s linear",
-  },
-  heroText: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    zIndex: 10,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    paddingTop: "6rem",
-    pointerEvents: "none",
-  },
-  heading: {
-    fontFamily: "'DM Serif Display', serif",
-    fontSize: "clamp(2.5rem, 8vw, 8rem)",
-    fontWeight: "400",
-    margin: "0 0 0.5rem",
-    letterSpacing: "-0.01em",
-    textAlign: "center",
-  },
-  sub: {
-    fontFamily: "'Barlow', sans-serif",
-    fontSize: "clamp(1.5rem, 2.5vw, 4rem)",
-    fontWeight: "400",
-    color: "rgba(255,255,255,0.85)",
-    textAlign: "center",
-    lineHeight: 1.6,
-  },
-  aboutWrapper: {
-    position: "relative",
-    zIndex: 50,
-    borderRadius: "24px 24px 0 0",
-    marginTop: "-24px",
-  },
-  aboutSection: {
-    width: "100%",
-    maxWidth: "1200px",
-    margin: "0 auto",
-    padding: "6rem 2rem 6rem",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "2.5rem",
-  },
-  aboutHeading: {
-    fontFamily: "'DM Serif Display', serif",
-    fontSize: "clamp(1.8rem, 5vw, 4.5rem)",
-    fontWeight: "400",
-    textAlign: "center",
-  },
-  statsRow: {
-    display: "flex",
-    gap: "1.5rem",
-    justifyContent: "center",
-    flexWrap: "wrap",
-    width: "100%",
-  },
-  statCard: {
-    flex: "1 1 220px",
-    maxWidth: "300px",
-    border: "1.5px solid rgba(100, 160, 255, 0.35)",
-    borderRadius: "12px",
-    padding: "2rem 1.5rem",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "0.5rem",
-  },
-  statNumber: {
-    fontFamily: "'Barlow', sans-serif",
-    fontSize: "clamp(2rem, 4vw, 3.5rem)",
-    fontWeight: "700",
-    color: "#B9CDE6",
-  },
-  statLabel: {
-    fontFamily: "'Barlow', sans-serif",
-    fontSize: "clamp(1.2rem, 2vw, 4rem)",
-    color: "rgba(255,255,255,0.8)",
-    textAlign: "center",
-    lineHeight: 1.4,
-  },
-  aboutText: {
-    fontFamily: "'Barlow', sans-serif",
-    fontSize: "clamp(1rem, 2vw, 2.3rem)",
-    color: "rgba(255,255,255,0.8)",
-    textAlign: "center",
-    lineHeight: 1.8,
-    maxWidth: "1000px",
-  },
-  connectionsHeading: {
-    fontFamily: "'DM Serif Display', serif",
-    fontSize: "clamp(1.5rem, 5vw, 4.5rem)",
-    fontWeight: "700",
-    color: "#ffffff",
-    letterSpacing: "0.08em",
-  },
-  logosGrid: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "1rem",
-    justifyContent: "center",
-    width: "100%",
-  },
-  logoPlaceholder: {
-    borderRadius: "8px",
-    padding: "0.75rem 1.5rem",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: "100px",
-  },
-
-  // Design Teams
-  dtSection: {
-    width: "100%",
-    padding: "4rem 0 0",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "2.5rem",
-  },
-  dtHeading: {
-    fontFamily: "'DM Serif Display', serif",
-    fontSize: "clamp(1.8rem, 5vw, 4.5rem)",
-    fontWeight: "400",
-    textAlign: "center",
-    color: "#ffffff",
-  },
-  dtGrid: {
-    display: "flex",
-    flexDirection: "row",
-    width: "100%",
-    height: "72vh",
-    overflow: "hidden",
-  },
-  dtCard: {
-    position: "relative",
-    overflow: "hidden",
-    transition: "flex 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
-    display: "flex",
-    alignItems: "flex-end",
-    justifyContent: "flex-start",
-    cursor: "pointer",
-  },
-  dtCardImg: {
-    position: "absolute",
-    inset: 0,
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    transition: "filter 0.4s ease",
-  },
-  dtVerticalTitle: {
-    position: "relative",
-    zIndex: 2,
-    writingMode: "vertical-rl",
-    transform: "rotate(180deg)",
-    fontFamily: "'DM Serif Display', serif",
-    fontSize: "clamp(4rem, 1.6vw, 6rem)",
-    fontWeight: "700",
-    color: "#ffffff",
-    padding: "2rem 1.8rem",
-    lineHeight: 1.2,
-    textShadow: "0 2px 12px rgba(0,0,0,0.7)",
-  },
-  dtExpandedContent: {
-    position: "absolute",
-    inset: 0,
-    zIndex: 2,
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "flex-end",
-    padding: "clamp(2rem, 3vw, 3rem)",
-    background: "linear-gradient(to top, rgba(29,48,71,0.88) 40%, transparent 100%)",
-  },
-  dtExpandedTitle: {
-    fontFamily: "'DM Serif Display', serif",
-    fontSize: "clamp(1.5rem, 2vw, 5rem)",
-    fontWeight: "400",
-    color: "#ffffff",
-    marginBottom: "1rem",
-    lineHeight: 1.3,
-  },
-  dtExpandedDesc: {
-    fontFamily: "'Barlow', sans-serif",
-    fontSize: "clamp(1rem, 1.1vw, 2rem)",
-    color: "rgba(255,255,255,0.85)",
-    lineHeight: 1.7,
-    marginBottom: "1.5rem",
-    maxWidth: "600px",
-  },
-  dtLearnMore: {
-    background: "transparent",
-    border: "1.5px solid rgba(255,255,255,0.6)",
-    color: "#ffffff",
-    fontFamily: "'Barlow', sans-serif",
-    fontSize: "1rem",
-    padding: "0.6rem 1.4rem",
-    borderRadius: "4px",
-    cursor: "pointer",
-    width: "fit-content",
-    transition: "background 0.2s",
-  },
-
-  // E-Board
-  ebSection: {
-    width: "100%",
-    maxWidth: "1200px",
-    margin: "0 auto",
-    padding: "6rem 2rem 8rem",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "2.5rem",
-  },
-  ebHeading: {
-    fontFamily: "'DM Serif Display', serif",
-    fontSize: "clamp(3rem, 5vw, 4.5rem)",
-    fontWeight: "400",
-    textAlign: "center",
-    color: "#ffffff",
-  },
-  ebGrid: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "1.25rem",
-    width: "100%",
-  },
-  ebCard: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    border: "1.5px solid rgba(100, 160, 255, 0.3)",
-    borderRadius: "10px",
-    overflow: "hidden",
-    height: "120px",
-    background: "rgba(255,255,255,0.03)",
-  },
-  ebPhoto: {
-    objectFit: "cover",
-    objectPosition: "top",
-    flexShrink: 0,
-    width: "100%",
-    height: "100%",
-  },
-  ebInfo: {
-    padding: "0.5rem 1rem",
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.3rem",
-  },
-  ebName: {
-    fontFamily: "'Barlow', sans-serif",
-    fontSize: "clamp(1rem, 1.6vw, 1.8rem)",
-    fontWeight: "700",
-    color: "#ffffff",
-  },
-  ebRole: {
-    fontFamily: "'Barlow', sans-serif",
-    fontSize: "clamp(0.8rem, 1.3vw, 1.5rem)",
-    color: "rgba(255,255,255,0.7)",
-  },
-  ebLinkedIn: {
-    fontFamily: "'Barlow', sans-serif",
-    fontSize: "1rem",
-    color: "#7ab8f5",
-    marginTop: "0.25rem",
-  },
-};
