@@ -159,9 +159,11 @@
 .stat .num { font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 54px; letter-spacing: -.02em; line-height: 1; }
 .stat .cap { margin-top: 12px; font-size: 15px; line-height: 1.45; color: var(--slate); }
 .orb-wrap { margin-top: 84px; display: flex; flex-direction: column; align-items: center; gap: 26px; }
-.sphere { width: min(360px, 60vw); aspect-ratio: 1; animation: spin 60s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.sphere ellipse, .sphere circle { fill: none; stroke-width: 1.1; vector-effect: non-scaling-stroke; }
+/* Container for the interactive Three.js atom (see AtomCanvas in Home.jsx).
+   Sized like the mock's old flat .sphere placeholder so the About section's
+   layout/spacing is unchanged — this just replaces what renders inside it. */
+.atom-canvas { width: min(360px, 60vw); aspect-ratio: 1; cursor: grab; }
+.atom-canvas:active { cursor: grabbing; }
 .about-note { font-size: 12px; color: rgba(148,163,184,.5); }
 
 /* ---------- CONNECTIONS ---------- */

@@ -13,6 +13,9 @@
 // visual design.
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import "./Home.css";
 
 // vite.config.js sets `base: '/aee-website/'` (needed so GitHub Pages,
@@ -100,6 +103,141 @@ const STATS = [
 ];
 
 const STATEMENT = "We put student engineers at the center of the energy transition.";
+
+// ─── Interactive Three.js atom (About section) ─────────────────────────────
+//
+// Ported from the pre-rebuild Home.jsx. Renders a rotating "atom" made of
+// three glowing torus rings plus a bolt icon (extruded from bolt_v2.svg)
+// at the center, with drag-to-orbit camera controls. This replaces the
+// mock's flat static SVG sphere with the site's original interactive
+// centerpiece.
+function AtomCanvas() {
+  const mountRef = useRef(null);
+
+  useEffect(() => {
+    const mount = mountRef.current;
+    const W = mount.clientWidth;
+    const H = mount.clientHeight;
+
+    const scene = new THREE.Scene();
+    scene.background = null;
+
+    const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 1000);
+    camera.position.set(0, 0, 25);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(W, H);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    mount.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.enableZoom = false;
+    controls.enablePan = false;
+    controls.target.set(0, 0, 0);
+    controls.update();
+
+    scene.add(new THREE.AmbientLight(0xffffff, 1));
+    const dir = new THREE.DirectionalLight(0xffffff, 1.5);
+    dir.position.set(5, 10, 7);
+    scene.add(dir);
+
+    const atomGroup = new THREE.Group();
+    atomGroup.position.set(0, -2, 0);
+    scene.add(atomGroup);
+
+    const ringMat = new THREE.MeshStandardMaterial({
+      color: 0x3C596F,
+      emissive: new THREE.Color(0x1a3f7a),
+      emissiveIntensity: 1.2,
+      roughness: 0.2,
+      metalness: 0.0,
+      transparent: true,
+      opacity: 0.6,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+
+    [[0, 0], [Math.PI / 3, 0], [0, Math.PI / 3]].forEach(([rx, ry]) => {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(4, 0.15, 32, 100), ringMat);
+      ring.rotation.x = rx;
+      ring.rotation.y = ry;
+      atomGroup.add(ring);
+    });
+
+    const boltStatic = new THREE.Group();
+    boltStatic.position.set(0, -2, 0);
+    scene.add(boltStatic);
+
+    const loader = new SVGLoader();
+    loader.load(
+      asset("/bolt_v2.svg"),
+      (data) => {
+        const boltGroup = new THREE.Group();
+        const mat = new THREE.MeshStandardMaterial({
+          color: 0x47668A,
+          emissive: new THREE.Color(0x47668A),
+          emissiveIntensity: 1.0,
+          transparent: true,
+          opacity: 0.5,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+          roughness: 0.2,
+          metalness: 0.0,
+        });
+        for (const path of data.paths) {
+          for (const shape of SVGLoader.createShapes(path)) {
+            const geom = new THREE.ExtrudeGeometry(shape, {
+              depth: 10,
+              bevelEnabled: false,
+              curveSegments: 24,
+            });
+            geom.center();
+            boltGroup.add(new THREE.Mesh(geom, mat));
+          }
+        }
+        boltGroup.rotation.x = Math.PI;
+        boltGroup.scale.setScalar(0.035);
+        boltGroup.position.set(0, 0, 0);
+        boltStatic.add(boltGroup);
+      },
+      undefined,
+      (e) => console.error("SVG load error:", e)
+    );
+
+    atomGroup.rotation.y = 0.2;
+    atomGroup.rotation.x = 0.1;
+
+    let animId;
+    function animate() {
+      animId = requestAnimationFrame(animate);
+      atomGroup.rotation.y += 0.008;
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    function onResize() {
+      const w = mount.clientWidth;
+      const h = mount.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    }
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener("resize", onResize);
+      controls.dispose();
+      renderer.dispose();
+      if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
+    };
+  }, []);
+
+  return <div ref={mountRef} style={{ width: "100%", height: "100%" }} />;
+}
 
 // ─── Nav + mobile menu ──────────────────────────────────────────────────────
 
@@ -288,16 +426,9 @@ function About() {
       </div>
 
       <div className="orb-wrap">
-        <svg className="sphere" viewBox="0 0 440 440">
-          <g transform="translate(220,220)">
-            <circle r="190" stroke="rgba(148,163,184,.5)" />
-            <ellipse rx="190" ry="66" stroke="rgba(148,163,184,.38)" />
-            <ellipse rx="190" ry="66" stroke="rgba(148,163,184,.32)" transform="rotate(60)" />
-            <ellipse rx="190" ry="66" stroke="rgba(255,255,255,.5)" transform="rotate(120)" />
-            <ellipse rx="126" ry="190" stroke="rgba(148,163,184,.28)" />
-            <ellipse rx="55" ry="190" stroke="rgba(148,163,184,.22)" />
-          </g>
-        </svg>
+        <div className="atom-canvas">
+          <AtomCanvas />
+        </div>
       </div>
     </section>
   );
