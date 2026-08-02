@@ -85,10 +85,19 @@
   width: 40px;
   height: 40px;
   background: transparent;
-  border: none;
+  /* Transparent (not `none`) so the box already occupies its final size at
+     rest — the hover state below only changes this border's *color*, never
+     its width, so the outline fades in in place instead of the button
+     resizing/jumping when the border "appears". */
+  border: 1px solid transparent;
+  border-radius: 8px;
   cursor: pointer;
   z-index: 110;
   padding: 0;
+  transition: border-color .25s ease;
+}
+.hamburger:hover {
+  border-color: rgba(255, 255, 255, .55);
 }
 .hamburger span {
   display: block;
@@ -131,8 +140,19 @@
   font-size: 26px;
   font-weight: 600;
   background: none;
-  border: none;
   cursor: pointer;
+  /* Same outline-fade-in treatment as .hamburger above: the border is
+     reserved at full width but transparent at rest, and padding gives it
+     room to sit around the text instead of touching the letters, so
+     hovering only ever changes a color — never the box's size/position. */
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 10px 22px;
+  transition: border-color .25s ease;
+}
+.mobile-menu a:hover,
+.mobile-menu button:hover {
+  border-color: rgba(255, 255, 255, .55);
 }
 
 /* ---------- HERO ---------- */
@@ -156,7 +176,7 @@
 @keyframes bob { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 6px); } }
 
 /* ---------- ABOUT ---------- */
-.about { position: relative; padding: 150px 24px 110px; text-align: center; background: linear-gradient(180deg, var(--navy-950) 0%, #0C1224 60%, var(--navy-950) 100%); }
+.about { position: relative; padding: 150px 24px 32px; text-align: center; background: linear-gradient(180deg, var(--navy-950) 0%, #0C1224 60%, var(--navy-950) 100%); }
 .label { font-size: 12px; font-weight: 600; letter-spacing: .34em; color: var(--slate); }
 .statement { font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(36px, 3.9vw, 54px); line-height: 1.16; letter-spacing: -.015em; color: var(--white); max-width: 880px; margin: 30px auto 0; }
 .statement .w { display: inline-block; opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
@@ -167,7 +187,7 @@
 .stat:hover { border-color: rgba(255,255,255,.42); transform: translateY(-3px); }
 .stat .num { font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 54px; letter-spacing: -.02em; line-height: 1; }
 .stat .cap { margin-top: 12px; font-size: 15px; line-height: 1.45; color: var(--slate); }
-.orb-wrap { margin-top: 84px; display: flex; flex-direction: column; align-items: center; gap: 26px; }
+.orb-wrap { margin-top: 64px; display: flex; flex-direction: column; align-items: center; gap: 26px; }
 /* Container for the interactive Three.js atom (see AtomCanvas in Home.jsx).
    Sized up from the mock's old flat .sphere placeholder (360px/60vw) —
    this is now a real interactive feature, not a small decorative graphic,
@@ -175,12 +195,12 @@
    space around it. The camera/lighting in AtomCanvas already read the
    container's actual size at mount and on resize, so this is a pure CSS
    change — the whole scene scales up proportionally with the container. */
-.atom-canvas { width: min(560px, 78vw); aspect-ratio: 1; cursor: grab; }
+.atom-canvas { width: min(600px, 80vw); aspect-ratio: 1; cursor: grab; }
 .atom-canvas:active { cursor: grabbing; }
 .about-note { font-size: 12px; color: rgba(148,163,184,.5); }
 
 /* ---------- CONNECTIONS ---------- */
-.connections { padding: 96px 0 84px; text-align: center; overflow: hidden; }
+.connections { padding: 32px 0 84px; text-align: center; overflow: hidden; }
 .marquee {
   margin-top: 56px; position: relative; overflow: hidden;
   -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);

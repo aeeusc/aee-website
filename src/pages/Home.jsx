@@ -14,7 +14,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import "./Home.css";
 
@@ -97,9 +96,9 @@ const BOARD = [
 ];
 
 const STATS = [
-  { count: 90, suffix: "+", label: "active members" },
-  { count: 3, suffix: "", label: <>nationally competing design&nbsp;teams</> },
-  { count: 9, suffix: "", label: "policy consortium organizations" },
+  { count: 90, suffix: "+", label: "Active Members" },
+  { count: 3, suffix: "", label: <>Nationally Competing Design&nbsp;Teams</> },
+  { count: 9, suffix: "", label: "Policy Consortium Organizations" },
 ];
 
 const STATEMENT = "We put student engineers at the center of the energy transition.";
@@ -130,20 +129,18 @@ function AtomCanvas() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     mount.appendChild(renderer.domElement);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.enableZoom = false;
-    controls.enablePan = false;
-    controls.target.set(0, 0, 0);
-    controls.update();
-
     scene.add(new THREE.AmbientLight(0xffffff, 1));
     const dir = new THREE.DirectionalLight(0xffffff, 1.5);
     dir.position.set(5, 10, 7);
     scene.add(dir);
 
+    // Centered on the camera's look-at target (0,0,0) — previously offset
+    // to (0,-2,0), which was a small, barely-visible downward nudge at the
+    // old 360px canvas size but became a large, lopsided gap once the
+    // canvas grew to 600px (the offset is in fixed world units, so it
+    // scales up in on-screen pixels right along with the canvas).
     const atomGroup = new THREE.Group();
-    atomGroup.position.set(0, -2, 0);
+    atomGroup.position.set(0, 0, 0);
     scene.add(atomGroup);
 
     const ringMat = new THREE.MeshStandardMaterial({
@@ -165,10 +162,11 @@ function AtomCanvas() {
       atomGroup.add(ring);
     });
 
-    const boltStatic = new THREE.Group();
-    boltStatic.position.set(0, -2, 0);
-    scene.add(boltStatic);
-
+    // The bolt icon is parented directly under atomGroup (rather than kept
+    // in its own separate scene-level group) so it automatically inherits
+    // every rotation applied to atomGroup — both the constant auto-spin and
+    // the manual drag rotation below — with no extra code needed to keep
+    // the two in sync.
     const loader = new SVGLoader();
     loader.load(
       asset("/bolt_v2.svg"),
@@ -200,7 +198,7 @@ function AtomCanvas() {
         boltGroup.rotation.x = Math.PI;
         boltGroup.scale.setScalar(0.035);
         boltGroup.position.set(0, 0, 0);
-        boltStatic.add(boltGroup);
+        atomGroup.add(boltGroup);
       },
       undefined,
       (e) => console.error("SVG load error:", e)
@@ -209,11 +207,60 @@ function AtomCanvas() {
     atomGroup.rotation.y = 0.2;
     atomGroup.rotation.x = 0.1;
 
+    // ─── Manual drag-to-rotate ────────────────────────────────────────────
+    // Previously this used three's OrbitControls, which orbits the camera
+    // around a fixed target. OrbitControls clamps its polar angle to
+    // [0, π] by default specifically to stop the camera from crossing over
+    // the top/bottom "poles" (avoiding a gimbal flip) — so a vertical drag
+    // always hit a hard wall instead of continuing over the top, which
+    // reads as the rotation "stopping." There's no supported OrbitControls
+    // option that removes that limit entirely (widening minPolarAngle/
+    // maxPolarAngle to their absolute max of [0, π] still stops right at
+    // the poles), so full unrestricted rotation on every axis needs a
+    // different approach: rotate atomGroup itself directly from pointer
+    // movement, with no clamping at all on either axis. Dragging past the
+    // top now keeps rotating smoothly over to the far side, same as
+    // spinning a globe with a hand — exactly like the horizontal drag
+    // already behaved, just now vertical works the same way.
+    let isDragging = false;
+    let lastX = 0;
+    let lastY = 0;
+    const dragSpeed = 0.01;
+
+    function onPointerDown(e) {
+      isDragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      renderer.domElement.style.cursor = "grabbing";
+    }
+    function onPointerMove(e) {
+      if (!isDragging) return;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      // No min/max clamp on either axis — rotation.x and rotation.y are
+      // free-running radians, so they wrap continuously in every direction.
+      atomGroup.rotation.y += dx * dragSpeed;
+      atomGroup.rotation.x += dy * dragSpeed;
+    }
+    function onPointerUp() {
+      isDragging = false;
+      renderer.domElement.style.cursor = "grab";
+    }
+
+    renderer.domElement.style.cursor = "grab";
+    renderer.domElement.style.touchAction = "none";
+    renderer.domElement.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+
     let animId;
     function animate() {
       animId = requestAnimationFrame(animate);
-      atomGroup.rotation.y += 0.008;
-      controls.update();
+      if (!isDragging) {
+        atomGroup.rotation.y += 0.008;
+      }
       renderer.render(scene, camera);
     }
     animate();
@@ -230,7 +277,9 @@ function AtomCanvas() {
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", onResize);
-      controls.dispose();
+      renderer.domElement.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
       renderer.dispose();
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
     };
