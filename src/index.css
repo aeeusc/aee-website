@@ -10,6 +10,17 @@
 
 html {
   scroll-behavior: smooth;
+  /* Hide the scrollbar while keeping the page scrollable. Firefox uses
+     its own property (scrollbar-width); WebKit/Blink browsers (Chrome,
+     Safari, Edge) use the ::-webkit-scrollbar pseudo-element below —
+     both are needed for this to actually be cross-browser.
+     Source: https://stackoverflow.com/q/16670931 (CC BY-SA 4.0) */
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
 }
 
 body {
