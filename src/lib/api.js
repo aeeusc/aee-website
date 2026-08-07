@@ -28,8 +28,8 @@ async function apiRequest(path, options = {}) {
   try {
     data = await res.json();
   } catch {
-    // Some responses (like /auth/verify-email) send plain text, not JSON.
-    // That's fine — data just stays null in that case.
+    // A non-JSON response would land here (none currently expected from
+    // this backend, but kept defensive) — data just stays null.
   }
 
   if (!res.ok) {
