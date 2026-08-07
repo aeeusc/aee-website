@@ -63,7 +63,7 @@ const PARTNERS = [
   { name: "Langan", logo: asset("/logos/langan.png"), href: "https://www.langan.com" },
   { name: "Arup", logo: asset("/logos/arup.png"), href: "https://www.arup.com" },
   { name: "Bloom Energy", logo: asset("/logos/bloomenergy.png"), href: "https://www.bloomenergy.com" },
-  { name: "CalWave", logo: asset("/logos/calwave.png"), href: "https://calwave.org" },
+  { name: "CalWave", logo: asset("/logos/calwave.png"), href: "https://calwave.energy" },
   { name: "Graymatter Robotics", logo: asset("/logos/graymatterrobotics.png"), href: "https://www.graymatter-robotics.com" },
   { name: "KPFF", logo: asset("/logos/kpff.png"), href: "https://www.kpff.com" },
   { name: "NREL", logo: asset("/logos/nrel.png"), href: "https://www.nrel.gov" },
