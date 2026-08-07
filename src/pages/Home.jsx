@@ -19,6 +19,7 @@
 // visual design.
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { subscribeToNewsletter } from "../lib/api";
 // No THREE.js/SVGLoader imports here — the interactive atom sphere and
 // the whole About section moved to their own page (About.jsx) when About
 // was split out into the /about route. Home.jsx doesn't render any of
@@ -496,23 +497,57 @@ function Board() {
 // Exported for the same reason as Nav above — About.jsx reuses it.
 
 export function Footer() {
+  // Newsletter signup — actually calls the backend's /newsletter/subscribe
+  // endpoint now (see src/lib/api.js's subscribeToNewsletter). This used
+  // to just open the old standalone Google Form in a new tab, from before
+  // the newsletter backend existed; that meant real subscribe attempts on
+  // the live site never touched the database NewsletterAdmin.jsx and the
+  // "Check subscriber count" button actually read from — so the newsletter
+  // feature looked broken/nonfunctional even though the backend itself
+  // (and the admin send page) had worked correctly the whole time. This
+  // is the actual fix.
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState("idle"); // idle | submitting | success | error
+  const [feedback, setFeedback] = useState("");
+
+  async function handleSubscribe(e) {
+    e.preventDefault();
+    setStatus("submitting");
+    setFeedback("");
+    try {
+      await subscribeToNewsletter(email);
+      setStatus("success");
+      setFeedback("You're subscribed!");
+      setEmail("");
+    } catch (err) {
+      setStatus("error");
+      setFeedback(err.message || "Something went wrong. Please try again.");
+    }
+  }
+
   return (
     <footer>
       <div className="foot-inner">
-        <div className="news-row">
+        <div className="news-row" id="newsletter">
           <div>
             <div className="nr-t">JOIN THE COMMUNITY</div>
             <div className="nr-s">Get updates on events, competitions, and opportunities.</div>
+            {status !== "idle" && (
+              <div className={`nr-feedback ${status}`}>{feedback}</div>
+            )}
           </div>
-          <form
-            className="news-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              window.open("https://forms.gle/2sbFAdnC5oxf3q2t6", "_blank", "noopener");
-            }}
-          >
-            <input type="email" placeholder="your@email.com" required />
-            <button type="submit">Subscribe</button>
+          <form className="news-form" onSubmit={handleSubscribe}>
+            <input
+              type="email"
+              placeholder="your@email.com"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={status === "submitting"}
+            />
+            <button type="submit" disabled={status === "submitting"}>
+              {status === "submitting" ? "Subscribing…" : "Subscribe"}
+            </button>
           </form>
         </div>
 
@@ -561,7 +596,13 @@ export function Footer() {
             <div className="fcol">
               <div className="fc-t">CONNECT</div>
               <a href="https://docs.google.com/forms/d/e/1FAIpQLSde2ldtrVXhxu5plBeN3wLRApQoZtVfj8l0FhG_rllde9MKyw/viewform" target="_blank" rel="noopener noreferrer">Slack</a>
-              <a href="https://forms.gle/2sbFAdnC5oxf3q2t6" target="_blank" rel="noopener noreferrer">Newsletter</a>
+              {/* Same fix as the subscribe form above (see Footer's
+                  handleSubscribe) — this used to point at the old
+                  standalone Google Form. Now scrolls to the real
+                  subscribe form in this same footer (#newsletter, added
+                  to .news-row above) instead of opening a form that
+                  doesn't feed the actual subscriber database. */}
+              <a href={`${import.meta.env.BASE_URL}#newsletter`}>Newsletter</a>
               <a href="mailto:aeeusc@gmail.com">Contact</a>
               <a href="https://forms.gle/vSFAnuKfpKV3GFfJ6" target="_blank" rel="noopener noreferrer">Get Involved</a>
             </div>

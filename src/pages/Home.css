@@ -289,10 +289,19 @@
 .news-row { display: flex; align-items: center; justify-content: space-between; gap: 32px; padding: 44px 0; border-bottom: 1px solid rgba(255,255,255,.07); flex-wrap: wrap; }
 .news-row .nr-t { font-size: 12px; font-weight: 600; letter-spacing: .26em; color: var(--white); }
 .news-row .nr-s { margin-top: 8px; font-size: 14px; color: var(--slate); }
+/* Feedback line under "Get updates on..." after a real subscribe attempt
+   (success or error) — see Footer's handleSubscribe in Home.jsx. Colors
+   match the success/error tokens already used elsewhere in the app
+   (Dashboard.jsx, NewsletterAdmin.jsx). */
+.nr-feedback { margin-top: 8px; font-size: 13px; }
+.nr-feedback.success { color: #4ADE80; }
+.nr-feedback.error { color: #F87171; }
 .news-form { display: flex; }
 .news-form input { width: 280px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.14); border-right: none; border-radius: 10px 0 0 10px; padding: 12px 16px; font-size: 14px; color: var(--white); outline: none; font-family: inherit; }
 .news-form input::placeholder { color: rgba(148,163,184,.6); }
+.news-form input:disabled { opacity: .6; }
 .news-form button { background: var(--white); color: var(--navy-950); border: none; border-radius: 0 10px 10px 0; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.news-form button:disabled { opacity: .6; cursor: default; }
 .foot-main { display: flex; justify-content: space-between; gap: 60px; padding: 52px 0 60px; flex-wrap: wrap; }
 .foot-brand { max-width: 320px; }
 .foot-brand .fb-logo { display: flex; align-items: center; gap: 10px; }
