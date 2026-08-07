@@ -19,6 +19,10 @@
 // visual design.
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+// No THREE.js/SVGLoader imports here — the interactive atom sphere and
+// the whole About section moved to their own page (About.jsx) when About
+// was split out into the /about route. Home.jsx doesn't render any of
+// that anymore.
 import "./Home.css";
 
 // vite.config.js sets `base: '/aee-website/'` (needed so GitHub Pages,

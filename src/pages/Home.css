@@ -33,9 +33,18 @@
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 100;
-  display: flex;
+  /* A real 3-column grid, not flex + absolute positioning. The old
+     approach centered .nav-links with position:absolute so it could stay
+     visually dead-center — but that also took it out of the layout
+     entirely, so the browser had no idea it needed to leave room for
+     .nav-ctas on the right. As the window narrowed, "Board" and "Contact"
+     would drift into each other with nothing preventing it. Equal 1fr
+     side columns keep the center column genuinely centered while making
+     collision structurally impossible: grid columns never share space. */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
+  column-gap: 16px;
   padding: 0 40px;
   height: 84px;
   transition: background .35s ease, height .35s ease;
@@ -47,18 +56,18 @@
   height: 68px;
   border-bottom: 1px solid rgba(255, 255, 255, .06);
 }
-.wordmark { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--white); }
-.wordmark img { height: 34px; width: auto; display: block; }
+.wordmark { grid-column: 1; justify-self: start; display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--white); min-width: 0; }
+.wordmark img { height: 34px; width: auto; display: block; flex-shrink: 0; }
 .wordmark .aee { font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -.02em; }
-.wordmark .atusc { font-size: 14px; font-weight: 500; color: var(--slate); }
+.wordmark .atusc { font-size: 14px; font-weight: 500; color: var(--slate); white-space: nowrap; }
 
-.nav-links { position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 44px; }
+.nav-links { grid-column: 2; justify-self: center; display: flex; gap: 44px; white-space: nowrap; }
 .nav-links a { color: rgba(255, 255, 255, .92); text-decoration: none; font-size: 15px; font-weight: 500; transition: opacity .2s; background: none; border: none; cursor: pointer; font-family: inherit; }
 .nav-links a:hover { opacity: .65; }
 .nav-links a .caret { font-size: 10px; opacity: .55; margin-left: 4px; }
 
-.nav-ctas { display: flex; align-items: center; gap: 22px; }
-.nav-ctas .contact { color: rgba(255, 255, 255, .85); text-decoration: none; font-size: 15px; font-weight: 500; }
+.nav-ctas { grid-column: 3; justify-self: end; display: flex; align-items: center; gap: 22px; min-width: 0; }
+.nav-ctas .contact { color: rgba(255, 255, 255, .85); text-decoration: none; font-size: 15px; font-weight: 500; white-space: nowrap; }
 .nav-ctas .contact:hover { color: var(--white); }
 
 .pill { background: var(--white); color: var(--navy-950); border-radius: 999px; padding: 11px 22px; font-size: 14px; font-weight: 600; text-decoration: none; transition: transform .2s, box-shadow .2s; display: inline-block; border: none; cursor: pointer; font-family: inherit; }
@@ -76,10 +85,19 @@
   width: 40px;
   height: 40px;
   background: transparent;
-  border: none;
+  /* Transparent (not `none`) so the box already occupies its final size at
+     rest — the hover state below only changes this border's *color*, never
+     its width, so the outline fades in in place instead of the button
+     resizing/jumping when the border "appears". */
+  border: 1px solid transparent;
+  border-radius: 8px;
   cursor: pointer;
   z-index: 110;
   padding: 0;
+  transition: border-color .25s ease;
+}
+.hamburger:hover {
+  border-color: rgba(255, 255, 255, .55);
 }
 .hamburger span {
   display: block;
@@ -122,8 +140,19 @@
   font-size: 26px;
   font-weight: 600;
   background: none;
-  border: none;
   cursor: pointer;
+  /* Same outline-fade-in treatment as .hamburger above: the border is
+     reserved at full width but transparent at rest, and padding gives it
+     room to sit around the text instead of touching the letters, so
+     hovering only ever changes a color — never the box's size/position. */
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 10px 22px;
+  transition: border-color .25s ease;
+}
+.mobile-menu a:hover,
+.mobile-menu button:hover {
+  border-color: rgba(255, 255, 255, .55);
 }
 
 /* ---------- HERO ---------- */
@@ -147,7 +176,7 @@
 @keyframes bob { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 6px); } }
 
 /* ---------- ABOUT ---------- */
-.about { position: relative; padding: 150px 24px 110px; text-align: center; background: linear-gradient(180deg, var(--navy-950) 0%, #0C1224 60%, var(--navy-950) 100%); }
+.about { position: relative; padding: 150px 24px 32px; text-align: center; background: linear-gradient(180deg, var(--navy-950) 0%, #0C1224 60%, var(--navy-950) 100%); }
 .label { font-size: 12px; font-weight: 600; letter-spacing: .34em; color: var(--slate); }
 .statement { font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(36px, 3.9vw, 54px); line-height: 1.16; letter-spacing: -.015em; color: var(--white); max-width: 880px; margin: 30px auto 0; }
 .statement .w { display: inline-block; opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
@@ -158,16 +187,24 @@
 .stat:hover { border-color: rgba(255,255,255,.42); transform: translateY(-3px); }
 .stat .num { font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 54px; letter-spacing: -.02em; line-height: 1; }
 .stat .cap { margin-top: 12px; font-size: 15px; line-height: 1.45; color: var(--slate); }
-.orb-wrap { margin-top: 84px; display: flex; flex-direction: column; align-items: center; gap: 26px; }
-/* Container for the interactive Three.js atom (see AtomCanvas in Home.jsx).
-   Sized like the mock's old flat .sphere placeholder so the About section's
-   layout/spacing is unchanged — this just replaces what renders inside it. */
-.atom-canvas { width: min(550px, 85vw); aspect-ratio: 1; cursor: grab; }
+.orb-wrap { margin-top: 64px; display: flex; flex-direction: column; align-items: center; gap: 26px; }
+/* Container for the interactive Three.js atom. AtomCanvas itself now
+   lives in About.jsx (the About section moved to its own /about route),
+   but this class is still defined here in Home.css because About.jsx
+   imports Home.css directly and reuses it, rather than duplicating
+   these rules.
+   Sized up from the mock's old flat .sphere placeholder (360px/60vw) —
+   this is now a real interactive feature, not a small decorative graphic,
+   so it should read as a centerpiece rather than leaving a lot of empty
+   space around it. The camera/lighting in AtomCanvas already read the
+   container's actual size at mount and on resize, so this is a pure CSS
+   change — the whole scene scales up proportionally with the container. */
+.atom-canvas { width: min(600px, 80vw); aspect-ratio: 1; cursor: grab; }
 .atom-canvas:active { cursor: grabbing; }
 .about-note { font-size: 12px; color: rgba(148,163,184,.5); }
 
 /* ---------- CONNECTIONS ---------- */
-.connections { padding: 96px 0 84px; text-align: center; overflow: hidden; }
+.connections { padding: 32px 0 84px; text-align: center; overflow: hidden; }
 .marquee {
   margin-top: 56px; position: relative; overflow: hidden;
   -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
@@ -267,11 +304,21 @@
 .legal .legal-links a { font-size: 12px; color: rgba(148,163,184,.55); text-decoration: none; }
 .legal .legal-links a:hover { color: var(--slate-light); }
 
-@media (max-width: 900px) {
+/* Nav switches to the hamburger menu at a wider breakpoint (1100px) than
+   the rest of the mobile layout (900px, below). The full desktop nav —
+   logo, 3 center links, Contact + 2 pill buttons — genuinely needs close
+   to 900px of width just to fit without crowding, so keeping the switch
+   at exactly 900px left almost no breathing room right at the threshold.
+   Widening it means the hamburger takes over well before things get
+   tight, rather than right at the edge where it was cramped. */
+@media (max-width: 1100px) {
   .nav-links { display: none; }
   .nav-ctas { display: none; }
   .hamburger { display: flex; }
-  .home-page nav.site-nav { padding: 0 20px; }
+  .home-page nav.site-nav { padding: 0 20px; grid-template-columns: 1fr auto; }
+}
+
+@media (max-width: 900px) {
   .stats { gap: 16px; }
   .stat { width: min(280px, 86vw); }
   .foot-main { flex-direction: column; }

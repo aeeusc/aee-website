@@ -27,10 +27,14 @@ import "./Home.css";
 // both copies.
 const asset = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;
 
+// Title Case, matching a wording update made directly on the live site
+// (independently of this file, since About.jsx isn't in that history) —
+// synced here during the main/origin merge on 2026-08-07 so both stay
+// consistent.
 const STATS = [
-  { count: 90, suffix: "+", label: "active members" },
-  { count: 3, suffix: "", label: <>nationally competing design&nbsp;teams</> },
-  { count: 9, suffix: "", label: "policy consortium organizations" },
+  { count: 90, suffix: "+", label: "Active Members" },
+  { count: 3, suffix: "", label: <>Nationally Competing Design&nbsp;Teams</> },
+  { count: 9, suffix: "", label: "Policy Consortium Organizations" },
 ];
 
 const STATEMENT = "We put student engineers at the center of the energy transition.";
