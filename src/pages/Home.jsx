@@ -319,6 +319,7 @@ function Board() {
   const [active, setActive] = useState(0);
   const [infoVisible, setInfoVisible] = useState(true);
   const stageRef = useRef(null);
+  const hitzoneRef = useRef(null);
   const N = BOARD.length;
 
   function goTo(i) {
@@ -344,22 +345,42 @@ function Board() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
-  // Mouse-wheel / trackpad scroll advances the carousel one card at a
-  // time, same direction as ArrowRight/ArrowLeft above. Two things this
-  // needs that a naive "one wheel event = one card" mapping wouldn't get
-  // right:
+  // Mouse-wheel / trackpad scroll advances the carousel, same direction as
+  // ArrowRight/ArrowLeft above. Several things this needs that a naive
+  // "one wheel event = one card" mapping wouldn't get right:
   //
-  // 1. preventDefault() — without it, scrolling over the cards would also
-  //    scroll the whole page underneath them, which fights the carousel
-  //    and feels broken. Only called while the cursor is actually over
-  //    the stage (the listener is attached to stageRef, not window), so
-  //    the rest of the page scrolls normally everywhere else.
+  // 1. Only react while the cursor is horizontally over the center
+  //    "hitzone" — a narrower region than the full .cf-stage width (see
+  //    .cf-hitzone's CSS for its width). The stage spans the whole
+  //    section including empty space on either side of the visible card
+  //    cluster; if the carousel captured wheel events across all of that,
+  //    the page couldn't be scrolled normally anywhere near the board,
+  //    even far from the actual cards (the "red zone" problem). The
+  //    listener is attached to the whole stage (stageRef) rather than a
+  //    literal overlay div, because an overlay div positioned in front of
+  //    the cards (needed for it to reliably receive the wheel event
+  //    instead of the topmost card underneath it) would also swallow
+  //    clicks on the cards/arrows. Reading e.clientX and comparing
+  //    against the hitzone element's live bounding rect gets the same
+  //    "only the center zone reacts" behavior via plain geometry, with no
+  //    stacking-order conflict — .cf-hitzone stays purely a visual/CSS
+  //    reference (see the div in the JSX below) for what that zone is,
+  //    not an event target itself. preventDefault() is likewise only
+  //    called inside that zone, so outside it the page scrolls exactly
+  //    like normal.
   //
-  // 2. A cooldown between card changes — a single physical scroll gesture
+  // 2. Speed-scaled step size — a fast/hard scroll (flicking a trackpad,
+  //    spinning a mouse wheel quickly) sends much larger deltaY values per
+  //    event than a slow, deliberate scroll. Mapping delta magnitude to
+  //    step count (via STEP_THRESHOLD below) means scrolling faster jumps
+  //    through more cards per gesture instead of always moving exactly
+  //    one, which is what people expect from a fast flick.
+  //
+  // 3. A cooldown between card changes — a single physical scroll gesture
   //    (especially on a trackpad) fires many wheel events in quick
   //    succession with small deltas each. Reacting to every one of those
-  //    individually would fly through several cards per swipe instead of
-  //    landing one card at a time the way a deliberate scroll should.
+  //    individually would fly through several cards per swipe on top of
+  //    the speed-scaled step above, compounding into way too much motion.
   //    isWheelingRef blocks new wheel-triggered navigation until the
   //    current card's transform transition has actually finished —
   //    .cf-card's transition is .55s (see Home.css), so this waits 550ms,
@@ -367,11 +388,28 @@ function Board() {
   //    the previous one settles rather than interrupting it mid-animation
   //    (which is what a shorter, guessed cooldown would do).
   const isWheelingRef = useRef(false);
+  const activeRef = useRef(active);
+  activeRef.current = active;
   useEffect(() => {
     const stage = stageRef.current;
-    if (!stage) return;
+    const hitzone = hitzoneRef.current;
+    if (!stage || !hitzone) return;
+
+    // Delta magnitude (in wheel-event units, typically ~53-120+ per
+    // "notch" depending on device) needed to advance one additional card
+    // beyond the first. E.g. a delta of 300 with STEP_THRESHOLD=120 steps
+    // 1 + floor(300/120) = 3 cards. Tuned so an ordinary slow scroll
+    // (small deltas) still moves exactly one card, while a hard flick
+    // (large deltas) moves several.
+    const STEP_THRESHOLD = 120;
+    const MAX_STEP = 5; // cap so an extreme flick can't lap the whole board
 
     function onWheel(e) {
+      const zoneRect = hitzone.getBoundingClientRect();
+      if (e.clientX < zoneRect.left || e.clientX > zoneRect.right) {
+        return; // cursor is over the sides — let the page scroll normally
+      }
+
       e.preventDefault();
       if (isWheelingRef.current) return;
 
@@ -381,17 +419,20 @@ function Board() {
       // horizontal trackpad swipe and a vertical mouse-wheel scroll being
       // treated inconsistently.
       const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-      if (Math.abs(delta) < 4) return; // ignore near-zero noise events
+      const magnitude = Math.abs(delta);
+      if (magnitude < 4) return; // ignore near-zero noise events
+
+      const step = Math.min(MAX_STEP, 1 + Math.floor(magnitude / STEP_THRESHOLD));
 
       isWheelingRef.current = true;
-      goTo(active + (delta > 0 ? 1 : -1));
+      goTo(activeRef.current + (delta > 0 ? step : -step));
       setTimeout(() => { isWheelingRef.current = false; }, 550);
     }
 
     stage.addEventListener("wheel", onWheel, { passive: false });
     return () => stage.removeEventListener("wheel", onWheel);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active]);
+  }, []);
 
   const current = BOARD[active];
 
@@ -399,6 +440,17 @@ function Board() {
     <section className="board" id="board">
       <div className="label">BOARD</div>
       <div className="cf-stage" ref={stageRef}>
+        {/* Defines the center "hitzone" that the wheel listener (see the
+            comment above, attached to the whole stage) checks the cursor
+            against — scrolling inside this zone's horizontal bounds
+            drives the carousel, scrolling outside it (the empty space on
+            either side of the visible card cluster) scrolls the page
+            normally. This div is NOT itself a wheel-event target (it has
+            pointer-events: none in CSS) — it exists only so the listener
+            can read its live getBoundingClientRect() as the zone
+            boundary, and is invisible (no fill) since it's not meant to
+            be seen, just measured. */}
+        <div className="cf-hitzone" ref={hitzoneRef} />
         <div className="cf-arrow left" onClick={() => goTo(active - 1)} role="button" aria-label="Previous">‹</div>
         <div className="cf-arrow right" onClick={() => goTo(active + 1)} role="button" aria-label="Next">›</div>
         {BOARD.map((m, j) => {
@@ -518,6 +570,14 @@ export function Footer() {
 
         <div className="legal">
           <div className="copy">© 2026 AEE at USC. All rights reserved.</div>
+          {/* .legal-links CSS already existed in Home.css from an earlier
+              pass but was never actually rendered here — added now
+              alongside the Privacy/Terms pages themselves (see
+              Legal.jsx / App.jsx). */}
+          <div className="legal-links">
+            <Link to="/privacy">Privacy Policy</Link>
+            <Link to="/terms">Terms &amp; Conditions</Link>
+          </div>
         </div>
       </div>
     </footer>

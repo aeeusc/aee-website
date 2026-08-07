@@ -5,6 +5,7 @@ import Login from './pages/Login'
 import CreateUser from './pages/CreateUser'
 import Dashboard from './pages/Dashboard'
 import NewsletterAdmin from './pages/NewsletterAdmin'
+import Legal from './pages/Legal'
 import NotFound from './pages/NotFound'
 import './App.css'
 
@@ -26,6 +27,8 @@ function App() {
         <Route path="/create-user" element={<CreateUser />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/newsletter-admin" element={<NewsletterAdmin />} />
+        <Route path="/privacy" element={<Legal kind="privacy" />} />
+        <Route path="/terms" element={<Legal kind="terms" />} />
         {/* Catch-all — anything that doesn't match a route above (like
             the now-removed /signup) gets a real 404 page instead of
             silently rendering blank. Must stay LAST; React Router

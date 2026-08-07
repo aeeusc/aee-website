@@ -253,6 +253,16 @@
 /* ---------- BOARD ---------- */
 .board { padding: 96px 24px 120px; text-align: center; overflow: hidden; background: linear-gradient(180deg, var(--navy-950) 0%, #0C1224 55%, var(--navy-950) 100%); }
 .cf-stage { position: relative; height: 430px; margin-top: 58px; perspective: 1300px; }
+/* Marks the center wheel-scroll zone's horizontal bounds — see the
+   wheel-listener comment in Home.jsx for how this is used (measured via
+   getBoundingClientRect, not an event target itself). Roughly matches the
+   width of the visible card cluster (a handful of ~290px cards plus their
+   fanned offsets), not the full .cf-stage width, so scrolling in the
+   empty space on either side of the board (outside this zone) scrolls
+   the page normally instead of getting captured by the carousel.
+   pointer-events: none means it never intercepts clicks or wheel events
+   itself — it's purely a geometry reference. */
+.cf-hitzone { position: absolute; top: 0; left: 50%; width: 900px; max-width: 90%; height: 100%; transform: translateX(-50%); pointer-events: none; }
 .cf-card {
   position: absolute; top: 0; left: 50%; width: 290px; height: 400px; margin-left: -145px; border-radius: 18px;
   overflow: hidden; border: 1px solid rgba(255,255,255,.14); background: #0C1224; cursor: pointer;
