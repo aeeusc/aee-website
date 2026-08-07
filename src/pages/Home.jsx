@@ -2,9 +2,15 @@
 //
 // The real homepage, ported section-by-section from aee_homepage_mock_3.html
 // into working React. Every interactive behavior from the mock (nav scroll
-// shadow, word-by-word About reveal, stat count-up, logo marquee loop,
-// Design Teams accordion, Board 3D coverflow carousel) is reimplemented
-// here with React state/hooks instead of the mock's vanilla DOM scripting.
+// shadow, logo marquee loop, Design Teams accordion, Board 3D coverflow
+// carousel) is reimplemented here with React state/hooks instead of the
+// mock's vanilla DOM scripting.
+//
+// The About section (word-by-word reveal, stat count-up, interactive
+// Three.js sphere) used to live here as an in-page anchor-scrolled
+// section but now has its own route — see About.jsx. Nav and Footer are
+// exported from this file so About.jsx (and any future standalone page)
+// can reuse the exact same header/footer instead of duplicating them.
 //
 // One addition beyond the mock: a hamburger + fullscreen mobile menu.
 // The mock only ever targeted desktop (it just hides .nav-links under
@@ -13,9 +19,6 @@
 // visual design.
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import "./Home.css";
 
 // vite.config.js sets `base: '/aee-website/'` (needed so GitHub Pages,
@@ -30,10 +33,25 @@ const asset = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;
 
 // ─── Data ─────────────────────────────────────────────────────────────────
 
+// "About" is a real route (its own page, like /login and /signup) rather
+// than an in-page anchor, so it carries `route` instead of `href` — Nav
+// below renders anything with `route` as a React Router <Link> and
+// everything else as a same-page `<a href="#...">` anchor, same split
+// the CTAs already use for "Log In" vs "Get Involved".
+//
+// "Design Teams" and "Board" still point at in-page anchors, but now that
+// About.jsx (and Login/Signup) exist as separate pages, those anchors
+// need to resolve to the *homepage's* #teams/#board — not "the current
+// page's #teams", which is what a bare "#teams" href means to a browser.
+// Prefixing with BASE_URL (site root, e.g. "/" — see asset() above for
+// why this can't be hardcoded) makes the link absolute, so clicking
+// "Design Teams" from /about correctly navigates back to the homepage
+// and lands on that section, instead of just appending "#teams" onto
+// whatever page you were already on.
 const NAV_LINKS = [
-  { label: "About", href: "#about" },
-  { label: "Design Teams", href: "#teams", caret: true },
-  { label: "Board", href: "#board" },
+  { label: "About", route: "/about" },
+  { label: "Design Teams", href: `${import.meta.env.BASE_URL}#teams`, caret: true },
+  { label: "Board", href: `${import.meta.env.BASE_URL}#board` },
 ];
 
 const PARTNERS = [
@@ -96,152 +114,12 @@ const BOARD = [
   { n: "Daniela Lopez Escalante", r: "Asst. Director of Brand", img: asset("/eboard/daniela.jpg"), li: "https://www.linkedin.com/in/daniela-lopez-escalante-839a4038a/" },
 ];
 
-const STATS = [
-  { count: 90, suffix: "+", label: "active members" },
-  { count: 3, suffix: "", label: <>nationally competing design&nbsp;teams</> },
-  { count: 9, suffix: "", label: "policy consortium organizations" },
-];
-
-const STATEMENT = "We put student engineers at the center of the energy transition.";
-
-// ─── Interactive Three.js atom (About section) ─────────────────────────────
-//
-// Ported from the pre-rebuild Home.jsx. Renders a rotating "atom" made of
-// three glowing torus rings plus a bolt icon (extruded from bolt_v2.svg)
-// at the center, with drag-to-orbit camera controls. This replaces the
-// mock's flat static SVG sphere with the site's original interactive
-// centerpiece.
-function AtomCanvas() {
-  const mountRef = useRef(null);
-
-  useEffect(() => {
-    const mount = mountRef.current;
-    const W = mount.clientWidth;
-    const H = mount.clientHeight;
-
-    const scene = new THREE.Scene();
-    scene.background = null;
-
-    const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 1000);
-    camera.position.set(0, 0, 25);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(W, H);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    mount.appendChild(renderer.domElement);
-
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.enableZoom = false;
-    controls.enablePan = false;
-    controls.target.set(0, 0, 0);
-    controls.update();
-
-    scene.add(new THREE.AmbientLight(0xffffff, 1));
-    const dir = new THREE.DirectionalLight(0xffffff, 1.5);
-    dir.position.set(5, 10, 7);
-    scene.add(dir);
-
-    const atomGroup = new THREE.Group();
-    atomGroup.position.set(0, -2, 0);
-    scene.add(atomGroup);
-
-    const ringMat = new THREE.MeshStandardMaterial({
-      color: 0x3C596F,
-      emissive: new THREE.Color(0x1a3f7a),
-      emissiveIntensity: 1.2,
-      roughness: 0.2,
-      metalness: 0.0,
-      transparent: true,
-      opacity: 0.6,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-
-    [[0, 0], [Math.PI / 3, 0], [0, Math.PI / 3]].forEach(([rx, ry]) => {
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(4, 0.15, 32, 100), ringMat);
-      ring.rotation.x = rx;
-      ring.rotation.y = ry;
-      atomGroup.add(ring);
-    });
-
-    const boltStatic = new THREE.Group();
-    boltStatic.position.set(0, -2, 0);
-    scene.add(boltStatic);
-
-    const loader = new SVGLoader();
-    loader.load(
-      asset("/bolt_v2.svg"),
-      (data) => {
-        const boltGroup = new THREE.Group();
-        const mat = new THREE.MeshStandardMaterial({
-          color: 0x47668A,
-          emissive: new THREE.Color(0x47668A),
-          emissiveIntensity: 1.0,
-          transparent: true,
-          opacity: 0.5,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
-          side: THREE.DoubleSide,
-          roughness: 0.2,
-          metalness: 0.0,
-        });
-        for (const path of data.paths) {
-          for (const shape of SVGLoader.createShapes(path)) {
-            const geom = new THREE.ExtrudeGeometry(shape, {
-              depth: 10,
-              bevelEnabled: false,
-              curveSegments: 24,
-            });
-            geom.center();
-            boltGroup.add(new THREE.Mesh(geom, mat));
-          }
-        }
-        boltGroup.rotation.x = Math.PI;
-        boltGroup.scale.setScalar(0.035);
-        boltGroup.position.set(0, 0, 0);
-        boltStatic.add(boltGroup);
-      },
-      undefined,
-      (e) => console.error("SVG load error:", e)
-    );
-
-    atomGroup.rotation.y = 0.2;
-    atomGroup.rotation.x = 0.1;
-
-    let animId;
-    function animate() {
-      animId = requestAnimationFrame(animate);
-      atomGroup.rotation.y += 0.008;
-      controls.update();
-      renderer.render(scene, camera);
-    }
-    animate();
-
-    function onResize() {
-      const w = mount.clientWidth;
-      const h = mount.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    }
-    window.addEventListener("resize", onResize);
-
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("resize", onResize);
-      controls.dispose();
-      renderer.dispose();
-      if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
-    };
-  }, []);
-
-  return <div ref={mountRef} style={{ width: "100%", height: "100%" }} />;
-}
-
 // ─── Nav + mobile menu ──────────────────────────────────────────────────────
 
-function Nav() {
+// Exported (not just used locally) so About.jsx can reuse the exact same
+// header — the new /about page should look like part of the same site,
+// not a bolted-on page with its own separately-maintained nav markup.
+export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -264,19 +142,26 @@ function Nav() {
   return (
     <>
       <nav className={`site-nav${scrolled ? " scrolled" : ""}`}>
-        <a className="wordmark" href="#">
+        <Link className="wordmark" to="/">
           <img src={asset("/logo.svg")} alt="AEE logo" />
           <span className="aee">AEE</span>
           <span className="atusc">at USC</span>
-        </a>
+        </Link>
 
         <div className="nav-links">
-          {NAV_LINKS.map(({ label, href, caret }) => (
-            <a key={label} href={href}>
-              {label}
-              {caret && <span className="caret">▾</span>}
-            </a>
-          ))}
+          {NAV_LINKS.map(({ label, href, route, caret }) =>
+            route ? (
+              <Link key={label} to={route}>
+                {label}
+                {caret && <span className="caret">▾</span>}
+              </Link>
+            ) : (
+              <a key={label} href={href}>
+                {label}
+                {caret && <span className="caret">▾</span>}
+              </a>
+            )
+          )}
         </div>
 
         <div className="nav-ctas">
@@ -298,11 +183,17 @@ function Nav() {
       </nav>
 
       <div className={`mobile-menu${menuOpen ? " open" : ""}`}>
-        {NAV_LINKS.map(({ label, href }) => (
-          <a key={label} href={href} onClick={() => setMenuOpen(false)}>
-            {label}
-          </a>
-        ))}
+        {NAV_LINKS.map(({ label, href, route }) =>
+          route ? (
+            <Link key={label} to={route} onClick={() => setMenuOpen(false)}>
+              {label}
+            </Link>
+          ) : (
+            <a key={label} href={href} onClick={() => setMenuOpen(false)}>
+              {label}
+            </a>
+          )
+        )}
         <Link to="/login" onClick={() => setMenuOpen(false)}>Log In</Link>
         <a href="https://forms.gle/vSFAnuKfpKV3GFfJ6" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>
           Get Involved
@@ -337,99 +228,6 @@ function Hero() {
         </div>
       </div>
       <div className="scroll-hint">SCROLL</div>
-    </section>
-  );
-}
-
-// ─── About (word reveal + stat count-up) ───────────────────────────────────
-
-function StatementReveal({ text }) {
-  const ref = useRef(null);
-  const [on, setOn] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { if (e.isIntersecting) setOn(true); }),
-      { threshold: 0.4 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  const words = text.split(" ");
-
-  return (
-    <div ref={ref} className={`statement${on ? " on" : ""}`}>
-      {words.map((word, i) => (
-        <span key={i}>
-          <span className="w" style={{ transitionDelay: `${i * 55}ms` }}>{word}</span>
-          {i < words.length - 1 ? " " : ""}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function StatCounter({ count, suffix, label }) {
-  const ref = useRef(null);
-  const [display, setDisplay] = useState(0);
-  const startedRef = useRef(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const ease = (t) => 1 - Math.pow(1 - t, 3);
-    const observer = new IntersectionObserver(
-      (entries) => entries.forEach((e) => {
-        if (e.isIntersecting && !startedRef.current) {
-          startedRef.current = true;
-          const t0 = performance.now();
-          const dur = 1400;
-          const tick = (now) => {
-            const p = Math.min(1, (now - t0) / dur);
-            setDisplay(Math.round(ease(p) * count));
-            if (p < 1) requestAnimationFrame(tick);
-          };
-          requestAnimationFrame(tick);
-        }
-      }),
-      { threshold: 0.5 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [count]);
-
-  return (
-    <div className="stat">
-      <div ref={ref} className="num">{display}{suffix}</div>
-      <div className="cap">{label}</div>
-    </div>
-  );
-}
-
-function About() {
-  return (
-    <section className="about" id="about">
-      <div className="label">ABOUT</div>
-      <StatementReveal text={STATEMENT} />
-      <p className="about-body">
-        Entirely student-led in USC's Sonny Astani Department — leading initiatives in
-        sustainable design, policy, and professional development.
-      </p>
-
-      <div className="stats">
-        {STATS.map((s, i) => (
-          <StatCounter key={i} count={s.count} suffix={s.suffix} label={s.label} />
-        ))}
-      </div>
-
-      <div className="orb-wrap">
-        <div className="atom-canvas">
-          <AtomCanvas />
-        </div>
-      </div>
     </section>
   );
 }
@@ -516,6 +314,7 @@ function DesignTeams() {
 function Board() {
   const [active, setActive] = useState(0);
   const [infoVisible, setInfoVisible] = useState(true);
+  const stageRef = useRef(null);
   const N = BOARD.length;
 
   function goTo(i) {
@@ -541,12 +340,61 @@ function Board() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
+  // Mouse-wheel / trackpad scroll advances the carousel one card at a
+  // time, same direction as ArrowRight/ArrowLeft above. Two things this
+  // needs that a naive "one wheel event = one card" mapping wouldn't get
+  // right:
+  //
+  // 1. preventDefault() — without it, scrolling over the cards would also
+  //    scroll the whole page underneath them, which fights the carousel
+  //    and feels broken. Only called while the cursor is actually over
+  //    the stage (the listener is attached to stageRef, not window), so
+  //    the rest of the page scrolls normally everywhere else.
+  //
+  // 2. A cooldown between card changes — a single physical scroll gesture
+  //    (especially on a trackpad) fires many wheel events in quick
+  //    succession with small deltas each. Reacting to every one of those
+  //    individually would fly through several cards per swipe instead of
+  //    landing one card at a time the way a deliberate scroll should.
+  //    isWheelingRef blocks new wheel-triggered navigation until the
+  //    current card's transform transition has actually finished —
+  //    .cf-card's transition is .55s (see Home.css), so this waits 550ms,
+  //    matched exactly to that so the next card change starts right as
+  //    the previous one settles rather than interrupting it mid-animation
+  //    (which is what a shorter, guessed cooldown would do).
+  const isWheelingRef = useRef(false);
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    function onWheel(e) {
+      e.preventDefault();
+      if (isWheelingRef.current) return;
+
+      // Trackpads commonly send both a dominant vertical (deltaY) and a
+      // smaller horizontal (deltaX) component even for a "straight up"
+      // scroll gesture; picking whichever axis moved more avoids a
+      // horizontal trackpad swipe and a vertical mouse-wheel scroll being
+      // treated inconsistently.
+      const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+      if (Math.abs(delta) < 4) return; // ignore near-zero noise events
+
+      isWheelingRef.current = true;
+      goTo(active + (delta > 0 ? 1 : -1));
+      setTimeout(() => { isWheelingRef.current = false; }, 550);
+    }
+
+    stage.addEventListener("wheel", onWheel, { passive: false });
+    return () => stage.removeEventListener("wheel", onWheel);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active]);
+
   const current = BOARD[active];
 
   return (
     <section className="board" id="board">
       <div className="label">BOARD</div>
-      <div className="cf-stage">
+      <div className="cf-stage" ref={stageRef}>
         <div className="cf-arrow left" onClick={() => goTo(active - 1)} role="button" aria-label="Previous">‹</div>
         <div className="cf-arrow right" onClick={() => goTo(active + 1)} role="button" aria-label="Next">›</div>
         {BOARD.map((m, j) => {
@@ -589,8 +437,9 @@ function Board() {
 }
 
 // ─── Footer ─────────────────────────────────────────────────────────────────
+// Exported for the same reason as Nav above — About.jsx reuses it.
 
-function Footer() {
+export function Footer() {
   return (
     <footer>
       <div className="foot-inner">
@@ -645,9 +494,13 @@ function Footer() {
           <div className="foot-cols">
             <div className="fcol">
               <div className="fc-t">PAGES</div>
-              <a href="#about">About</a>
-              <a href="#teams">Design Teams</a>
-              <a href="#board">Board</a>
+              {/* Same fix as NAV_LINKS above: "About" is a real route, and
+                  Footer is shared across Home *and* About (and eventually
+                  other pages), so these links can't assume "the current
+                  page" the way a bare "#teams" href would. */}
+              <Link to="/about">About</Link>
+              <a href={`${import.meta.env.BASE_URL}#teams`}>Design Teams</a>
+              <a href={`${import.meta.env.BASE_URL}#board`}>Board</a>
             </div>
             <div className="fcol">
               <div className="fc-t">CONNECT</div>
@@ -674,7 +527,6 @@ export default function Home() {
     <div className="home-page">
       <Nav />
       <Hero />
-      <About />
       <Connections />
       <DesignTeams />
       <Board />

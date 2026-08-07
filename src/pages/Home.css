@@ -162,7 +162,7 @@
 /* Container for the interactive Three.js atom (see AtomCanvas in Home.jsx).
    Sized like the mock's old flat .sphere placeholder so the About section's
    layout/spacing is unchanged — this just replaces what renders inside it. */
-.atom-canvas { width: min(360px, 60vw); aspect-ratio: 1; cursor: grab; }
+.atom-canvas { width: min(550px, 85vw); aspect-ratio: 1; cursor: grab; }
 .atom-canvas:active { cursor: grabbing; }
 .about-note { font-size: 12px; color: rgba(148,163,184,.5); }
 

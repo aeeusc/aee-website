@@ -11,7 +11,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../lib/api';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  // "identifier" rather than "email" — accounts are now admin-created
+  // (see CreateUser.jsx) and get a generated username; a person can log
+  // in with either that username or an email, if one is attached to
+  // their account. See routes/auth.js's /login and lib/api.js's login().
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState('idle'); // idle | submitting | error
   const [errorMessage, setErrorMessage] = useState('');
@@ -23,7 +27,7 @@ export default function Login() {
     setErrorMessage('');
 
     try {
-      await login(email, password);
+      await login(identifier, password);
       // Success — send them back to the homepage using React Router
       // navigation (not a full page reload).
       navigate('/');
@@ -45,14 +49,14 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <label style={styles.label}>
-            Email
+            Username or email
             <input
-              type="email"
+              type="text"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               style={styles.input}
-              placeholder="you@example.com"
+              placeholder="your.username"
             />
           </label>
 
@@ -80,10 +84,6 @@ export default function Login() {
             {status === 'submitting' ? 'Logging in…' : 'Log In'}
           </button>
         </form>
-
-        <p style={styles.footerText}>
-          Don't have an account? <Link to="/signup" style={styles.inlineLink}>Sign up</Link>
-        </p>
       </div>
     </div>
   );

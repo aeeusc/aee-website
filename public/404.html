@@ -3,10 +3,9 @@
   This file solves a specific GitHub Pages problem: GitHub Pages only
   knows about real files (like /index.html), not React Router's
   client-side routes. So if someone directly visits or refreshes
-  https://aeeusc.github.io/aee-website/login, GitHub Pages looks for a
-  real file at that path, doesn't find one, and serves this 404.html
-  file instead (GitHub Pages does this automatically for any unknown
-  path in a project site).
+  https://aeeusc.com/login, GitHub Pages looks for a real file at that
+  path, doesn't find one, and serves this 404.html file instead
+  (GitHub Pages does this automatically for any unknown path).
 
   Instead of showing a real error, this script redirects the browser
   back to index.html while preserving the intended path in the URL's
@@ -16,14 +15,24 @@
 
   This is the standard, widely-used workaround for SPA routing on
   GitHub Pages (originally popularized by the spa-github-pages project).
+
+  IMPORTANT — fixed 2026-08-07: pathSegmentsToKeep used to be 1, back
+  when the site lived at aeeusc.github.io/aee-website/ (a repo-name
+  subpath GitHub Pages adds for project sites). Now that the site is
+  hosted at aeeusc.com's root via a custom domain, there IS no repo-name
+  segment in the URL anymore — vite.config.js's base is '/', not
+  '/aee-website/'. Leaving this at 1 made the redirect math strip one
+  path segment too many, producing a malformed target URL that also
+  404'd, which redirected again, forever — that's the "?/signup/~and~/
+  ~and~/..." infinite-loop bug. 0 is correct for root-hosted sites.
 -->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>AEE at USC</title>
     <script>
-      // Redirect e.g. /aee-website/login -> /aee-website/?/login
-      var pathSegmentsToKeep = 1; // "aee-website" — the repo name segment GitHub Pages requires
+      // Redirect e.g. /login -> /?/login
+      var pathSegmentsToKeep = 0; // no repo-name segment — site is hosted at the domain root
       var l = window.location;
       l.replace(
         l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
