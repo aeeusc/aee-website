@@ -63,7 +63,7 @@ const PARTNERS = [
   { name: "Langan", logo: asset("/logos/langan.png"), href: "https://www.langan.com" },
   { name: "Arup", logo: asset("/logos/arup.png"), href: "https://www.arup.com" },
   { name: "Bloom Energy", logo: asset("/logos/bloomenergy.png"), href: "https://www.bloomenergy.com" },
-  { name: "CalWave", logo: asset("/logos/calwave.png"), href: "https://calwave.energy" },
+  { name: "CalWave", logo: asset("/logos/calwave.png"), href: "https://calwave.org" },
   { name: "Graymatter Robotics", logo: asset("/logos/graymatterrobotics.png"), href: "https://www.graymatter-robotics.com" },
   { name: "KPFF", logo: asset("/logos/kpff.png"), href: "https://www.kpff.com" },
   { name: "NREL", logo: asset("/logos/nrel.png"), href: "https://www.nrel.gov" },
@@ -370,40 +370,70 @@ function Board() {
   //    called inside that zone, so outside it the page scrolls exactly
   //    like normal.
   //
-  // 2. Speed-scaled step size — a fast/hard scroll (flicking a trackpad,
-  //    spinning a mouse wheel quickly) sends much larger deltaY values per
-  //    event than a slow, deliberate scroll. Mapping delta magnitude to
-  //    step count (via STEP_THRESHOLD below) means scrolling faster jumps
-  //    through more cards per gesture instead of always moving exactly
-  //    one, which is what people expect from a fast flick.
-  //
-  // 3. A cooldown between card changes — a single physical scroll gesture
-  //    (especially on a trackpad) fires many wheel events in quick
-  //    succession with small deltas each. Reacting to every one of those
-  //    individually would fly through several cards per swipe on top of
-  //    the speed-scaled step above, compounding into way too much motion.
-  //    isWheelingRef blocks new wheel-triggered navigation until the
-  //    current card's transform transition has actually finished —
-  //    .cf-card's transition is .55s (see Home.css), so this waits 550ms,
-  //    matched exactly to that so the next card change starts right as
-  //    the previous one settles rather than interrupting it mid-animation
-  //    (which is what a shorter, guessed cooldown would do).
-  const isWheelingRef = useRef(false);
+  // 2. Uncapped, uncooldown'd accumulation — every wheel event's delta
+  //    magnitude adds to a running pixel total (wheelAccumRef) instead of
+  //    being converted to a step and then thrown away. A queue drains
+  //    that total one card at a time on the same cadence as .cf-card's
+  //    .55s transition (see Home.css), but critically the accumulator
+  //    itself is NEVER blocked or reset while that drain is happening —
+  //    so scrolling five times in a row while cards are still animating
+  //    doesn't lose any of those five scrolls, it just means the queue
+  //    has more to work through. This replaced an earlier version that
+  //    capped how many cards a single scroll could jump (MAX_STEP) and
+  //    used a cooldown flag (isWheelingRef) that discarded any wheel
+  //    event arriving before the previous card change finished
+  //    animating — by design, at the time, to stop a single trackpad
+  //    flick's many small events from overshooting. The trade-off wasn't
+  //    wanted: scrolling multiple times back-to-back should always
+  //    advance by that many cards, with no ceiling and nothing silently
+  //    dropped, however many gestures that takes.
   const activeRef = useRef(active);
   activeRef.current = active;
+  const wheelAccumRef = useRef(0); // running pixel total not yet converted to card-steps
+  const drainingRef = useRef(false); // true while the queued steps are being walked through
   useEffect(() => {
     const stage = stageRef.current;
     const hitzone = hitzoneRef.current;
     if (!stage || !hitzone) return;
 
-    // Delta magnitude (in wheel-event units, typically ~53-120+ per
-    // "notch" depending on device) needed to advance one additional card
-    // beyond the first. E.g. a delta of 300 with STEP_THRESHOLD=120 steps
-    // 1 + floor(300/120) = 3 cards. Tuned so an ordinary slow scroll
-    // (small deltas) still moves exactly one card, while a hard flick
-    // (large deltas) moves several.
+    // Pixel distance (in wheel-event delta units) that equals one card
+    // step once accumulated. Same tuning as before: an ordinary slow
+    // scroll's small per-event deltas take a few events to cross this
+    // threshold (feels like "one notch = one card"), while a fast flick's
+    // large single-event delta can cross it several times over, queuing
+    // several card-steps from one gesture.
     const STEP_THRESHOLD = 120;
-    const MAX_STEP = 5; // cap so an extreme flick can't lap the whole board
+    // How long one card's transition takes — see .cf-card in Home.css.
+    // The drain loop waits this long between each queued step so every
+    // card actually gets to visually land before the next one starts,
+    // no matter how large the queue backed up behind it.
+    const STEP_INTERVAL_MS = 550;
+
+    // Walks through whatever's built up in wheelAccumRef, one card at a
+    // time, until the accumulator drops below one full step. Because
+    // this only runs one call at a time (drainingRef guards re-entry)
+    // but re-checks the accumulator after every step — rather than
+    // capturing a fixed step count up front — any wheel events that
+    // arrive WHILE it's draining just add to the total it's already
+    // working through, instead of being dropped or starting a
+    // conflicting second drain.
+    function drain() {
+      if (drainingRef.current) return;
+
+      function step() {
+        const magnitude = Math.abs(wheelAccumRef.current);
+        if (magnitude < STEP_THRESHOLD) {
+          drainingRef.current = false;
+          return;
+        }
+        drainingRef.current = true;
+        const direction = wheelAccumRef.current > 0 ? 1 : -1;
+        wheelAccumRef.current -= direction * STEP_THRESHOLD;
+        goTo(activeRef.current + direction);
+        setTimeout(step, STEP_INTERVAL_MS);
+      }
+      step();
+    }
 
     function onWheel(e) {
       const zoneRect = hitzone.getBoundingClientRect();
@@ -412,7 +442,6 @@ function Board() {
       }
 
       e.preventDefault();
-      if (isWheelingRef.current) return;
 
       // Trackpads commonly send both a dominant vertical (deltaY) and a
       // smaller horizontal (deltaX) component even for a "straight up"
@@ -420,14 +449,10 @@ function Board() {
       // horizontal trackpad swipe and a vertical mouse-wheel scroll being
       // treated inconsistently.
       const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-      const magnitude = Math.abs(delta);
-      if (magnitude < 4) return; // ignore near-zero noise events
+      if (Math.abs(delta) < 4) return; // ignore near-zero noise events
 
-      const step = Math.min(MAX_STEP, 1 + Math.floor(magnitude / STEP_THRESHOLD));
-
-      isWheelingRef.current = true;
-      goTo(activeRef.current + (delta > 0 ? step : -step));
-      setTimeout(() => { isWheelingRef.current = false; }, 550);
+      wheelAccumRef.current += delta;
+      drain();
     }
 
     stage.addEventListener("wheel", onWheel, { passive: false });
