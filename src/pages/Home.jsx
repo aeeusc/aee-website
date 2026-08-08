@@ -370,23 +370,36 @@ function Board() {
   //    called inside that zone, so outside it the page scrolls exactly
   //    like normal.
   //
-  // 2. Uncapped, uncooldown'd accumulation — every wheel event's delta
-  //    magnitude adds to a running pixel total (wheelAccumRef) instead of
-  //    being converted to a step and then thrown away. A queue drains
-  //    that total one card at a time on the same cadence as .cf-card's
-  //    .55s transition (see Home.css), but critically the accumulator
-  //    itself is NEVER blocked or reset while that drain is happening —
-  //    so scrolling five times in a row while cards are still animating
-  //    doesn't lose any of those five scrolls, it just means the queue
-  //    has more to work through. This replaced an earlier version that
-  //    capped how many cards a single scroll could jump (MAX_STEP) and
-  //    used a cooldown flag (isWheelingRef) that discarded any wheel
-  //    event arriving before the previous card change finished
-  //    animating — by design, at the time, to stop a single trackpad
-  //    flick's many small events from overshooting. The trade-off wasn't
-  //    wanted: scrolling multiple times back-to-back should always
-  //    advance by that many cards, with no ceiling and nothing silently
-  //    dropped, however many gestures that takes.
+  // 2. Uncapped, uncooldown'd accumulation that actually FLOWS — every
+  //    wheel event's delta magnitude adds to a running pixel total
+  //    (wheelAccumRef) instead of being converted to a step and thrown
+  //    away, and the drain loop (below) walks through however many steps
+  //    that adds up to on a fast, fixed cadence (STEP_INTERVAL_MS),
+  //    advancing as quickly as the accumulated input allows rather than
+  //    pausing to let each card's full .55s CSS transition (see .cf-card
+  //    in Home.css) finish before starting the next one.
+  //
+  //    That distinction matters and was the actual bug in an earlier
+  //    version of this: it correctly avoided dropping/capping scroll
+  //    input, but paced each queued step exactly 550ms apart — matched
+  //    1:1 to the CSS transition's duration — so a fast flick that queued
+  //    up 10 steps still played out as 10 separate stop-and-go beats,
+  //    ~550ms each, instead of feeling like one continuous motion through
+  //    the cards. The fix is to decouple "how fast we advance the active
+  //    index" from "how long one card's CSS transition takes to fully
+  //    settle": setActive can be called far more often than every 550ms,
+  //    and because CSS transitions restart smoothly from wherever an
+  //    element currently sits mid-flight (rather than snapping back to a
+  //    start position first), calling goTo() every ~90ms while there's
+  //    still accumulated input to work through makes the cards visually
+  //    blend through each other — actually flowing — instead of settling
+  //    completely between every single step. See the STEP_INTERVAL_MS
+  //    comment below for why there's no separate slower pace for the
+  //    final step either.
+  //
+  //    The accumulator itself still works the same as before: it's NEVER
+  //    blocked or reset while draining, so scrolling many times in a row
+  //    doesn't lose any of that input — see onWheel below.
   const activeRef = useRef(active);
   activeRef.current = active;
   const wheelAccumRef = useRef(0); // running pixel total not yet converted to card-steps
@@ -403,11 +416,36 @@ function Board() {
     // large single-event delta can cross it several times over, queuing
     // several card-steps from one gesture.
     const STEP_THRESHOLD = 120;
-    // How long one card's transition takes — see .cf-card in Home.css.
-    // The drain loop waits this long between each queued step so every
-    // card actually gets to visually land before the next one starts,
-    // no matter how large the queue backed up behind it.
-    const STEP_INTERVAL_MS = 550;
+    // How often the drain loop is allowed to advance to the next card
+    // while working through a backlog. Deliberately much shorter than
+    // .cf-card's .55s CSS transition (see Home.css) — the goal isn't to
+    // let every card fully settle before the next one starts, it's to
+    // keep calling goTo() often enough that the cards are always
+    // mid-transition, blending continuously into each other, which is
+    // what actually reads as "flowing" rather than "stepping." 90ms
+    // keeps consecutive steps comfortably faster than the eye registers
+    // as separate discrete stops, while still giving each setActive a
+    // moment to actually paint (going much lower, close to 0ms/rAF-only
+    // pacing, looked identical to jumping straight to the final card
+    // with no visible motion in between when tested).
+    //
+    // There's deliberately no separate "slow down for the last step"
+    // branch here (an earlier version of this tried that, timed to
+    // .cf-card's .55s transition) — it turned out to add nothing
+    // visible: the wait it introduced came AFTER the final goTo() call,
+    // so it only delayed drainingRef resetting to false, not anything
+    // on screen. The actual "lands smoothly instead of snapping" feel
+    // for the last card comes for free from the CSS transition itself
+    // (.cf-card's transition: transform .55s ...) — that plays out at
+    // its own full eased duration regardless of how quickly goTo() was
+    // called, since it's the browser animating toward wherever the
+    // element's transform target currently is. Keeping every step at the
+    // same fast STEP_INTERVAL_MS also fixed a small responsiveness bug
+    // the settle-wait version had: during that extra dead wait,
+    // drainingRef stayed true, so a new scroll arriving in that window
+    // would correctly still accumulate into wheelAccumRef but wouldn't
+    // resume being drained until the pending timeout finally fired.
+    const STEP_INTERVAL_MS = 90;
 
     // Walks through whatever's built up in wheelAccumRef, one card at a
     // time, until the accumulator drops below one full step. Because
