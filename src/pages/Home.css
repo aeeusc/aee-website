@@ -75,6 +75,38 @@
 .pill-ghost { background: transparent; color: var(--white); border: 1px solid rgba(255, 255, 255, .35); }
 .pill-ghost:hover { background: rgba(255, 255, 255, .08); box-shadow: none; }
 
+/* Logged-in nav state — replaces the "Log In" pill (see Nav in Home.jsx).
+   Two independent click targets side by side: a small round profile
+   icon (-> /profile) on the left, the person's first name (-> /portal)
+   on the right, matching the layout described for the feature ("profile
+   icon on the left of the login [replacement]... name... redirects to
+   the member portal").
+   .nav-firstname reuses .pill-ghost's exact look (white outline, same
+   radius/weight/hover) so swapping "Log In" for the person's name reads
+   as the SAME button with different text, not a different kind of
+   control — per explicit feedback 2026-08-08: "I don't want you to get
+   rid of this outline... I literally just want you to change the text."
+   Kept as its own class (rather than just applying "pill pill-ghost" in
+   JSX) so it can sit flush next to the avatar icon just to its left
+   without fighting that icon's own spacing. */
+.nav-account { display: flex; align-items: center; gap: 10px; }
+.nav-avatar { display: flex; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex-shrink: 0; transition: opacity .2s; }
+.nav-avatar:hover { opacity: .8; }
+.nav-firstname {
+  background: transparent;
+  color: var(--white);
+  border: 1px solid rgba(255, 255, 255, .35);
+  border-radius: 999px;
+  padding: 11px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  display: inline-block;
+  transition: background .2s, box-shadow .2s;
+}
+.nav-firstname:hover { background: rgba(255, 255, 255, .08); }
+
 /* hamburger (mobile only) */
 .hamburger {
   display: none;
