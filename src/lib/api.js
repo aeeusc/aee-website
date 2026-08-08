@@ -105,3 +105,61 @@ export function getSubscribers(password) {
     method: 'GET',
   });
 }
+
+// The member-facing "Newsletter" tab on the portal reads past sends via
+// this — session-gated (any logged-in member), unlike sendNewsletter/
+// getSubscribers above which require the separate shared admin password.
+export function getNewsletterArchive() {
+  return apiRequest('/newsletter/archive', { method: 'GET' });
+}
+
+// --- Member Portal: events (calendar) ---
+//
+// getEvents is for any logged-in member (everyone sees the same shared
+// list). createEvent/deleteEvent require an active admin session — same
+// requireAdmin check on the backend as createUser above.
+export function getEvents() {
+  return apiRequest('/portal/events', { method: 'GET' });
+}
+
+export function createEvent(title, description, eventAt) {
+  return apiRequest('/portal/events', {
+    method: 'POST',
+    body: JSON.stringify({ title, description: description || undefined, eventAt }),
+  });
+}
+
+export function deleteEvent(id) {
+  return apiRequest(`/portal/events/${id}`, { method: 'DELETE' });
+}
+
+// Minimal id/name list for the admin task-assignment dropdown — NOT the
+// full Members directory (that's still a placeholder on the portal).
+// See routes/portal.js's GET /assignable-members for what this returns.
+export function getAssignableMembers() {
+  return apiRequest('/portal/assignable-members', { method: 'GET' });
+}
+
+// --- Member Portal: tasks ---
+//
+// getMyTasks only ever returns the logged-in user's own tasks (enforced
+// server-side, not by anything passed from here). createTask is
+// admin-only. setTaskDone works for any logged-in member, but only on a
+// task actually assigned to them — see routes/portal.js's WHERE clause.
+export function getMyTasks() {
+  return apiRequest('/portal/tasks/mine', { method: 'GET' });
+}
+
+export function createTask(title, description, assignedTo) {
+  return apiRequest('/portal/tasks', {
+    method: 'POST',
+    body: JSON.stringify({ title, description: description || undefined, assignedTo }),
+  });
+}
+
+export function setTaskDone(id, isDone) {
+  return apiRequest(`/portal/tasks/${id}/done`, {
+    method: 'PUT',
+    body: JSON.stringify({ isDone }),
+  });
+}

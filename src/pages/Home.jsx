@@ -19,7 +19,7 @@
 // visual design.
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { subscribeToNewsletter } from "../lib/api";
+import { subscribeToNewsletter, getCurrentUser } from "../lib/api";
 // No THREE.js/SVGLoader imports here — the interactive atom sphere and
 // the whole About section moved to their own page (About.jsx) when About
 // was split out into the /about route. Home.jsx doesn't render any of
@@ -128,6 +128,31 @@ export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Logged-in state for the nav's login-pill-vs-profile swap (see the
+  // nav-ctas block below). null while the /auth/me check is in flight or
+  // the visitor isn't logged in — Nav renders the same "Log In" pill it
+  // always has in both of those cases, so a logged-out visitor sees no
+  // flash/flicker of anything auth-related. This check runs on every
+  // page that renders Nav (Home, About, and anywhere else that imports
+  // it) since it's a plain fetch — cheap enough not to need lifting to
+  // a shared top-level provider for a site this size.
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getCurrentUser()
+      .then((data) => {
+        if (!cancelled && data?.user) setCurrentUser(data.user);
+      })
+      .catch(() => {
+        // Not logged in, or the backend's unreachable — either way, the
+        // nav just shows the normal logged-out "Log In" pill. No error
+        // surfaced to the visitor for what's an entirely expected state
+        // (most visitors aren't logged in).
+      });
+    return () => { cancelled = true; };
+  }, []);
+
   useEffect(() => {
     function onScroll() {
       setScrolled(window.scrollY > 40);
@@ -171,7 +196,27 @@ export function Nav() {
 
         <div className="nav-ctas">
           <a className="contact" href="mailto:aeeusc@gmail.com">Contact</a>
-          <Link className="pill pill-ghost" to="/login">Log In</Link>
+          {currentUser ? (
+            // Logged in: the "Log In" pill is replaced entirely — a
+            // small placeholder profile icon (goes to /profile) sits to
+            // the LEFT of the person's first name (goes to /portal),
+            // per the explicit layout: "on the left side of the login
+            // is gonna have a little profile icon... click on that,
+            // I'll redirect to... their profile" while the name itself
+            // opens the Member Portal. Two separate click targets, not
+            // one combined button — clicking the icon and clicking the
+            // name go to two different places.
+            <div className="nav-account">
+              <Link to="/profile" className="nav-avatar" aria-label="Your profile">
+                <PlaceholderAvatar />
+              </Link>
+              <Link to="/portal" className="nav-firstname">
+                {currentUser.first_name || currentUser.username || "Account"}
+              </Link>
+            </div>
+          ) : (
+            <Link className="pill pill-ghost" to="/login">Log In</Link>
+          )}
           <a className="pill" href="https://forms.gle/vSFAnuKfpKV3GFfJ6" target="_blank" rel="noopener noreferrer">
             Get Involved
           </a>
@@ -199,12 +244,49 @@ export function Nav() {
             </a>
           )
         )}
-        <Link to="/login" onClick={() => setMenuOpen(false)}>Log In</Link>
+        {currentUser ? (
+          <>
+            <Link to="/portal" onClick={() => setMenuOpen(false)}>
+              {currentUser.first_name || currentUser.username || "Member Portal"}
+            </Link>
+            <Link to="/profile" onClick={() => setMenuOpen(false)}>Profile</Link>
+          </>
+        ) : (
+          <Link to="/login" onClick={() => setMenuOpen(false)}>Log In</Link>
+        )}
         <a href="https://forms.gle/vSFAnuKfpKV3GFfJ6" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>
           Get Involved
         </a>
       </div>
     </>
+  );
+}
+
+// Simple person-silhouette placeholder avatar — used in the nav's
+// logged-in state (see nav-avatar above) and reused on Profile.jsx (a
+// larger version) until real profile photo uploads exist. Plain inline
+// SVG rather than an image file so there's no extra asset to manage for
+// what's explicitly a temporary placeholder.
+export function PlaceholderAvatar({ size = 32 }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      className="placeholder-avatar"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="12" fill="rgba(255,255,255,.12)" />
+      <circle cx="12" cy="9.5" r="3.5" fill="rgba(255,255,255,.55)" />
+      <path
+        d="M4.5 20c1.2-3.6 4.2-5.5 7.5-5.5s6.3 1.9 7.5 5.5"
+        stroke="rgba(255,255,255,.55)"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        fill="none"
+      />
+    </svg>
   );
 }
 
@@ -559,7 +641,15 @@ function Board() {
 // ─── Footer ─────────────────────────────────────────────────────────────────
 // Exported for the same reason as Nav above — About.jsx reuses it.
 
-export function Footer() {
+// showNewsletterSignup: the Member Portal (Portal.jsx) reuses this same
+// Footer for consistency ("copy the bottom section, just without the
+// Join the Community thing" — since a logged-in member is either
+// already subscribed or can subscribe from the homepage; repeating the
+// signup pitch on a page you can only reach by already having an
+// account didn't make sense) but hides the newsletter-signup row.
+// Defaults to true so every existing call site (Home.jsx, About.jsx)
+// keeps behaving exactly as before with no changes needed there.
+export function Footer({ showNewsletterSignup = true }) {
   // Newsletter signup — actually calls the backend's /newsletter/subscribe
   // endpoint now (see src/lib/api.js's subscribeToNewsletter). This used
   // to just open the old standalone Google Form in a new tab, from before
@@ -591,28 +681,30 @@ export function Footer() {
   return (
     <footer>
       <div className="foot-inner">
-        <div className="news-row" id="newsletter">
-          <div>
-            <div className="nr-t">JOIN THE COMMUNITY</div>
-            <div className="nr-s">Get updates on events, competitions, and opportunities.</div>
-            {status !== "idle" && (
-              <div className={`nr-feedback ${status}`}>{feedback}</div>
-            )}
+        {showNewsletterSignup && (
+          <div className="news-row" id="newsletter">
+            <div>
+              <div className="nr-t">JOIN THE COMMUNITY</div>
+              <div className="nr-s">Get updates on events, competitions, and opportunities.</div>
+              {status !== "idle" && (
+                <div className={`nr-feedback ${status}`}>{feedback}</div>
+              )}
+            </div>
+            <form className="news-form" onSubmit={handleSubscribe}>
+              <input
+                type="email"
+                placeholder="your@email.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={status === "submitting"}
+              />
+              <button type="submit" disabled={status === "submitting"}>
+                {status === "submitting" ? "Subscribing…" : "Subscribe"}
+              </button>
+            </form>
           </div>
-          <form className="news-form" onSubmit={handleSubscribe}>
-            <input
-              type="email"
-              placeholder="your@email.com"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={status === "submitting"}
-            />
-            <button type="submit" disabled={status === "submitting"}>
-              {status === "submitting" ? "Subscribing…" : "Subscribe"}
-            </button>
-          </form>
-        </div>
+        )}
 
         <div className="foot-main">
           <div className="foot-brand">
