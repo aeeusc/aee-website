@@ -88,22 +88,21 @@ export function subscribeToNewsletter(email) {
   });
 }
 
-// The admin send/list endpoints below all take the shared admin
-// password as an argument rather than reading it from anywhere stored
-// client-side — nothing about it is persisted in the browser (no
-// localStorage, no cookie), so it has to be re-entered on the admin
-// page each time. See NewsletterAdmin.jsx.
-export function sendNewsletter(password, subject, message) {
+// As of 2026-08-08, sending/listing subscribers is gated by session-based
+// admin login (same as everything else in the portal) instead of a
+// shared password — the backend checks req.session, not anything passed
+// from here, so these just need an active admin session already
+// established via login(). See NewsletterAdmin.jsx / Portal.jsx's
+// NewsletterSend.
+export function sendNewsletter(subject, message) {
   return apiRequest('/newsletter/send', {
     method: 'POST',
-    body: JSON.stringify({ password, subject, message }),
+    body: JSON.stringify({ subject, message }),
   });
 }
 
-export function getSubscribers(password) {
-  return apiRequest(`/newsletter/subscribers?password=${encodeURIComponent(password)}`, {
-    method: 'GET',
-  });
+export function getSubscribers() {
+  return apiRequest('/newsletter/subscribers', { method: 'GET' });
 }
 
 // The member-facing "Newsletter" tab on the portal reads past sends via

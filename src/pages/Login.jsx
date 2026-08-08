@@ -17,6 +17,7 @@ export default function Login() {
   // their account. See routes/auth.js's /login and lib/api.js's login().
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState('idle'); // idle | submitting | error
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
@@ -62,14 +63,38 @@ export default function Login() {
 
           <label style={styles.label}>
             Password
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={styles.input}
-              placeholder="Your password"
-            />
+            <div style={styles.passwordWrap}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{ ...styles.input, ...styles.passwordInput }}
+                placeholder="Your password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                style={styles.eyeButton}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+              >
+                {showPassword ? (
+                  // Eye with a slash through it — password is currently visible
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M3 3l18 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                    <path d="M10.6 5.2A10.9 10.9 0 0112 5c5.5 0 9.5 4 11 7-.6 1.2-1.6 2.6-3 3.9M6.3 6.9C4.5 8.1 3.1 9.8 2 12c1.5 3 5.5 7 10 7 1.4 0 2.7-.3 3.9-.9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                    <path d="M9.9 10a3 3 0 004.1 4.1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                  </svg>
+                ) : (
+                  // Plain open eye — password is currently hidden
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M1 12c1.5-3 5.5-7 11-7s9.5 4 11 7c-1.5 3-5.5 7-11 7s-9.5-4-11-7z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" fill="none" />
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" fill="none" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </label>
 
           {status === 'error' && (
@@ -162,6 +187,31 @@ const styles = {
     fontFamily: "'Inter', -apple-system, sans-serif",
     fontSize: '15px',
     outline: 'none',
+  },
+  passwordWrap: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  passwordInput: {
+    width: '100%',
+    paddingRight: '44px',
+    boxSizing: 'border-box',
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: '10px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'none',
+    border: 'none',
+    padding: '4px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: colors.slate,
+    cursor: 'pointer',
+    lineHeight: 0,
   },
   pill: {
     background: colors.white,

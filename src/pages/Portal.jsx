@@ -346,11 +346,11 @@ function NewsletterArchive() {
   );
 }
 
-// ─── Newsletter send (admin-only — same shared-admin-password flow as
-// the existing standalone NewsletterAdmin.jsx page, folded in here) ────
+// ─── Newsletter send (admin-only — gated by session-based admin login,
+// same requireAdmin check as everywhere else in the portal; no shared
+// password anymore as of 2026-08-08) ─────────────────────────────────
 
 function NewsletterSend() {
-  const [password, setPassword] = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [sendStatus, setSendStatus] = useState('idle');
@@ -363,7 +363,7 @@ function NewsletterSend() {
     setSendStatus('submitting');
     setSendFeedback('');
     try {
-      const data = await sendNewsletter(password, subject, message);
+      const data = await sendNewsletter(subject, message);
       setSendStatus('success');
       setSendFeedback(data?.message || 'Sent.');
       setSubject('');
@@ -377,7 +377,7 @@ function NewsletterSend() {
   async function handleCheckSubscribers() {
     setCountStatus('loading');
     try {
-      const data = await getSubscribers(password);
+      const data = await getSubscribers();
       setSubscriberCount(data?.count ?? 0);
       setCountStatus('idle');
     } catch (err) {
@@ -391,27 +391,14 @@ function NewsletterSend() {
       <h2>Send Newsletter</h2>
       <p className="portal-section-sub">
         Compose an update and send it to everyone on the subscriber list.
-        Requires the shared admin password.
       </p>
 
       <form onSubmit={handleSend} className="portal-form">
-        <label className="portal-label">
-          Admin password
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="portal-input"
-            placeholder="Shared newsletter password"
-          />
-        </label>
-
         <div className="portal-subscriber-row">
           <button
             type="button"
             onClick={handleCheckSubscribers}
-            disabled={!password || countStatus === 'loading'}
+            disabled={countStatus === 'loading'}
             className="portal-link-button"
           >
             {countStatus === 'loading' ? 'Checking…' : 'Check subscriber count'}

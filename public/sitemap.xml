@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sitemap for aeeusc.com — lists only the real public pages (matches
+  robots.txt's allowed set). Account-only pages (/login, /portal,
+  /dashboard, etc.) are deliberately left out, same reasoning as
+  robots.txt's Disallow list: nothing there is meant to be indexed.
+
+  lastmod values are approximate (the date this sitemap was written) —
+  update them whenever a page's content meaningfully changes. This is a
+  static file since the site is a client-rendered SPA with no build-time
+  step that generates one automatically; if pages are added or removed,
+  this file needs a matching manual update.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://aeeusc.com/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://aeeusc.com/about</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>

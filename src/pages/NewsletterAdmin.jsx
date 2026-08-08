@@ -4,26 +4,25 @@
 // update to every subscriber. Reachable only by knowing the URL
 // (/newsletter-admin) — it's not linked anywhere in the nav or footer,
 // since it's a tool for whoever's running the newsletter, not a page
-// for visitors.
+// for visitors. It's also blocked from search indexing — see
+// public/robots.txt and the noindex meta tag this page sets.
 //
-// Gated by the single shared admin password (see routes/newsletter.js's
-// /send and /subscribers endpoints) rather than the existing user
-// login/session system, per an explicit scope decision. The password is
-// only ever held in this component's React state — never written to
-// localStorage/sessionStorage/cookies — so it has to be re-entered each
-// time this page loads, same as typing it straight into a form every
-// time.
+// As of 2026-08-08, gated by session-based admin login (same
+// requireAdmin check as routes/auth.js and routes/portal.js) instead of
+// a separate shared password — you need to already be logged in as an
+// admin (via /login) for this to work. See routes/newsletter.js's /send
+// and /subscribers endpoints.
 //
 // Styled to match Login.jsx/Signup.jsx (same design tokens, same
 // card/pill treatment) so it still feels like part of the same site
 // rather than a bolted-on tool.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { sendNewsletter, getSubscribers } from '../lib/api';
+import { sendNewsletter, getSubscribers, getCurrentUser } from '../lib/api';
 
 export default function NewsletterAdmin() {
-  const [password, setPassword] = useState('');
+  const [authCheck, setAuthCheck] = useState('checking'); // checking | ok | denied
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [sendStatus, setSendStatus] = useState('idle'); // idle | submitting | success | error
@@ -32,12 +31,18 @@ export default function NewsletterAdmin() {
   const [subscriberCount, setSubscriberCount] = useState(null);
   const [countStatus, setCountStatus] = useState('idle'); // idle | loading | error
 
+  useEffect(() => {
+    getCurrentUser()
+      .then((data) => setAuthCheck(data?.user?.is_admin ? 'ok' : 'denied'))
+      .catch(() => setAuthCheck('denied'));
+  }, []);
+
   async function handleSend(e) {
     e.preventDefault();
     setSendStatus('submitting');
     setSendFeedback('');
     try {
-      const data = await sendNewsletter(password, subject, message);
+      const data = await sendNewsletter(subject, message);
       setSendStatus('success');
       setSendFeedback(data?.message || 'Sent.');
       setSubject('');
@@ -51,13 +56,34 @@ export default function NewsletterAdmin() {
   async function handleCheckSubscribers() {
     setCountStatus('loading');
     try {
-      const data = await getSubscribers(password);
+      const data = await getSubscribers();
       setSubscriberCount(data?.count ?? 0);
       setCountStatus('idle');
     } catch (err) {
       setCountStatus('error');
       setSendFeedback(err.message || 'Could not check subscriber count.');
     }
+  }
+
+  if (authCheck === 'checking') {
+    return <div style={styles.page} />;
+  }
+
+  if (authCheck === 'denied') {
+    return (
+      <div style={styles.page}>
+        <Link to="/" style={styles.backLink}>← Back to home</Link>
+        <div style={styles.card}>
+          <h1 style={styles.heading}>Admin access required</h1>
+          <p style={styles.body}>
+            You need to be logged in as an admin to send the newsletter.
+          </p>
+          <Link to="/login" style={{ ...styles.pill, ...styles.pillButton, textAlign: 'center' }}>
+            Go to Log In
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -68,27 +94,14 @@ export default function NewsletterAdmin() {
         <h1 style={styles.heading}>Send Newsletter</h1>
         <p style={styles.body}>
           Compose an update and send it to everyone on the subscriber list.
-          Requires the shared admin password.
         </p>
 
         <form onSubmit={handleSend} style={styles.form}>
-          <label style={styles.label}>
-            Admin password
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={styles.input}
-              placeholder="Shared newsletter password"
-            />
-          </label>
-
           <div style={styles.subscriberRow}>
             <button
               type="button"
               onClick={handleCheckSubscribers}
-              disabled={!password || countStatus === 'loading'}
+              disabled={countStatus === 'loading'}
               style={styles.linkButton}
             >
               {countStatus === 'loading' ? 'Checking…' : 'Check subscriber count'}

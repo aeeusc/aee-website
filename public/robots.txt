@@ -1,0 +1,24 @@
+# robots.txt for aeeusc.com
+#
+# Everything is allowed to be crawled/indexed EXCEPT the account-only
+# pages below — there's nothing for a search engine or a random visitor
+# to gain from those showing up in results, and keeping them out of the
+# index is one layer of "don't make this easy to stumble onto" (the real
+# access control is still server-side session checks on the backend —
+# see routes/auth.js's requireAdmin/routes/portal.js's requireAdmin — a
+# disallow line here is a hygiene/discoverability measure, not security).
+#
+# Note: this only tells WELL-BEHAVED crawlers (Google, Bing, etc.) not to
+# index these paths. It doesn't block a person from visiting the URL
+# directly, and it isn't a security boundary by itself.
+
+User-agent: *
+Disallow: /login
+Disallow: /create-user
+Disallow: /dashboard
+Disallow: /newsletter-admin
+Disallow: /portal
+Disallow: /profile
+Disallow: /settings
+
+Sitemap: https://aeeusc.com/sitemap.xml

@@ -211,7 +211,7 @@ export function Nav() {
                 <PlaceholderAvatar />
               </Link>
               <Link to="/portal" className="nav-firstname">
-                {currentUser.first_name || currentUser.username || "Account"}
+                {currentUser.first_name || currentUser.username || "Member Portal"}
               </Link>
             </div>
           ) : (

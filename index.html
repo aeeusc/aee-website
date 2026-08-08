@@ -4,7 +4,45 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AEE at USC</title>
+
+    <!-- SEO — added 2026-08-08. This is a client-rendered SPA (no
+         server-side rendering), so per-page <title>/meta tags set from
+         inside React Router routes are invisible to most crawlers and to
+         link-preview bots (they don't run JavaScript before reading
+         <head>). That means THIS static file is what actually shows up
+         in Google results and when the site's link is shared on
+         iMessage/Slack/Discord/etc. — one shared title/description for
+         the whole site is the correct trade-off here, not a compromise,
+         short of adding a server-rendering step later. -->
+    <title>AEE at USC | Alternative Energy Engineering</title>
+    <meta
+      name="description"
+      content="Alternative Energy Engineering (AEE) at USC is a student organization designing real renewable energy systems — wind, marine, hydropower, and solar — through nationally competing design teams and industry partnerships."
+    />
+    <link rel="canonical" href="https://aeeusc.com/" />
+
+    <!-- Open Graph — controls how the link looks when shared on
+         iMessage, Slack, Discord, LinkedIn, Facebook, etc. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="AEE at USC" />
+    <meta property="og:title" content="AEE at USC | Alternative Energy Engineering" />
+    <meta
+      property="og:description"
+      content="A USC student organization designing real renewable energy systems through nationally competing design teams and industry partnerships."
+    />
+    <meta property="og:url" content="https://aeeusc.com/" />
+    <meta property="og:image" content="https://aeeusc.com/logo.svg" />
+
+    <!-- Twitter/X card — falls back to the Open Graph tags above on most
+         platforms, but Twitter/X specifically wants its own tag names. -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="AEE at USC | Alternative Energy Engineering" />
+    <meta
+      name="twitter:description"
+      content="A USC student organization designing real renewable energy systems through nationally competing design teams and industry partnerships."
+    />
+    <meta name="twitter:image" content="https://aeeusc.com/logo.svg" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
