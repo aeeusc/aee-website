@@ -72,7 +72,7 @@ export default function NewsletterAdmin() {
   if (authCheck === 'denied') {
     return (
       <div style={styles.page}>
-        <Link to="/" style={styles.backLink}>← Back to home</Link>
+        <Link to="/portal" style={styles.backLink}>← Back to Member Portal</Link>
         <div style={styles.card}>
           <h1 style={styles.heading}>Admin access required</h1>
           <p style={styles.body}>
@@ -88,7 +88,7 @@ export default function NewsletterAdmin() {
 
   return (
     <div style={styles.page}>
-      <Link to="/" style={styles.backLink}>← Back to home</Link>
+      <Link to="/portal" style={styles.backLink}>← Back to Member Portal</Link>
 
       <div style={styles.card}>
         <h1 style={styles.heading}>Send Newsletter</h1>

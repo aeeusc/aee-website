@@ -76,7 +76,7 @@ export default function Dashboard() {
   if (authCheck === 'denied') {
     return (
       <div style={styles.page}>
-        <Link to="/" style={styles.backLink}>← Back to home</Link>
+        <Link to="/portal" style={styles.backLink}>← Back to Member Portal</Link>
         <div style={styles.card}>
           <h1 style={styles.heading}>Please log in</h1>
           <p style={styles.body}>You need to be logged in to view your dashboard.</p>
@@ -90,7 +90,7 @@ export default function Dashboard() {
 
   return (
     <div style={styles.page}>
-      <Link to="/" style={styles.backLink}>← Back to home</Link>
+      <Link to="/portal" style={styles.backLink}>← Back to Member Portal</Link>
 
       <div style={styles.card}>
         <h1 style={styles.heading}>Hey, {displayName}</h1>

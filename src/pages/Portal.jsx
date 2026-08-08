@@ -5,22 +5,32 @@
 // to /profile instead, a separate page). Requires an active session;
 // bounces to /login otherwise, same pattern as Dashboard.jsx/CreateUser.jsx.
 //
-// Layout follows the wireframe directly: a logo header (links back to
-// the homepage), a left rail (~1/3 width) listing every section as
-// plain links, and a right side (~2/3 width) split into a top row of
-// big icon+label tiles mirroring the rail, and a bottom row split into
-// two quarters — Calendar (events) on the left, Tasks on the right.
-// Clicking a rail link OR its matching tile switches which section's
-// content renders below that layout (see `section` state) — Calendar
-// and Tasks stay visible in their quadrants regardless of which section
-// is selected, since they're part of the persistent layout, not a tab.
+// Layout: a logo header (links back to the homepage), a slim left rail
+// listing every section as plain links, and a right side — the bulk of
+// the page — split into a top row of big icon+label tiles mirroring the
+// rail, and a bottom row split into two quarters — Calendar (events) on
+// the left, Tasks on the right. The rail is deliberately minimal (a
+// thin column of plain text links, not a padded 1/3-width panel) per
+// explicit feedback 2026-08-08 ("way too much space for this vertical
+// bar... I wanna be super minimal... simple, easy vertical bars... the
+// members thing should be taking up more space") — most of the width
+// goes to the tiles/content side instead.
+//
+// Most rail items/tiles switch which section's content renders below
+// (see `section` state) — Calendar and Tasks stay visible in their
+// quadrants regardless of which section is selected, since they're part
+// of the persistent layout, not a tab. Dashboard and Send Newsletter are
+// the exception: per explicit feedback 2026-08-08 ("dashboard and send
+// newsletter... it should redirect you to their pages, their subpages
+//... when you click on them"), those two are real links to standalone
+// pages (/dashboard, /newsletter-admin) instead of in-page tabs — see
+// the `to` field on SECTIONS below.
 //
 // Members and Org Chart are explicit placeholders for now (no backend
-// yet) — everything else here (Settings, Dashboard, Newsletter view,
-// Newsletter send, Calendar, Tasks) is real and backed by routes/
-// portal.js + routes/newsletter.js's archive addition, kept
-// intentionally bare-minimum rather than fully built out, per an
-// explicit scope decision.
+// yet) — everything else here (Settings, Newsletter view, Calendar,
+// Tasks) is real and backed by routes/portal.js + routes/newsletter.js's
+// archive addition, kept intentionally bare-minimum rather than fully
+// built out, per an explicit scope decision.
 
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -29,8 +39,6 @@ import {
   logout,
   changePassword,
   getNewsletterArchive,
-  sendNewsletter,
-  getSubscribers,
   getEvents,
   createEvent,
   deleteEvent,
@@ -48,13 +56,21 @@ import './Portal.css';
 // in the portal (Profile.jsx's EditIcon/CameraIcon) — 1.8px strokes, no
 // fill, currentColor so they inherit the tile's text color state
 // (default/hover/active) for free.
+//
+// Each section is either an in-page tab (`key`, switches the `section`
+// state below) or a real link to a standalone page (`to`) — Dashboard
+// and Send Newsletter became real subpages per explicit feedback
+// 2026-08-08 ("dashboard and send newsletter... it should redirect you
+// to their pages, their subpages... when you click on them"), pointing
+// at the existing already-admin-gated /dashboard and /newsletter-admin
+// routes rather than the in-page tabs they used to be.
 const SECTIONS = [
   { key: 'members', label: 'Members', Icon: MembersIcon, adminOnly: false },
   { key: 'orgchart', label: 'Org Chart', Icon: OrgChartIcon, adminOnly: false },
   { key: 'newsletter', label: 'Newsletter', Icon: NewsletterIcon, adminOnly: false },
   { key: 'settings', label: 'Settings', Icon: SettingsIcon, adminOnly: false },
-  { key: 'dashboard', label: 'Dashboard', Icon: DashboardIcon, adminOnly: true },
-  { key: 'newsletter-send', label: 'Send Newsletter', Icon: SendIcon, adminOnly: true },
+  { key: 'dashboard', label: 'Dashboard', Icon: DashboardIcon, adminOnly: true, to: '/dashboard' },
+  { key: 'newsletter-send', label: 'Send Newsletter', Icon: SendIcon, adminOnly: true, to: '/newsletter-admin' },
 ];
 
 export default function Portal() {
@@ -127,12 +143,18 @@ export default function Portal() {
             return (
               <div key={s.key}>
                 {showDivider && <div className="portal-rail-divider">Admin</div>}
-                <button
-                  className={`portal-rail-item${section === s.key ? ' active' : ''}`}
-                  onClick={() => setSection(s.key)}
-                >
-                  {s.label}
-                </button>
+                {s.to ? (
+                  <Link to={s.to} className="portal-rail-item">
+                    {s.label}
+                  </Link>
+                ) : (
+                  <button
+                    className={`portal-rail-item${section === s.key ? ' active' : ''}`}
+                    onClick={() => setSection(s.key)}
+                  >
+                    {s.label}
+                  </button>
+                )}
               </div>
             );
           })}
@@ -141,14 +163,21 @@ export default function Portal() {
         <div className="portal-main">
           <div className="portal-tiles">
             {visibleSections.map((s) => (
-              <button
-                key={s.key}
-                className={`portal-tile${section === s.key ? ' active' : ''}`}
-                onClick={() => setSection(s.key)}
-              >
-                <span className="portal-tile-icon" aria-hidden="true"><s.Icon /></span>
-                <span className="portal-tile-label">{s.label}</span>
-              </button>
+              s.to ? (
+                <Link key={s.key} to={s.to} className="portal-tile">
+                  <span className="portal-tile-icon" aria-hidden="true"><s.Icon /></span>
+                  <span className="portal-tile-label">{s.label}</span>
+                </Link>
+              ) : (
+                <button
+                  key={s.key}
+                  className={`portal-tile${section === s.key ? ' active' : ''}`}
+                  onClick={() => setSection(s.key)}
+                >
+                  <span className="portal-tile-icon" aria-hidden="true"><s.Icon /></span>
+                  <span className="portal-tile-label">{s.label}</span>
+                </button>
+              )
             ))}
           </div>
 
@@ -157,8 +186,6 @@ export default function Portal() {
             {section === 'orgchart' && <OrgChartPlaceholder />}
             {section === 'newsletter' && <NewsletterArchive />}
             {section === 'settings' && <Settings user={user} onLogout={handleLogout} />}
-            {section === 'dashboard' && user?.is_admin && <AdminDashboard />}
-            {section === 'newsletter-send' && user?.is_admin && <NewsletterSend />}
           </div>
 
           <div className="portal-quadrants">
@@ -291,19 +318,6 @@ function Settings({ user, onLogout }) {
   );
 }
 
-// ─── Dashboard (admin-only — links to the existing account-creation
-// flow; a place for more admin tools later without restructuring) ──────
-
-function AdminDashboard() {
-  return (
-    <div className="portal-section">
-      <h2>Dashboard</h2>
-      <p className="portal-section-sub">Admin tools for managing the org.</p>
-      <Link to="/create-user" className="portal-pill">Create a new account</Link>
-    </div>
-  );
-}
-
 // ─── Newsletter (member view — archive of past sends) ──────────────────
 
 function NewsletterArchive() {
@@ -348,105 +362,6 @@ function NewsletterArchive() {
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-// ─── Newsletter send (admin-only — gated by session-based admin login,
-// same requireAdmin check as everywhere else in the portal; no shared
-// password anymore as of 2026-08-08) ─────────────────────────────────
-
-function NewsletterSend() {
-  const [subject, setSubject] = useState('');
-  const [message, setMessage] = useState('');
-  const [sendStatus, setSendStatus] = useState('idle');
-  const [sendFeedback, setSendFeedback] = useState('');
-  const [subscriberCount, setSubscriberCount] = useState(null);
-  const [countStatus, setCountStatus] = useState('idle');
-
-  async function handleSend(e) {
-    e.preventDefault();
-    setSendStatus('submitting');
-    setSendFeedback('');
-    try {
-      const data = await sendNewsletter(subject, message);
-      setSendStatus('success');
-      setSendFeedback(data?.message || 'Sent.');
-      setSubject('');
-      setMessage('');
-    } catch (err) {
-      setSendStatus('error');
-      setSendFeedback(err.message || 'Something went wrong. Please try again.');
-    }
-  }
-
-  async function handleCheckSubscribers() {
-    setCountStatus('loading');
-    try {
-      const data = await getSubscribers();
-      setSubscriberCount(data?.count ?? 0);
-      setCountStatus('idle');
-    } catch (err) {
-      setCountStatus('error');
-      setSendFeedback(err.message || 'Could not check subscriber count.');
-    }
-  }
-
-  return (
-    <div className="portal-section">
-      <h2>Send Newsletter</h2>
-      <p className="portal-section-sub">
-        Compose an update and send it to everyone on the subscriber list.
-      </p>
-
-      <form onSubmit={handleSend} className="portal-form">
-        <div className="portal-subscriber-row">
-          <button
-            type="button"
-            onClick={handleCheckSubscribers}
-            disabled={countStatus === 'loading'}
-            className="portal-link-button"
-          >
-            {countStatus === 'loading' ? 'Checking…' : 'Check subscriber count'}
-          </button>
-          {subscriberCount !== null && (
-            <span className="portal-muted">
-              {subscriberCount} subscriber{subscriberCount === 1 ? '' : 's'}
-            </span>
-          )}
-        </div>
-
-        <label className="portal-label">
-          Subject
-          <input
-            type="text"
-            required
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            className="portal-input"
-            placeholder="e.g. This week at AEE"
-          />
-        </label>
-
-        <label className="portal-label">
-          Message
-          <textarea
-            required
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="portal-textarea"
-            placeholder="Write your update here. Plain text — line breaks become paragraphs."
-            rows={8}
-          />
-        </label>
-
-        {sendStatus === 'error' && <p className="portal-error">{sendFeedback}</p>}
-        {sendStatus === 'success' && <p className="portal-success">{sendFeedback}</p>}
-
-        <button type="submit" disabled={sendStatus === 'submitting'} className="portal-pill">
-          {sendStatus === 'submitting' ? 'Sending…' : 'Send to all subscribers'}
-        </button>
-      </form>
     </div>
   );
 }
