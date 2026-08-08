@@ -8,6 +8,22 @@
  * layout, and the crop modal.
  */
 
+/* Moved into the header (top-left, next to the logo/title) per explicit
+   feedback 2026-08-08 — used to live as a link at the bottom of the
+   page. Sits between .portal-title and .portal-header-spacer, so it's
+   grouped with the rest of the top-left cluster before the spacer pushes
+   the Edit button to the right. */
+.profile-back-link {
+  color: var(--slate);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  margin-left: 8px;
+  transition: color .15s;
+}
+.profile-back-link:hover { color: var(--white); }
+
 .profile-edit-btn {
   display: flex;
   align-items: center;
@@ -100,6 +116,34 @@
   margin: 0;
   white-space: pre-wrap;
 }
+/* Fixed size, full width, no resize handle — per explicit feedback
+   2026-08-08 ("make the description box a set size that will actually
+   fill across the whole thing instead of being resizable vertical
+   only"). resize: none removes the drag handle a plain <textarea> shows
+   by default. */
+.profile-description-textarea {
+  width: 100%;
+  height: 110px;
+  resize: none;
+  box-sizing: border-box;
+}
+
+/* Label + live character counter, shared by the description box and
+   each preset field below — surfaces the limit while editing instead of
+   only silently enforcing it via maxLength, per explicit feedback
+   2026-08-08 ("people should know... like zero out of one fifty and has
+   a character counter"). */
+.profile-field-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.profile-char-counter {
+  font-size: 12px;
+  color: var(--slate);
+  font-variant-numeric: tabular-nums;
+}
 
 .profile-preset-grid {
   display: grid;
@@ -160,11 +204,25 @@
   font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   font-size: 19px;
   margin: 0;
-  align-self: flex-start;
+  text-align: center;
+  align-self: center;
+}
+/* Centered under the heading, per explicit feedback 2026-08-08 ("I want
+   the text to be centered/aligned there along with 'this is how it'll
+   look'") — .portal-section-sub is left-aligned by default elsewhere in
+   the portal, so this overrides just for this modal. */
+.profile-crop-sub {
+  text-align: center;
+  margin: 0;
 }
 .profile-crop-window {
   position: relative;
-  border-radius: 50%;
+  /* Rounded square, not circular — matches the e-board/member-card
+     display shape, per explicit correction 2026-08-08 ("it's not gonna
+     look circular everywhere... I wanna do the square rounded, like we
+     do for the e board"). 18px matches the e-board coverflow card's own
+     border-radius (see Home.css's .cf-card). */
+  border-radius: 18px;
   overflow: hidden;
   background: #000;
   outline: 2px solid rgba(255,255,255,.5);
@@ -182,6 +240,27 @@
   pointer-events: none;
 }
 .profile-crop-zoom { width: 100%; accent-color: var(--white); }
+
+/* Cancel/Use-this-photo row — both same size (portal-pill-sm) and
+   centered, per explicit feedback 2026-08-08 ("make the use this photo
+   button a little bit smaller... should be relatively equal in size...
+   make sure they're center aligned"). Cancel is styled as a ghost pill
+   (transparent fill, outline only) rather than the plain underlined
+   .portal-link-button it used to be, so the two buttons read as the same
+   kind of control at the same size — a link-style Cancel next to a
+   solid-pill Save never look "equal in size" regardless of font-size. */
+.profile-crop-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.profile-crop-cancel {
+  background: transparent;
+  color: var(--white);
+  border: 1px solid rgba(255,255,255,.35);
+}
+.profile-crop-cancel:hover { background: rgba(255,255,255,.08); }
 
 @media (max-width: 560px) {
   .profile-preset-grid { grid-template-columns: 1fr; }

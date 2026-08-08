@@ -39,7 +39,12 @@ import './Profile.css';
 const PHOTO_DISPLAY_SIZE = 400;
 
 const PRESET_FIELD_MAX = 75;
-const DESCRIPTION_MAX = 500;
+// Lowered from 500 to 150 per explicit feedback 2026-08-08 ("nothing too
+// much, easy peasy lemon squeezy, I just want a hundred fifty characters
+// max"). Also see routes/auth.js's DESCRIPTION_MAX — kept in sync with
+// this value, since the server enforces the real limit and this is only
+// the client-side maxLength/counter.
+const DESCRIPTION_MAX = 150;
 
 const PRESET_FIELDS = [
   { key: 'hometown', label: 'Hometown' },
@@ -179,6 +184,9 @@ export default function Profile() {
           <span>AEE at USC</span>
         </Link>
         <div className="portal-title">Profile</div>
+        <Link to="/portal" className="profile-back-link">
+          ← Back to Member Portal
+        </Link>
         <div className="portal-header-spacer" />
         {!editMode && (
           <button type="button" className="profile-edit-btn" onClick={enterEditMode}>
@@ -223,14 +231,18 @@ export default function Profile() {
         {saveStatus === 'error' && <p className="portal-error" style={{ textAlign: 'center' }}>{saveError}</p>}
 
         <div className="portal-content profile-description-box">
-          <div className="portal-label" style={{ marginBottom: 8 }}>Description</div>
+          <div className="profile-field-label-row">
+            <div className="portal-label">Description</div>
+            {editMode && (
+              <span className="profile-char-counter">{fields.description.length}/{DESCRIPTION_MAX}</span>
+            )}
+          </div>
           {editMode ? (
             <textarea
-              className="portal-textarea"
+              className="portal-textarea profile-description-textarea"
               value={fields.description}
-              onChange={(e) => setFields((f) => ({ ...f, description: e.target.value }))}
+              onChange={(e) => setFields((f) => ({ ...f, description: e.target.value.slice(0, DESCRIPTION_MAX) }))}
               maxLength={DESCRIPTION_MAX}
-              rows={4}
               placeholder="Say a bit about yourself…"
             />
           ) : (
@@ -243,7 +255,12 @@ export default function Profile() {
         <div className="portal-content profile-preset-grid">
           {PRESET_FIELDS.map(({ key, label }) => (
             <div key={key} className="profile-preset-field">
-              <div className="portal-label" style={{ marginBottom: 6 }}>{label}</div>
+              <div className="profile-field-label-row">
+                <div className="portal-label">{label}</div>
+                {editMode && (
+                  <span className="profile-char-counter">{fields[key].length}/{PRESET_FIELD_MAX}</span>
+                )}
+              </div>
               {editMode ? (
                 <input
                   type="text"
@@ -272,10 +289,6 @@ export default function Profile() {
             </button>
           </div>
         )}
-
-        <Link to="/portal" className="portal-link-button" style={{ marginTop: 24 }}>
-          ← Back to Member Portal
-        </Link>
       </div>
 
       {zoomOpen && user?.photo_url && (
@@ -314,12 +327,18 @@ function PhotoLightbox({ src, alt, onClose }) {
 // ─── Edit-mode upload + crop ─────────────────────────────────────────────
 //
 // A minimal drag-to-reposition, scroll/pinch-free square crop: the image
-// is shown at a fixed preview size with a fixed-size circular crop
-// window centered on it; the user drags the IMAGE underneath to choose
-// what falls inside the circle (rather than resizing the crop window
-// itself) — simplest possible interaction that still satisfies "meet the
-// pixel requirement for how it'll display." A zoom slider adjusts image
-// scale within the same fixed window.
+// is shown at a fixed preview size with a fixed-size crop window centered
+// on it (rounded-square, not circular — matches the actual e-board/
+// member-card display shape, per explicit correction 2026-08-08: "it's
+// not gonna look circular everywhere... I wanna do the square rounded,
+// like we do for the e board"); the user drags the IMAGE underneath to
+// choose what falls inside the window (rather than resizing the crop
+// window itself) — simplest possible interaction that still satisfies
+// "meet the pixel requirement for how it'll display." A zoom slider
+// adjusts image scale within the same fixed window. The crop WINDOW
+// shape is purely a CSS border-radius on .profile-crop-window (see
+// Profile.css) — the drag/scale/export math below is shape-agnostic, it
+// just fills a square region either way.
 
 const CROP_PREVIEW_SIZE = 280; // on-screen size of the circular crop window
 
@@ -379,8 +398,8 @@ function PhotoCropModal({ src, onCancel, onSave }) {
     <div className="profile-lightbox">
       <div className="profile-crop-modal" onClick={(e) => e.stopPropagation()}>
         <h2 className="profile-crop-heading">Crop your photo</h2>
-        <p className="portal-section-sub">
-          This is how it'll look everywhere your photo is shown. Drag to reposition, use the slider to zoom.
+        <p className="portal-section-sub profile-crop-sub">
+          This is how it'll look on the e-board and member cards. Drag to reposition, use the slider to zoom.
         </p>
 
         <div
@@ -421,9 +440,11 @@ function PhotoCropModal({ src, onCancel, onSave }) {
           />
         )}
 
-        <div className="profile-edit-actions">
-          <button type="button" className="portal-link-button" onClick={onCancel}>Cancel</button>
-          <button type="button" className="portal-pill" onClick={handleSave} disabled={!naturalSize}>
+        <div className="profile-crop-actions">
+          <button type="button" className="portal-pill portal-pill-sm profile-crop-cancel" onClick={onCancel}>
+            Cancel
+          </button>
+          <button type="button" className="portal-pill portal-pill-sm" onClick={handleSave} disabled={!naturalSize}>
             Use this photo
           </button>
         </div>
