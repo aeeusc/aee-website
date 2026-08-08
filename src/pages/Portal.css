@@ -76,26 +76,42 @@
 .portal-body {
   display: flex;
   flex: 1;
-  max-width: 1400px;
-  margin: 0 auto;
   width: 100%;
-  padding: 32px 24px;
-  gap: 24px;
 }
 
-/* Left rail — roughly 1/3 of the body width, per the wireframe. */
+/* Left rail — a full third of the page, pinned to the far-left edge and
+   running the full height of the body (not just as tall as its own
+   content), per explicit feedback 2026-08-08 ("I want the vertical bar
+   to be to the farthest left of the page where it's taken up, like,
+   that one third... I don't like the amount of white space"). This
+   replaced an earlier version that lived inside the same max-width/
+   padded .portal-body as .portal-main, capped at 280px and left-aligned
+   — that's what caused the leftover side whitespace Kev was pointing at.
+   Now the rail is a direct flex child of the full-bleed .portal-body
+   (no shared max-width container), and .portal-main gets its own
+   max-width + centering + padding independently, so the rail can
+   genuinely hug the edge while the content area still reads as a
+   comfortable reading width. */
 .portal-rail {
-  flex: 0 0 30%;
-  max-width: 280px;
+  flex: 0 0 33.333%;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  /* top-aligned, not vertically centered — items start right below the
+     header, matching the wireframe, rather than floating in the middle
+     of a tall full-height column. */
+  justify-content: flex-start;
   gap: 4px;
-  padding-right: 8px;
+  padding: 48px 24px;
+  background: rgba(255,255,255,.015);
+  border-right: 1px solid var(--line);
+  text-align: center;
 }
 .portal-rail-item {
   display: block;
   width: 100%;
-  text-align: left;
+  max-width: 240px;
+  text-align: center;
   background: none;
   border: none;
   color: var(--slate-light);
@@ -110,47 +126,64 @@
 .portal-rail-item:hover { background: rgba(255,255,255,.05); color: var(--white); }
 .portal-rail-item.active { background: rgba(255,255,255,.09); color: var(--white); }
 .portal-rail-divider {
-  margin: 16px 14px 6px;
+  margin: 16px 0 6px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: .12em;
   color: rgba(148,163,184,.55);
   text-transform: uppercase;
+  text-align: center;
 }
 
-/* Right side — roughly 2/3, per the wireframe. */
+/* Right side — the remaining two thirds, its own centered/padded
+   content column independent of the full-bleed rail beside it. */
 .portal-main {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 20px;
   min-width: 0;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 32px 24px;
 }
 
-/* Icon+label tiles mirroring the rail. */
+/* Icon+label tiles mirroring the rail — square, icon top-center, per
+   the wireframe. Centered inside the two-thirds grid area, per explicit
+   feedback 2026-08-08 ("I also want the boxes... to be in the middle
+   of the grid, in this two thirds"): the grid itself is capped narrower
+   than .portal-main's full width and auto-centered, so there's breathing
+   room on both sides rather than the tiles stretching edge-to-edge. */
 .portal-tiles {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
+  max-width: 620px;
+  margin: 0 auto;
+  width: 100%;
 }
 .portal-tile {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
   gap: 10px;
+  aspect-ratio: 1 / 1;
   background: rgba(255,255,255,.03);
   border: 1px solid var(--line);
   border-radius: 14px;
-  padding: 20px;
+  padding: 16px;
   cursor: pointer;
   transition: border-color .15s, background .15s;
   font-family: inherit;
-  text-align: left;
+  text-align: center;
+  color: var(--slate-light);
 }
 .portal-tile:hover { border-color: rgba(255,255,255,.35); }
-.portal-tile.active { border-color: var(--white); background: rgba(255,255,255,.07); }
-.portal-tile-icon { font-size: 24px; line-height: 1; }
-.portal-tile-label { font-size: 14px; font-weight: 600; color: var(--white); }
+.portal-tile.active { border-color: var(--white); background: rgba(255,255,255,.07); color: var(--white); }
+.portal-tile-icon { display: flex; line-height: 1; }
+.portal-tile-label { font-size: 13px; font-weight: 600; color: var(--white); }
 
 /* Content section — whichever tab is selected renders here. */
 .portal-content {
@@ -178,7 +211,13 @@
   padding: 32px 16px;
   color: var(--slate);
 }
-.portal-placeholder-icon { font-size: 32px; margin-bottom: 12px; }
+.portal-placeholder-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.portal-placeholder-icon svg { width: 32px; height: 32px; }
 .portal-placeholder h2 {
   font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   color: var(--white);
@@ -366,7 +405,15 @@ select.portal-input { cursor: pointer; }
 /* ---------- RESPONSIVE ---------- */
 @media (max-width: 860px) {
   .portal-body { flex-direction: column; }
-  .portal-rail { max-width: none; flex-direction: row; flex-wrap: wrap; }
-  .portal-tiles { grid-template-columns: repeat(2, 1fr); }
+  .portal-rail {
+    flex: 0 0 auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    padding: 20px;
+  }
+  .portal-rail-item { width: auto; max-width: none; }
+  .portal-tiles { grid-template-columns: repeat(2, 1fr); max-width: none; }
   .portal-quadrants { grid-template-columns: 1fr; }
 }

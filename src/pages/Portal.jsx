@@ -42,13 +42,19 @@ import {
 import { Footer } from './Home';
 import './Portal.css';
 
+// Icon components (not emoji strings) — real inline SVGs per explicit
+// feedback 2026-08-08 ("I want actual icons, no emojis for all these
+// boxes"). Same stroke-based style as the icons already used elsewhere
+// in the portal (Profile.jsx's EditIcon/CameraIcon) — 1.8px strokes, no
+// fill, currentColor so they inherit the tile's text color state
+// (default/hover/active) for free.
 const SECTIONS = [
-  { key: 'members', label: 'Members', icon: '👥', adminOnly: false },
-  { key: 'orgchart', label: 'Org Chart', icon: '🗂️', adminOnly: false },
-  { key: 'newsletter', label: 'Newsletter', icon: '📰', adminOnly: false },
-  { key: 'settings', label: 'Settings', icon: '⚙️', adminOnly: false },
-  { key: 'dashboard', label: 'Dashboard', icon: '📊', adminOnly: true },
-  { key: 'newsletter-send', label: 'Send Newsletter', icon: '✉️', adminOnly: true },
+  { key: 'members', label: 'Members', Icon: MembersIcon, adminOnly: false },
+  { key: 'orgchart', label: 'Org Chart', Icon: OrgChartIcon, adminOnly: false },
+  { key: 'newsletter', label: 'Newsletter', Icon: NewsletterIcon, adminOnly: false },
+  { key: 'settings', label: 'Settings', Icon: SettingsIcon, adminOnly: false },
+  { key: 'dashboard', label: 'Dashboard', Icon: DashboardIcon, adminOnly: true },
+  { key: 'newsletter-send', label: 'Send Newsletter', Icon: SendIcon, adminOnly: true },
 ];
 
 export default function Portal() {
@@ -140,7 +146,7 @@ export default function Portal() {
                 className={`portal-tile${section === s.key ? ' active' : ''}`}
                 onClick={() => setSection(s.key)}
               >
-                <span className="portal-tile-icon" aria-hidden="true">{s.icon}</span>
+                <span className="portal-tile-icon" aria-hidden="true"><s.Icon /></span>
                 <span className="portal-tile-label">{s.label}</span>
               </button>
             ))}
@@ -176,7 +182,7 @@ export default function Portal() {
 function MembersPlaceholder() {
   return (
     <div className="portal-placeholder">
-      <div className="portal-placeholder-icon">👥</div>
+      <div className="portal-placeholder-icon"><MembersIcon /></div>
       <h2>Members</h2>
       <p>A full member directory is coming soon.</p>
     </div>
@@ -186,7 +192,7 @@ function MembersPlaceholder() {
 function OrgChartPlaceholder() {
   return (
     <div className="portal-placeholder">
-      <div className="portal-placeholder-icon">🗂️</div>
+      <div className="portal-placeholder-icon"><OrgChartIcon /></div>
       <h2>Org Chart</h2>
       <p>An interactive org chart is coming soon.</p>
     </div>
@@ -746,5 +752,75 @@ function TasksPanel() {
         </div>
       )}
     </div>
+  );
+}
+
+// ─── Rail/tile icons ───────────────────────────────────────────────────
+//
+// Six simple line icons, one per portal section — real SVGs rather than
+// emoji, per explicit feedback 2026-08-08. Consistent style: 22x22
+// viewBox, 1.8px stroke, no fill, currentColor (so hover/active tile
+// states recolor them for free without a second icon variant).
+
+function MembersIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <circle cx="8" cy="7" r="3" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M2.5 18c.9-3.4 3-5 5.5-5s4.6 1.6 5.5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+      <circle cx="16" cy="8" r="2.4" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M14 12.3c1.9.2 3.2 1.4 3.9 3.7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+    </svg>
+  );
+}
+
+function OrgChartIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <rect x="8" y="2" width="6" height="4.5" rx="1" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="2" y="15.5" width="6" height="4.5" rx="1" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="14" y="15.5" width="6" height="4.5" rx="1" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M11 6.5v4M11 10.5H5v5M11 10.5h6v5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+    </svg>
+  );
+}
+
+function NewsletterIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <rect x="2" y="4.5" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M3 6l8 6 8-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  );
+}
+
+function SettingsIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="3.2" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M11 2.8v2.1M11 16.1v2.1M18.2 11h-2.1M5.9 11H3.8M16.1 5.9l-1.5 1.5M7.4 14.6l-1.5 1.5M16.1 16.1l-1.5-1.5M7.4 7.4L5.9 5.9"
+        stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function DashboardIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <rect x="2" y="2" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="12" y="2" width="8" height="5" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="12" y="9" width="8" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="2" y="12" width="8" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function SendIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path d="M2.5 11L19.5 3l-6 16-3.8-6.7L2.5 11z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" fill="none" />
+      <path d="M9.7 12.3L19.5 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
   );
 }
