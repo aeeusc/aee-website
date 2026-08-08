@@ -1,0 +1,188 @@
+/* src/pages/Profile.css
+ *
+ * Styles specific to Profile.jsx — reuses Portal.css's shared classes
+ * (.portal-page, .portal-header, .portal-content, .portal-input,
+ * .portal-pill, etc.) for anything already covered there, and only
+ * defines what's unique to this page: the circular photo + its
+ * edit/zoom states, the name/title block, the description/preset-field
+ * layout, and the crop modal.
+ */
+
+.profile-edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--white);
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.profile-edit-btn:hover { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.05); }
+
+.profile-body {
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 40px 24px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profile-photo-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.profile-photo-btn {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: none;
+  padding: 0;
+  background: rgba(255,255,255,.05);
+  cursor: pointer;
+  position: relative;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+.profile-photo-btn.has-photo:not(.editable):hover { opacity: .88; }
+.profile-photo-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.profile-photo-btn.editable { cursor: pointer; }
+.profile-photo-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(10,14,26,.55);
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.profile-photo-btn.editable:hover .profile-photo-overlay,
+.profile-photo-btn.editable:focus-visible .profile-photo-overlay {
+  opacity: 1;
+}
+
+.profile-name {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 26px;
+  margin: 0;
+}
+.profile-title-text {
+  color: var(--slate);
+  font-size: 14px;
+  margin: 2px 0 0;
+}
+
+.profile-description-box { padding: 20px 22px; }
+.profile-description-text {
+  color: var(--slate-light);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.profile-preset-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 24px;
+  padding: 20px 22px;
+}
+.profile-preset-value {
+  color: var(--white);
+  font-size: 14px;
+  margin: 0;
+}
+
+.profile-edit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+/* ---------- Zoom lightbox (view mode) + crop modal (edit mode) share
+   this dark overlay backdrop ---------- */
+.profile-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(5,7,14,.86);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 24px;
+  cursor: pointer;
+}
+.profile-lightbox-img {
+  max-width: min(90vw, 520px);
+  max-height: 80vh;
+  border-radius: 20px;
+  object-fit: cover;
+  cursor: default;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+
+.profile-crop-modal {
+  background: var(--navy-950, #0A0E1A);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 28px;
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  cursor: default;
+}
+.profile-crop-heading {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 19px;
+  margin: 0;
+  align-self: flex-start;
+}
+.profile-crop-window {
+  position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #000;
+  outline: 2px solid rgba(255,255,255,.5);
+  outline-offset: 3px;
+  touch-action: none;
+  cursor: grab;
+}
+.profile-crop-window:active { cursor: grabbing; }
+.profile-crop-window img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: none;
+  user-select: none;
+  pointer-events: none;
+}
+.profile-crop-zoom { width: 100%; accent-color: var(--white); }
+
+@media (max-width: 560px) {
+  .profile-preset-grid { grid-template-columns: 1fr; }
+}

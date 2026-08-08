@@ -25,6 +25,7 @@ export default function CreateUser() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [title, setTitle] = useState('');
   const [status, setStatus] = useState('idle'); // idle | submitting | success | error
   const [errorMessage, setErrorMessage] = useState('');
   const [result, setResult] = useState(null); // { username, generatedPassword }
@@ -47,12 +48,13 @@ export default function CreateUser() {
     setErrorMessage('');
 
     try {
-      const data = await createUser(firstName, lastName, email);
+      const data = await createUser(firstName, lastName, email, title);
       setStatus('success');
       setResult({ username: data.username, generatedPassword: data.generatedPassword });
       setFirstName('');
       setLastName('');
       setEmail('');
+      setTitle('');
     } catch (err) {
       setStatus('error');
       setErrorMessage(err.message);
@@ -152,6 +154,17 @@ export default function CreateUser() {
                   onChange={(e) => setEmail(e.target.value)}
                   style={styles.input}
                   placeholder="jane@example.com"
+                />
+              </label>
+
+              <label style={styles.label}>
+                Title / role (optional)
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  style={styles.input}
+                  placeholder="e.g. Design Team Coordinator"
                 />
               </label>
 

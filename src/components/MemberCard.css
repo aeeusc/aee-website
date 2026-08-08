@@ -1,0 +1,136 @@
+/* src/components/MemberCard.css
+ *
+ * The flip card itself. Uses a real CSS 3D transform (transform-style:
+ * preserve-3d + backface-visibility: hidden on each face, rotateY on the
+ * inner wrapper) rather than a JS animation library — the same approach
+ * that makes the e-board coverflow's card transitions (see Home.css's
+ * .cf-card) feel native or the browser's own compositor, not something
+ * fighting against it.
+ *
+ * Sizing: square, per explicit feedback 2026-08-08 ("instead of being
+ * rectangle, I want them to be square") — this replaces the coverflow's
+ * portrait 290x400 card shape for the Members grid specifically, not a
+ * change to the e-board carousel itself.
+ */
+
+.member-card {
+  all: unset;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  cursor: pointer;
+  perspective: 1200px;
+  border-radius: 16px;
+}
+
+.member-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform .6s cubic-bezier(.22,.61,.36,1);
+  transform-style: preserve-3d;
+}
+.member-card.flipped .member-card-inner {
+  transform: rotateY(180deg);
+}
+
+.member-card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: #0C1224;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.member-card-front {
+  /* front face, no rotation */
+}
+
+.member-card-photo {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 14px 0;
+  min-height: 0;
+}
+.member-card-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+}
+
+.member-card-divider {
+  height: 1px;
+  background: rgba(255,255,255,.14);
+  margin: 14px 14px 0;
+}
+
+.member-card-info {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px 14px;
+}
+.member-card-info-left { text-align: left; min-width: 0; }
+.member-card-info-right { text-align: right; min-width: 0; }
+
+.member-card-name {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--white, #fff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.member-card-role {
+  font-size: 11px;
+  color: var(--slate, #94A3B8);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.member-card-join {
+  font-size: 11px;
+  color: var(--slate, #94A3B8);
+  white-space: nowrap;
+}
+.member-card-team {
+  font-size: 11px;
+  color: var(--slate-light, #C9D4E4);
+  font-weight: 600;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.member-card-back {
+  transform: rotateY(180deg);
+  align-items: flex-start;
+  justify-content: center;
+  gap: 14px;
+  padding: 22px;
+  text-align: left;
+}
+.member-card-back-field {
+  font-size: 13px;
+  color: var(--slate-light, #C9D4E4);
+  line-height: 1.5;
+}
+.member-card-back-label {
+  font-weight: 700;
+  color: var(--white, #fff);
+}
+.member-card-back-empty {
+  font-size: 12px;
+  color: var(--slate, #94A3B8);
+  margin: 0;
+}

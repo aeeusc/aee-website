@@ -63,10 +63,33 @@ export function getCurrentUser() {
 // Requires an active admin session (the backend checks req.session,
 // not anything passed from here) — so this only works when called by
 // someone who's already logged in as an admin, via CreateUser.jsx.
-export function createUser(firstName, lastName, email) {
+export function createUser(firstName, lastName, email, title) {
   return apiRequest('/auth/admin/create-user', {
     method: 'POST',
-    body: JSON.stringify({ firstName, lastName, email: email || undefined }),
+    body: JSON.stringify({ firstName, lastName, email: email || undefined, title: title || undefined }),
+  });
+}
+
+// --- Profile (Profile.jsx) ---
+//
+// updateProfile only ever acts on the logged-in user's OWN profile
+// (enforced server-side via req.session.userId, not anything passed
+// here) — every field is optional, only send the ones actually changed.
+// updateProfilePhoto is separate from updateProfile (its own endpoint,
+// its own request) since the photo payload is much larger — keeping it
+// out of the plain profile-fields save means a small text-only edit
+// never has to re-upload the photo along with it.
+export function updateProfile({ description, hometown, favoriteFood, favoriteDrink, hobbies } = {}) {
+  return apiRequest('/auth/profile', {
+    method: 'PUT',
+    body: JSON.stringify({ description, hometown, favoriteFood, favoriteDrink, hobbies }),
+  });
+}
+
+export function updateProfilePhoto(photoDataUrl) {
+  return apiRequest('/auth/profile/photo', {
+    method: 'PUT',
+    body: JSON.stringify({ photoDataUrl }),
   });
 }
 

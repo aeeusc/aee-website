@@ -208,7 +208,11 @@ export function Nav() {
             // name go to two different places.
             <div className="nav-account">
               <Link to="/profile" className="nav-avatar" aria-label="Your profile">
-                <PlaceholderAvatar />
+                {currentUser.photo_url ? (
+                  <img src={currentUser.photo_url} alt="" />
+                ) : (
+                  <PlaceholderAvatar />
+                )}
               </Link>
               <Link to="/portal" className="nav-firstname">
                 {currentUser.first_name || currentUser.username || "Member Portal"}
