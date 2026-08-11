@@ -76,11 +76,13 @@ export default function MemberCard({ member, team }) {
 
         <div className="member-card-face member-card-back">
           {backFields.length > 0 ? (
-            backFields.map((f) => (
-              <div key={f.label} className="member-card-back-field">
-                <span className="member-card-back-label">{f.label}:</span> {f.value}
-              </div>
-            ))
+            <ul className="member-card-back-list">
+              {backFields.map((f) => (
+                <li key={f.label} className="member-card-back-field">
+                  <span className="member-card-back-label">{f.label}:</span> {f.value}
+                </li>
+              ))}
+            </ul>
           ) : (
             <p className="member-card-back-empty">This member hasn't filled out their profile yet.</p>
           )}

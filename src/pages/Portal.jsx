@@ -19,18 +19,21 @@
 // Most rail items/tiles switch which section's content renders below
 // (see `section` state) — Calendar and Tasks stay visible in their
 // quadrants regardless of which section is selected, since they're part
-// of the persistent layout, not a tab. Dashboard and Send Newsletter are
-// the exception: per explicit feedback 2026-08-08 ("dashboard and send
+// of the persistent layout, not a tab. Members, Dashboard, and Send
+// Newsletter are the exception: real links to standalone pages
+// (/members, /dashboard, /newsletter-admin) instead of in-page tabs —
+// see the `to` field on SECTIONS below. Dashboard/Send Newsletter became
+// real pages per explicit feedback 2026-08-08 ("dashboard and send
 // newsletter... it should redirect you to their pages, their subpages
-//... when you click on them"), those two are real links to standalone
-// pages (/dashboard, /newsletter-admin) instead of in-page tabs — see
-// the `to` field on SECTIONS below.
+// ...when you click on them"); Members followed the same pattern
+// 2026-08-10 once its full grid/filter/sort page was built (see
+// src/pages/Members.jsx) rather than staying a placeholder tab.
 //
-// Members and Org Chart are explicit placeholders for now (no backend
-// yet) — everything else here (Settings, Newsletter view, Calendar,
-// Tasks) is real and backed by routes/portal.js + routes/newsletter.js's
-// archive addition, kept intentionally bare-minimum rather than fully
-// built out, per an explicit scope decision.
+// Org Chart is still an explicit placeholder (no backend yet) —
+// everything else here (Settings, Newsletter view, Calendar, Tasks) is
+// real and backed by routes/portal.js + routes/newsletter.js's archive
+// addition, kept intentionally bare-minimum rather than fully built
+// out, per an explicit scope decision.
 
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -65,7 +68,7 @@ import './Portal.css';
 // at the existing already-admin-gated /dashboard and /newsletter-admin
 // routes rather than the in-page tabs they used to be.
 const SECTIONS = [
-  { key: 'members', label: 'Members', Icon: MembersIcon, adminOnly: false },
+  { key: 'members', label: 'Members', Icon: MembersIcon, adminOnly: false, to: '/members' },
   { key: 'orgchart', label: 'Org Chart', Icon: OrgChartIcon, adminOnly: false },
   { key: 'newsletter', label: 'Newsletter', Icon: NewsletterIcon, adminOnly: false },
   { key: 'settings', label: 'Settings', Icon: SettingsIcon, adminOnly: false },
@@ -77,7 +80,11 @@ export default function Portal() {
   const navigate = useNavigate();
   const [authCheck, setAuthCheck] = useState('checking'); // checking | ok | denied
   const [user, setUser] = useState(null);
-  const [section, setSection] = useState('members');
+  // Default is now 'orgchart' rather than 'members' — Members became a
+  // real standalone page (see SECTIONS' `to: '/members'` above) instead
+  // of an in-page tab, so 'members' is no longer a valid `section` value
+  // to default into.
+  const [section, setSection] = useState('orgchart');
 
   useEffect(() => {
     getCurrentUser()
@@ -182,7 +189,6 @@ export default function Portal() {
           </div>
 
           <div className="portal-content">
-            {section === 'members' && <MembersPlaceholder />}
             {section === 'orgchart' && <OrgChartPlaceholder />}
             {section === 'newsletter' && <NewsletterArchive />}
             {section === 'settings' && <Settings user={user} onLogout={handleLogout} />}
@@ -205,16 +211,6 @@ export default function Portal() {
 }
 
 // ─── Placeholders ────────────────────────────────────────────────────────
-
-function MembersPlaceholder() {
-  return (
-    <div className="portal-placeholder">
-      <div className="portal-placeholder-icon"><MembersIcon /></div>
-      <h2>Members</h2>
-      <p>A full member directory is coming soon.</p>
-    </div>
-  );
-}
 
 function OrgChartPlaceholder() {
   return (

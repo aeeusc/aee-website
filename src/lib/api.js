@@ -63,11 +63,26 @@ export function getCurrentUser() {
 // Requires an active admin session (the backend checks req.session,
 // not anything passed from here) — so this only works when called by
 // someone who's already logged in as an admin, via CreateUser.jsx.
-export function createUser(firstName, lastName, email, title) {
+export function createUser(firstName, lastName, email, title, team) {
   return apiRequest('/auth/admin/create-user', {
     method: 'POST',
-    body: JSON.stringify({ firstName, lastName, email: email || undefined, title: title || undefined }),
+    body: JSON.stringify({
+      firstName, lastName,
+      email: email || undefined,
+      title: title || undefined,
+      team: team || undefined,
+    }),
   });
+}
+
+// --- Members directory (Members.jsx) ---
+//
+// Any logged-in member can view the full directory — not admin-gated,
+// unlike createUser above. Returns every account's card-relevant fields
+// (see routes/auth.js's GET /auth/members) for the Members grid to sort/
+// filter/render as MemberCard flip-cards.
+export function getMembers() {
+  return apiRequest('/auth/members', { method: 'GET' });
 }
 
 // --- Profile (Profile.jsx) ---

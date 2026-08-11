@@ -116,14 +116,40 @@
   transform: rotateY(180deg);
   align-items: flex-start;
   justify-content: center;
-  gap: 14px;
   padding: 22px;
   text-align: left;
 }
+/* Bullet-pointed list, per explicit feedback 2026-08-10 ("you could
+   click the back, and you could get the bullet points of people with
+   more info on them") — replaces the earlier plain stacked-lines
+   layout. Bullets use the card's muted slate color rather than default
+   browser black/white, and sit close to the text (not the browser
+   default indent) so they read as part of this card's own design. */
+.member-card-back-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
 .member-card-back-field {
+  position: relative;
+  padding-left: 16px;
   font-size: 13px;
   color: var(--slate-light, #C9D4E4);
   line-height: 1.5;
+}
+.member-card-back-field::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--slate, #94A3B8);
 }
 .member-card-back-label {
   font-weight: 700;

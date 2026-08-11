@@ -1,0 +1,245 @@
+/* src/pages/Members.css
+ *
+ * The full member directory grid page. Reuses the color tokens defined
+ * in Home.css's :root block (--navy-950, --slate, etc.) same as
+ * Portal.css/Profile.css do — not redefined here.
+ *
+ * Layout: a header (logo + "Back to Member Portal", matching the
+ * pattern used on Dashboard.jsx/NewsletterAdmin.jsx/Profile.jsx), a
+ * toolbar row (title, sort dropdown, filter button), then either one
+ * flat 5-across grid or a stack of team-labeled sections — see
+ * Members.jsx for when each renders.
+ */
+
+.members-page {
+  background: var(--navy-950);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', -apple-system, sans-serif;
+  color: var(--white);
+}
+
+.members-denied {
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.members-denied-card {
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 40px 32px;
+  text-align: center;
+  margin: 0 auto;
+}
+.members-denied-card h1 {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 26px;
+  margin-bottom: 12px;
+}
+.members-denied-card p {
+  color: var(--slate-light);
+  margin-bottom: 24px;
+}
+
+/* ---------- HEADER (matches Portal.css's .portal-header) ---------- */
+.members-header {
+  display: flex;
+  align-items: center;
+  padding: 20px 40px;
+  border-bottom: 1px solid var(--line);
+  gap: 24px;
+}
+.members-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--white);
+  font-weight: 700;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
+.members-logo img { width: 28px; height: 28px; }
+.members-back-link {
+  color: var(--slate);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  margin-left: 8px;
+  transition: color .15s;
+}
+.members-back-link:hover { color: var(--white); }
+.members-header-spacer { flex: 1; }
+
+/* ---------- BODY ---------- */
+.members-body {
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 32px 40px 64px;
+}
+
+.members-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.members-title {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 26px;
+  margin: 0;
+}
+.members-toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.members-sort-select {
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 9px 14px;
+  color: var(--white);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+}
+
+/* Filter button + its dropdown panel, top-right per the wireframe. */
+.members-filter-wrap { position: relative; }
+.members-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--white);
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.members-filter-btn:hover { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.05); }
+.members-filter-btn.active { border-color: var(--white); background: rgba(255,255,255,.08); }
+
+.members-filter-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  background: #0C1224;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  min-width: 200px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.4);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.members-filter-dropdown-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin-bottom: 6px;
+}
+.members-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 6px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--slate-light);
+  cursor: pointer;
+  transition: background .15s;
+}
+.members-filter-option:hover { background: rgba(255,255,255,.05); color: var(--white); }
+.members-filter-option input[type="checkbox"] { accent-color: var(--white); cursor: pointer; }
+.members-filter-clear {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  color: var(--slate);
+  text-decoration: underline;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+.members-filter-clear:hover { color: var(--slate-light); }
+
+/* ---------- GRID (flat, no team filter) ---------- */
+.members-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 18px;
+}
+
+/* ---------- GROUPED SECTIONS (team filter active) ---------- */
+.members-sections {
+  display: flex;
+  flex-direction: column;
+}
+.members-section-heading {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 18px;
+  margin: 0 0 16px;
+  cursor: default;
+}
+/* Inset divider between team sections — deliberately NOT full-width,
+   per explicit feedback 2026-08-10 ("the break line won't stretch all
+   the way [[edge to edge of the grid]]"). Margin on both sides achieves
+   the inset; a full-bleed rule would just be border-top on the section
+   itself, which is what this is explicitly not. */
+.members-section-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 8px 32px 32px;
+}
+
+.members-muted { color: var(--slate); font-size: 14px; }
+.members-error { color: #F87171; font-size: 14px; }
+
+.members-pill {
+  background: var(--white);
+  color: var(--navy-950);
+  border-radius: 999px;
+  padding: 11px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 1100px) {
+  .members-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 860px) {
+  .members-body { padding: 24px 20px 48px; }
+  .members-grid { grid-template-columns: repeat(3, 1fr); }
+  .members-section-divider { margin: 8px 12px 32px; }
+}
+@media (max-width: 560px) {
+  .members-grid { grid-template-columns: repeat(2, 1fr); }
+  .members-toolbar { flex-direction: column; align-items: flex-start; }
+}
