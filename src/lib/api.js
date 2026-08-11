@@ -63,16 +63,62 @@ export function getCurrentUser() {
 // Requires an active admin session (the backend checks req.session,
 // not anything passed from here) — so this only works when called by
 // someone who's already logged in as an admin, via CreateUser.jsx.
+//
+// title and team are now REQUIRED as of 2026-08-11 (previously
+// optional) — both must be one of the preset values from
+// CreateUser.jsx's TITLES/TEAMS dropdowns. The backend re-validates
+// this (see routes/auth.js's VALID_TITLES/VALID_TEAMS) since anything
+// enforced only client-side is bypassable via a direct API call.
 export function createUser(firstName, lastName, email, title, team) {
   return apiRequest('/auth/admin/create-user', {
     method: 'POST',
     body: JSON.stringify({
-      firstName, lastName,
+      firstName, lastName, title, team,
       email: email || undefined,
-      title: title || undefined,
-      team: team || undefined,
     }),
   });
+}
+
+// --- Admin: account management (AdminUsers.jsx) ---
+//
+// Every function here requires an active ADMIN session (checked
+// server-side via requireAdmin, not anything passed from here). Powers
+// the admin dashboard: list every account (including deactivated ones,
+// unlike getMembers() above which only returns active members),
+// edit an account's name/title/team, reset a locked-out member's
+// password, deactivate/reactivate an account, and promote/demote admin
+// status. See routes/auth.js's "Admin account management" section for
+// the matching backend routes and their safeguards (e.g. an admin can't
+// deactivate or demote their own account through these).
+export function getAllUsers() {
+  return apiRequest('/auth/admin/users', { method: 'GET' });
+}
+
+export function updateUser(id, { firstName, lastName, title, team } = {}) {
+  return apiRequest(`/auth/admin/users/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ firstName, lastName, title, team }),
+  });
+}
+
+export function resetUserPassword(id) {
+  return apiRequest(`/auth/admin/users/${id}/reset-password`, { method: 'POST' });
+}
+
+export function deactivateUser(id) {
+  return apiRequest(`/auth/admin/users/${id}/deactivate`, { method: 'PUT' });
+}
+
+export function reactivateUser(id) {
+  return apiRequest(`/auth/admin/users/${id}/reactivate`, { method: 'PUT' });
+}
+
+export function promoteUser(id) {
+  return apiRequest(`/auth/admin/users/${id}/promote`, { method: 'PUT' });
+}
+
+export function demoteUser(id) {
+  return apiRequest(`/auth/admin/users/${id}/demote`, { method: 'PUT' });
 }
 
 // --- Members directory (Members.jsx) ---

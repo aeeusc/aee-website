@@ -1,0 +1,274 @@
+/* src/pages/AdminUsers.css
+ *
+ * Admin account-management dashboard. Reuses the color tokens defined
+ * in Home.css's :root block, same as every other portal-adjacent page —
+ * not redefined here. Header pattern matches Members.css/Portal.css
+ * (logo left, "Back to Member Portal" link, spacer).
+ */
+
+.admin-users-page {
+  background: var(--navy-950);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', -apple-system, sans-serif;
+  color: var(--white);
+}
+
+.admin-users-denied {
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.admin-users-denied-card {
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 40px 32px;
+  text-align: center;
+  margin: 0 auto;
+}
+.admin-users-denied-card h1 {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 26px;
+  margin-bottom: 12px;
+}
+.admin-users-denied-card p {
+  color: var(--slate-light);
+  margin-bottom: 24px;
+}
+
+/* ---------- HEADER ---------- */
+.admin-users-header {
+  display: flex;
+  align-items: center;
+  padding: 20px 40px;
+  border-bottom: 1px solid var(--line);
+  gap: 24px;
+}
+.admin-users-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--white);
+  font-weight: 700;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
+.admin-users-logo img { width: 28px; height: 28px; }
+.admin-users-back-link {
+  color: var(--slate);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  margin-left: 8px;
+  transition: color .15s;
+}
+.admin-users-back-link:hover { color: var(--white); }
+.admin-users-header-spacer { flex: 1; }
+
+/* ---------- BODY ---------- */
+.admin-users-body {
+  flex: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 32px 40px 64px;
+}
+.admin-users-title {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 26px;
+  margin: 0 0 6px;
+}
+.admin-users-sub {
+  color: var(--slate-light);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+.admin-users-reset-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  background: rgba(74,222,128,.08);
+  border: 1px solid rgba(74,222,128,.35);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: var(--slate-light);
+  line-height: 1.6;
+}
+.admin-users-reset-password {
+  font-family: 'Space Grotesk', 'Inter', monospace;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--white);
+  margin-top: 4px;
+  word-break: break-all;
+}
+.admin-users-dismiss {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--white);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.admin-users-dismiss:hover { border-color: rgba(255,255,255,.5); }
+
+.admin-users-muted { color: var(--slate); font-size: 14px; }
+.admin-users-error { color: #F87171; font-size: 14px; }
+
+/* ---------- ACCOUNT LIST ---------- */
+.admin-users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.admin-users-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: rgba(255,255,255,.02);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+.admin-users-row.inactive {
+  opacity: .55;
+  border-style: dashed;
+}
+
+.admin-users-row-main { min-width: 0; }
+.admin-users-row-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--white);
+}
+.admin-users-row-meta {
+  font-size: 12px;
+  color: var(--slate);
+  margin-top: 3px;
+}
+.admin-users-row-error {
+  color: #F87171;
+  font-size: 12px;
+  margin: 6px 0 0;
+}
+
+.admin-users-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.admin-users-badge.admin {
+  background: rgba(255,255,255,.12);
+  color: var(--white);
+}
+.admin-users-badge.inactive {
+  background: rgba(248,113,113,.15);
+  color: #F87171;
+}
+
+.admin-users-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.admin-users-action {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--white);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, opacity .15s;
+  white-space: nowrap;
+}
+.admin-users-action:hover:not(:disabled) { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.05); }
+.admin-users-action:disabled { opacity: .35; cursor: not-allowed; }
+
+/* ---------- INLINE EDIT FORM ---------- */
+.admin-users-edit-form { width: 100%; }
+.admin-users-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+.admin-users-input {
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: var(--white);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+select.admin-users-input { cursor: pointer; }
+
+.admin-users-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+.admin-users-pill-sm {
+  background: var(--white);
+  color: var(--navy-950);
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+}
+.admin-users-pill-sm:disabled { opacity: .6; cursor: default; }
+.admin-users-cancel-sm {
+  background: transparent;
+  color: var(--slate);
+  border: none;
+  font-size: 13px;
+  font-family: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.admin-users-cancel-sm:hover { color: var(--slate-light); }
+
+.admin-users-pill {
+  background: var(--white);
+  color: var(--navy-950);
+  border-radius: 999px;
+  padding: 11px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+}
+
+@media (max-width: 700px) {
+  .admin-users-body { padding: 24px 20px 48px; }
+  .admin-users-row { flex-direction: column; align-items: stretch; }
+  .admin-users-row-actions { justify-content: flex-start; }
+}

@@ -152,6 +152,8 @@ export default function Dashboard() {
         {user?.is_admin && (
           <p style={styles.footerText}>
             <Link to="/create-user" style={styles.inlineLink}>Create a new account</Link>
+            {' · '}
+            <Link to="/admin/users" style={styles.inlineLink}>Manage accounts</Link>
           </p>
         )}
 

@@ -9,6 +9,7 @@ import Legal from './pages/Legal'
 import Portal from './pages/Portal'
 import Profile from './pages/Profile'
 import Members from './pages/Members'
+import AdminUsers from './pages/AdminUsers'
 import NotFound from './pages/NotFound'
 import './App.css'
 
@@ -35,6 +36,7 @@ function App() {
         <Route path="/portal" element={<Portal />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/members" element={<Members />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
         {/* Catch-all — anything that doesn't match a route above (like
             the now-removed /signup) gets a real 404 page instead of
             silently rendering blank. Must stay LAST; React Router
