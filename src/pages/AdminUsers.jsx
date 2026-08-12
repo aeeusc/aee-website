@@ -36,10 +36,29 @@ import {
 import './AdminUsers.css';
 
 // Kept in sync with routes/auth.js's VALID_TITLES/VALID_TEAMS and
-// CreateUser.jsx's TITLES/TEAMS. PLACEHOLDER TITLES — Kev is sending
-// the real org role names separately.
-const TITLES = ['President', 'Vice President', 'Design Team Coordinator', 'Officer', 'Member'];
-const TEAMS = ['CWC', 'MECC', 'HCC', 'STiT'];
+// CreateUser.jsx's TITLES/TEAMS. Real title list received from Kev
+// 2026-08-11, replacing the earlier 5-item placeholder.
+const TITLES = [
+  'Founder & Advisor',
+  'President',
+  'Vice President',
+  'Executive Project Manager',
+  'Director of Outreach',
+  'Director of Membership',
+  'Director of Finance',
+  'Policy Consortium Director',
+  'Director of Brand',
+  'Executive Coordinator',
+  'HCC PM',
+  'CWC PM',
+  'MECC PM',
+  'STEP PM',
+  'TREX PM',
+  'Member',
+];
+// STEP and TREX added 2026-08-12 — see CreateUser.jsx's matching TEAMS
+// comment.
+const TEAMS = ['CWC', 'MECC', 'HCC', 'STiT', 'STEP', 'TREX'];
 
 function fullName(u) {
   return [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username;

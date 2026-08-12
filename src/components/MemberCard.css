@@ -7,17 +7,24 @@
  * .cf-card) feel native or the browser's own compositor, not something
  * fighting against it.
  *
- * Sizing: square, per explicit feedback 2026-08-08 ("instead of being
- * rectangle, I want them to be square") — this replaces the coverflow's
- * portrait 290x400 card shape for the Members grid specifically, not a
- * change to the e-board carousel itself.
+ * Sizing: portrait, matching the e-board coverflow's own 290x400 card
+ * shape (see Home.css's .cf-card) — per explicit feedback 2026-08-11
+ * ("make the member galleries along with... the org chart photos...
+ * the same size as... what we have for the e board on the main page").
+ * This REVERSES an earlier decision (2026-08-08: "instead of being
+ * rectangle, I want them to be square") — kept as aspect-ratio rather
+ * than a fixed 290x400px so cards still respond to the grid's own
+ * column width (Members.css's .members-grid is a responsive 5/4/3/2-
+ * across grid, not a fixed-width layout the way the coverflow is); the
+ * PROPORTION matches the e-board exactly (290/400), just scaled to
+ * whatever width the grid column gives it.
  */
 
 .member-card {
   all: unset;
   display: block;
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 290 / 400;
   cursor: pointer;
   perspective: 1200px;
   border-radius: 16px;
@@ -159,4 +166,45 @@
   font-size: 12px;
   color: var(--slate, #94A3B8);
   margin: 0;
+}
+
+/* Wraps the back face's sub-sections (hobbies/etc. list, past roles,
+ * social links) added 2026-08-11 — plain flex column so each section
+ * stacks with consistent spacing regardless of how many of the three
+ * are actually present for a given member. */
+.member-card-back-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.member-card-back-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--slate, #94A3B8);
+  margin-bottom: 8px;
+}
+
+.member-card-back-links {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.member-card-back-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--white, #fff);
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 999px;
+  padding: 5px 12px;
+  text-decoration: none;
+  transition: background .15s ease, border-color .15s ease;
+}
+.member-card-back-link:hover {
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.4);
 }

@@ -285,7 +285,15 @@
 
 /* ---------- BOARD ---------- */
 .board { padding: 96px 24px 120px; text-align: center; overflow: hidden; background: linear-gradient(180deg, var(--navy-950) 0%, #0C1224 55%, var(--navy-950) 100%); }
-.cf-stage { position: relative; height: 430px; margin-top: 58px; perspective: 1300px; }
+/* touch-action: pan-y — added 2026-08-12 alongside Home.jsx's new touch
+   swipe handler. Tells the browser upfront "vertical panning here is
+   normal page scroll, but don't assume anything about horizontal
+   gestures" so it doesn't start its own native scroll/back-navigation
+   physics on a horizontal drag before our JS's preventDefault has a
+   chance to run — without this, the first few pixels of a swipe can
+   feel laggy or get fought over between the browser and the touchmove
+   handler. Vertical scrolling over the board is untouched either way. */
+.cf-stage { position: relative; height: 430px; margin-top: 58px; perspective: 1300px; touch-action: pan-y; }
 /* Marks the center wheel-scroll zone's horizontal bounds — see the
    wheel-listener comment in Home.jsx for how this is used (measured via
    getBoundingClientRect, not an event target itself). Roughly matches the

@@ -8,43 +8,56 @@
 // Layout: a logo header (links back to the homepage), a slim left rail
 // listing every section as plain links, and a right side — the bulk of
 // the page — split into a top row of big icon+label tiles mirroring the
-// rail, and a bottom row split into two quarters — Calendar (events) on
-// the left, Tasks on the right. The rail is deliberately minimal (a
-// thin column of plain text links, not a padded 1/3-width panel) per
+// rail, a content section for whichever tab is active, and a bottom row
+// holding the Tasks panel. The rail is deliberately minimal (a thin
+// column of plain text links, not a padded 1/3-width panel) per
 // explicit feedback 2026-08-08 ("way too much space for this vertical
 // bar... I wanna be super minimal... simple, easy vertical bars... the
 // members thing should be taking up more space") — most of the width
 // goes to the tiles/content side instead.
 //
 // Most rail items/tiles switch which section's content renders below
-// (see `section` state) — Calendar and Tasks stay visible in their
-// quadrants regardless of which section is selected, since they're part
-// of the persistent layout, not a tab. Members, Dashboard, and Send
-// Newsletter are the exception: real links to standalone pages
-// (/members, /dashboard, /newsletter-admin) instead of in-page tabs —
-// see the `to` field on SECTIONS below. Dashboard/Send Newsletter became
-// real pages per explicit feedback 2026-08-08 ("dashboard and send
-// newsletter... it should redirect you to their pages, their subpages
-// ...when you click on them"); Members followed the same pattern
-// 2026-08-10 once its full grid/filter/sort page was built (see
-// src/pages/Members.jsx) rather than staying a placeholder tab.
+// (see `section` state) — Tasks stays visible in its own panel
+// regardless of which section is selected, since it's part of the
+// persistent layout, not a tab. Members, Calendar, Settings, Dashboard,
+// and Send Newsletter are the exception: real links to standalone pages
+// (/members, /calendar, /profile?tab=settings, /dashboard,
+// /newsletter-admin) instead of in-page tabs — see the `to` field on
+// SECTIONS below. Dashboard/Send Newsletter became real pages per
+// explicit feedback 2026-08-08 ("dashboard and send newsletter... it
+// should redirect you to their pages, their subpages... when you click
+// on them"); Members followed the same pattern 2026-08-10 once its full
+// grid/filter/sort page was built (see src/pages/Members.jsx); Settings
+// followed 2026-08-11 when it merged into Profile.jsx as a tab there
+// ("I think profile and settings should be, like, two in one kinda...
+// like an Instagram type of deal or Facebook") — its change-password/
+// log-out logic moved to Profile.jsx's SettingsTab component and no
+// longer lives here at all. Calendar followed the same pattern the same
+// day, as part of the "Calendar/Tasks rework" — it used to be a small
+// quarter-width "upcoming events" panel living right here alongside
+// Tasks; it's now a full month-grid standalone page (see
+// src/pages/Calendar.jsx) reached via this tile/rail-item instead.
+// Tasks explicitly did NOT get the same treatment — per Kev, "add due
+// dates, but keep Tasks separate" — so it's still an in-portal panel
+// (see TasksPanel below), just now full-width in the bottom row since
+// Calendar's old quadrant neighbor is gone, and each task can now
+// optionally carry a due date.
 //
-// Org Chart is still an explicit placeholder (no backend yet) —
-// everything else here (Settings, Newsletter view, Calendar, Tasks) is
-// real and backed by routes/portal.js + routes/newsletter.js's archive
-// addition, kept intentionally bare-minimum rather than fully built
-// out, per an explicit scope decision.
+// Org Chart became a real standalone page 2026-08-12 (see
+// src/pages/OrgChart.jsx) once Kev approved the review sketch — same
+// pattern as Members/Calendar/Settings before it: a real link
+// (`to: '/org-chart'`) instead of the in-page placeholder tab it used to
+// be. Newsletter (view) and Tasks are the only pieces left that are
+// genuinely still in-page — real and backed by routes/portal.js +
+// routes/newsletter.js's archive addition, kept intentionally
+// bare-minimum rather than fully built out, per an explicit scope
+// decision.
 
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   getCurrentUser,
-  logout,
-  changePassword,
   getNewsletterArchive,
-  getEvents,
-  createEvent,
-  deleteEvent,
   getMyTasks,
   createTask,
   setTaskDone,
@@ -69,22 +82,23 @@ import './Portal.css';
 // routes rather than the in-page tabs they used to be.
 const SECTIONS = [
   { key: 'members', label: 'Members', Icon: MembersIcon, adminOnly: false, to: '/members' },
-  { key: 'orgchart', label: 'Org Chart', Icon: OrgChartIcon, adminOnly: false },
+  { key: 'calendar', label: 'Calendar', Icon: CalendarIcon, adminOnly: false, to: '/calendar' },
+  { key: 'orgchart', label: 'Org Chart', Icon: OrgChartIcon, adminOnly: false, to: '/org-chart' },
   { key: 'newsletter', label: 'Newsletter', Icon: NewsletterIcon, adminOnly: false },
-  { key: 'settings', label: 'Settings', Icon: SettingsIcon, adminOnly: false },
+  { key: 'settings', label: 'Settings', Icon: SettingsIcon, adminOnly: false, to: '/profile?tab=settings' },
   { key: 'dashboard', label: 'Dashboard', Icon: DashboardIcon, adminOnly: true, to: '/dashboard' },
   { key: 'newsletter-send', label: 'Send Newsletter', Icon: SendIcon, adminOnly: true, to: '/newsletter-admin' },
 ];
 
 export default function Portal() {
-  const navigate = useNavigate();
   const [authCheck, setAuthCheck] = useState('checking'); // checking | ok | denied
   const [user, setUser] = useState(null);
-  // Default is now 'orgchart' rather than 'members' — Members became a
-  // real standalone page (see SECTIONS' `to: '/members'` above) instead
-  // of an in-page tab, so 'members' is no longer a valid `section` value
-  // to default into.
-  const [section, setSection] = useState('orgchart');
+  // Default is now 'newsletter' — it's the only SECTIONS entry left
+  // without a `to` (a real in-page tab, not a link to a standalone
+  // page). Members, Calendar, and now Org Chart (2026-08-12) all moved
+  // out to their own pages over time, so 'members'/'orgchart' are no
+  // longer valid `section` values to default into.
+  const [section, setSection] = useState('newsletter');
 
   useEffect(() => {
     getCurrentUser()
@@ -98,14 +112,6 @@ export default function Portal() {
       })
       .catch(() => setAuthCheck('denied'));
   }, []);
-
-  async function handleLogout() {
-    try {
-      await logout();
-    } finally {
-      navigate('/');
-    }
-  }
 
   if (authCheck === 'checking') {
     return <div className="portal-page" />;
@@ -189,15 +195,10 @@ export default function Portal() {
           </div>
 
           <div className="portal-content">
-            {section === 'orgchart' && <OrgChartPlaceholder />}
             {section === 'newsletter' && <NewsletterArchive />}
-            {section === 'settings' && <Settings user={user} onLogout={handleLogout} />}
           </div>
 
           <div className="portal-quadrants">
-            <div className="portal-quadrant">
-              <CalendarPanel isAdmin={user?.is_admin} />
-            </div>
             <div className="portal-quadrant">
               <TasksPanel />
             </div>
@@ -206,110 +207,6 @@ export default function Portal() {
       </div>
 
       <Footer showNewsletterSignup={false} />
-    </div>
-  );
-}
-
-// ─── Placeholders ────────────────────────────────────────────────────────
-
-function OrgChartPlaceholder() {
-  return (
-    <div className="portal-placeholder">
-      <div className="portal-placeholder-icon"><OrgChartIcon /></div>
-      <h2>Org Chart</h2>
-      <p>An interactive org chart is coming soon.</p>
-    </div>
-  );
-}
-
-// ─── Settings (change password — same logic as the old standalone
-// Dashboard.jsx, now living inside the portal as its own tab) ──────────
-
-function Settings({ user, onLogout }) {
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [status, setStatus] = useState('idle');
-  const [feedback, setFeedback] = useState('');
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setStatus('submitting');
-    setFeedback('');
-
-    if (newPassword !== confirmPassword) {
-      setStatus('error');
-      setFeedback('New password and confirmation do not match.');
-      return;
-    }
-
-    try {
-      const data = await changePassword(currentPassword, newPassword);
-      setStatus('success');
-      setFeedback(data?.message || 'Password updated.');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (err) {
-      setStatus('error');
-      setFeedback(err.message || 'Something went wrong. Please try again.');
-    }
-  }
-
-  return (
-    <div className="portal-section">
-      <h2>Settings</h2>
-      <p className="portal-section-sub">
-        {user?.username && <>Username: <strong>{user.username}</strong><br /></>}
-        Manage your account security below.
-      </p>
-
-      <form onSubmit={handleSubmit} className="portal-form">
-        <label className="portal-label">
-          Current password
-          <input
-            type="password"
-            required
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            className="portal-input"
-          />
-        </label>
-        <label className="portal-label">
-          New password
-          <input
-            type="password"
-            required
-            minLength={8}
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="portal-input"
-            placeholder="At least 8 characters"
-          />
-        </label>
-        <label className="portal-label">
-          Confirm new password
-          <input
-            type="password"
-            required
-            minLength={8}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="portal-input"
-          />
-        </label>
-
-        {status === 'error' && <p className="portal-error">{feedback}</p>}
-        {status === 'success' && <p className="portal-success">{feedback}</p>}
-
-        <button type="submit" disabled={status === 'submitting'} className="portal-pill">
-          {status === 'submitting' ? 'Updating…' : 'Update Password'}
-        </button>
-      </form>
-
-      <button type="button" onClick={onLogout} className="portal-link-button">
-        Log out
-      </button>
     </div>
   );
 }
@@ -362,160 +259,16 @@ function NewsletterArchive() {
   );
 }
 
-// ─── Calendar (events) ───────────────────────────────────────────────────
-//
-// Every member sees the same shared events list. Admins additionally get
-// a small inline "add event" form right in this quadrant — kept compact
-// since this is a quarter-width panel, not a dedicated page.
-
-function CalendarPanel({ isAdmin }) {
-  const [status, setStatus] = useState('loading');
-  const [events, setEvents] = useState([]);
-  const [error, setError] = useState('');
-  const [selected, setSelected] = useState(null);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [eventAt, setEventAt] = useState('');
-  const [addStatus, setAddStatus] = useState('idle');
-  const [addError, setAddError] = useState('');
-
-  function loadEvents() {
-    setStatus('loading');
-    getEvents()
-      .then((data) => {
-        setEvents(data?.events || []);
-        setStatus('ok');
-      })
-      .catch((err) => {
-        setError(err.message || 'Could not load events.');
-        setStatus('error');
-      });
-  }
-
-  useEffect(loadEvents, []);
-
-  async function handleAdd(e) {
-    e.preventDefault();
-    setAddStatus('submitting');
-    setAddError('');
-    try {
-      await createEvent(title, description, new Date(eventAt).toISOString());
-      setTitle('');
-      setDescription('');
-      setEventAt('');
-      setShowAddForm(false);
-      setAddStatus('idle');
-      loadEvents();
-    } catch (err) {
-      setAddStatus('error');
-      setAddError(err.message || 'Could not add event.');
-    }
-  }
-
-  async function handleDelete(id) {
-    try {
-      await deleteEvent(id);
-      setSelected(null);
-      loadEvents();
-    } catch (err) {
-      setAddError(err.message || 'Could not delete event.');
-    }
-  }
-
-  return (
-    <div className="portal-panel">
-      <div className="portal-panel-header">
-        <h3>Upcoming Events</h3>
-        {isAdmin && (
-          <button
-            type="button"
-            className="portal-panel-add"
-            onClick={() => setShowAddForm((v) => !v)}
-            aria-label="Add event"
-          >
-            {showAddForm ? '×' : '+'}
-          </button>
-        )}
-      </div>
-
-      {isAdmin && showAddForm && (
-        <form onSubmit={handleAdd} className="portal-inline-form">
-          <input
-            type="text"
-            required
-            placeholder="Event title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="portal-input portal-input-sm"
-          />
-          <input
-            type="datetime-local"
-            required
-            value={eventAt}
-            onChange={(e) => setEventAt(e.target.value)}
-            className="portal-input portal-input-sm"
-          />
-          <input
-            type="text"
-            placeholder="Description (optional)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="portal-input portal-input-sm"
-          />
-          {addStatus === 'error' && <p className="portal-error portal-error-sm">{addError}</p>}
-          <button type="submit" disabled={addStatus === 'submitting'} className="portal-pill portal-pill-sm">
-            {addStatus === 'submitting' ? 'Adding…' : 'Add Event'}
-          </button>
-        </form>
-      )}
-
-      {status === 'loading' && <p className="portal-muted">Loading…</p>}
-      {status === 'error' && <p className="portal-error">{error}</p>}
-      {status === 'ok' && events.length === 0 && (
-        <p className="portal-muted">No upcoming events.</p>
-      )}
-      {status === 'ok' && events.length > 0 && (
-        <div className="portal-event-list">
-          {events.map((ev) => (
-            <div key={ev.id}>
-              <button
-                type="button"
-                className="portal-event-item"
-                onClick={() => setSelected(selected === ev.id ? null : ev.id)}
-              >
-                <span className="portal-event-date">
-                  {new Date(ev.event_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                </span>
-                <span className="portal-event-title">{ev.title}</span>
-              </button>
-              {selected === ev.id && (
-                <div className="portal-event-detail">
-                  <div>
-                    {new Date(ev.event_at).toLocaleString(undefined, {
-                      dateStyle: 'full', timeStyle: 'short',
-                    })}
-                  </div>
-                  {ev.description && <p>{ev.description}</p>}
-                  {isAdmin && (
-                    <button type="button" className="portal-link-button" onClick={() => handleDelete(ev.id)}>
-                      Delete event
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Tasks (per-user, assigned by an admin) ─────────────────────────────
 //
 // Any member sees only their own tasks and can check them off. Admins
-// additionally get a compact inline "assign a task" form.
+// additionally get a compact inline "assign a task" form. Gained an
+// OPTIONAL due-date field as part of the 2026-08-11 Calendar/Tasks
+// rework — Calendar moved out to its own page (see Calendar.jsx), but
+// per explicit decision Tasks stayed right here rather than merging
+// into that calendar grid; due dates only affect sort order/display
+// within this panel (soonest-due-first, see routes/portal.js's ORDER
+// BY), they never appear on the Calendar page itself.
 
 function TasksPanel() {
   const [status, setStatus] = useState('loading');
@@ -528,6 +281,7 @@ function TasksPanel() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
+  const [dueDate, setDueDate] = useState(''); // optional — <input type="date"> value, e.g. "2026-08-15"
   const [addStatus, setAddStatus] = useState('idle');
   const [addError, setAddError] = useState('');
 
@@ -574,10 +328,11 @@ function TasksPanel() {
     setAddStatus('submitting');
     setAddError('');
     try {
-      await createTask(title, description, Number(assignedTo));
+      await createTask(title, description, Number(assignedTo), dueDate ? new Date(dueDate).toISOString() : undefined);
       setTitle('');
       setDescription('');
       setAssignedTo('');
+      setDueDate('');
       setShowAddForm(false);
       setAddStatus('idle');
       // Only reloads the CURRENT user's own task list — if the task was
@@ -636,6 +391,15 @@ function TasksPanel() {
             onChange={(e) => setDescription(e.target.value)}
             className="portal-input portal-input-sm"
           />
+          <label className="portal-task-due-label">
+            Due date (optional)
+            <input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="portal-input portal-input-sm"
+            />
+          </label>
           {addStatus === 'error' && <p className="portal-error portal-error-sm">{addError}</p>}
           <button type="submit" disabled={addStatus === 'submitting'} className="portal-pill portal-pill-sm">
             {addStatus === 'submitting' ? 'Assigning…' : 'Assign Task'}
@@ -650,16 +414,27 @@ function TasksPanel() {
       )}
       {status === 'ok' && tasks.length > 0 && (
         <div className="portal-task-list">
-          {tasks.map((task) => (
-            <label key={task.id} className={`portal-task-item${task.is_done ? ' done' : ''}`}>
-              <input
-                type="checkbox"
-                checked={task.is_done}
-                onChange={() => handleToggle(task)}
-              />
-              <span className="portal-task-title">{task.title}</span>
-            </label>
-          ))}
+          {tasks.map((task) => {
+            // "Overdue" = has a due date, that date has passed, and it's
+            // not done yet — purely a display flag (a red due-date label),
+            // there's no separate backend concept of overdue.
+            const isOverdue = task.due_date && !task.is_done && new Date(task.due_date) < new Date();
+            return (
+              <label key={task.id} className={`portal-task-item${task.is_done ? ' done' : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={task.is_done}
+                  onChange={() => handleToggle(task)}
+                />
+                <span className="portal-task-title">{task.title}</span>
+                {task.due_date && (
+                  <span className={`portal-task-due${isOverdue ? ' overdue' : ''}`}>
+                    Due {new Date(task.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  </span>
+                )}
+              </label>
+            );
+          })}
         </div>
       )}
     </div>
@@ -668,10 +443,12 @@ function TasksPanel() {
 
 // ─── Rail/tile icons ───────────────────────────────────────────────────
 //
-// Six simple line icons, one per portal section — real SVGs rather than
+// Simple line icons, one per portal section — real SVGs rather than
 // emoji, per explicit feedback 2026-08-08. Consistent style: 22x22
 // viewBox, 1.8px stroke, no fill, currentColor (so hover/active tile
 // states recolor them for free without a second icon variant).
+// CalendarIcon added 2026-08-11 for the Calendar/Tasks rework, matching
+// the same style as everything else here.
 
 function MembersIcon() {
   return (
@@ -680,6 +457,19 @@ function MembersIcon() {
       <path d="M2.5 18c.9-3.4 3-5 5.5-5s4.6 1.6 5.5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none" />
       <circle cx="16" cy="8" r="2.4" stroke="currentColor" strokeWidth="1.8" />
       <path d="M14 12.3c1.9.2 3.2 1.4 3.9 3.7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+    </svg>
+  );
+}
+
+function CalendarIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <rect x="2.5" y="4" width="17" height="15.5" rx="2" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M2.5 8.5h17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M6.5 2.5v3M15.5 2.5v3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="7" cy="12.5" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="11" cy="12.5" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="12.5" r="1.1" fill="currentColor" stroke="none" />
     </svg>
   );
 }

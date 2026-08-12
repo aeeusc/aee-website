@@ -102,8 +102,27 @@ const TEAMS = [
   },
 ];
 
+// Reordered/edited 2026-08-11 per Kev's explicit feedback:
+//  - Mitch Kirby steps down from President, stays on as "Founder & Advisor."
+//  - Alex Bartolomei becomes President ("just president" — his old "MECC PM"
+//    title is dropped, not kept alongside it), moved up to sit right after
+//    Mitch since President follows the two Advisor-tier entries at the top.
+//    That leaves MECC PM without a listed PM here — fine unless/until Kev
+//    wants someone else in that slot.
+//  - Kevin Jack (this project's dev) added at the very end, title "Member,"
+//    using PLACEHOLDER_AVATAR until he sends a real photo — swap `img` for
+//    a real `/eboard/<file>.jpg` once he does. LinkedIn omitted (the `li`
+//    field is optional now — see the conditional render below).
+//  - Faculty Advisor: STILL PENDING — Kev wants her added in front of Mitch
+//    Kirby (i.e. as the very first entry) with the title "Faculty Advisor,"
+//    but hasn't sent her name yet, so there's nothing to add here. Once we
+//    have her name (and a photo, or PLACEHOLDER_AVATAR in the meantime),
+//    insert her object as the new first entry in this array.
+const PLACEHOLDER_AVATAR = asset("/eboard/placeholder-avatar.svg");
+
 const BOARD = [
-  { n: "Mitch Kirby", r: "President & Founder", img: asset("/eboard/mitchkirby.jpg"), li: "https://www.linkedin.com/in/mitchell-kirby/" },
+  { n: "Mitch Kirby", r: "Founder & Advisor", img: asset("/eboard/mitchkirby.jpg"), li: "https://www.linkedin.com/in/mitchell-kirby/" },
+  { n: "Alex Bartolomei", r: "President", img: asset("/eboard/alexbartolomei.jpg"), li: "https://www.linkedin.com/in/alexbartolomei/" },
   { n: "Alexandra Somodi", r: "Vice President & Brand Director", img: asset("/eboard/alexandrasomodi.png"), li: "https://www.linkedin.com/in/alexandra-somodi/" },
   { n: "David Moseley", r: "Design Team Coordinator", img: asset("/eboard/davidmoseley.jpg"), li: "https://www.linkedin.com/in/davidmmoseley/" },
   { n: "Jordyn Wetherbee", r: "Executive Coordinator & CWC PM", img: asset("/eboard/jordynwetherbee.jpg"), li: "https://www.linkedin.com/in/jordyn-wetherbee/" },
@@ -114,9 +133,9 @@ const BOARD = [
   { n: "Jainam Jain", r: "Director of Outreach & CWC PM", img: asset("/eboard/jainamjain.png"), li: "https://www.linkedin.com/in/jainam-jain-937a13214/" },
   { n: "Ellis Fertig", r: "ShadeLA PM & Director of Policy", img: asset("/eboard/ellisfertig.jpg"), li: "https://www.linkedin.com/in/ellis-fertig-4512b232b/" },
   { n: "Sam Gold", r: "ShadeLA PM & Asst. Director of Policy", img: asset("/eboard/samgold.jpg"), li: "https://www.linkedin.com/in/sam-j-gold/" },
-  { n: "Alex Bartolomei", r: "MECC PM", img: asset("/eboard/alexbartolomei.jpg"), li: "https://www.linkedin.com/in/alexbartolomei/" },
   { n: "Alex Geschwill", r: "HCC PM", img: asset("/eboard/alexgeschwill.jpg"), li: "https://www.linkedin.com/in/alexandra-geschwill/" },
   { n: "Daniela Lopez Escalante", r: "Asst. Director of Brand", img: asset("/eboard/daniela.jpg"), li: "https://www.linkedin.com/in/daniela-lopez-escalante-839a4038a/" },
+  { n: "Kevin Jack", r: "Member", img: PLACEHOLDER_AVATAR },
 ];
 
 // ─── Nav + mobile menu ──────────────────────────────────────────────────────
@@ -584,6 +603,128 @@ function Board() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Touch/swipe support — added 2026-08-12 per explicit feedback ("when
+  // you scroll... it doesn't work for the [board] whatsoever [on
+  // mobile]. You're not able to scroll on mobile as you are on a
+  // computer"). The wheel listener above only ever fires for a physical
+  // mouse wheel or trackpad — a phone's finger swipe never generates a
+  // "wheel" event, so without a matching touch handler here mobile
+  // visitors had NO way to move through the carousel by swiping the way
+  // desktop visitors move through it by scrolling; only the arrow
+  // buttons and tapping a neighboring card worked. Confirmed as an
+  // actual gap (not just a guess) by simulating a real touch swipe
+  // against a mobile-viewport build before writing this fix: the active
+  // card never changed.
+  //
+  // Simpler than the wheel accumulator/drain-loop above on purpose — a
+  // touch swipe is one discrete gesture with a clear start and end, not
+  // a stream of small deltas that needs pacing to feel like continuous
+  // motion, so there's no need to replicate that machinery here. Same
+  // hitzone-gating and axis-picking principles as the wheel listener
+  // still apply though: only a swipe that STARTS within the hitzone and
+  // whose motion is genuinely more horizontal than vertical drives the
+  // carousel; anything else (starting outside the card cluster, or a
+  // mostly-vertical drag) is left alone so the page still scrolls
+  // normally on mobile, same as scrolling outside the hitzone works on
+  // desktop.
+  useEffect(() => {
+    const stage = stageRef.current;
+    const hitzone = hitzoneRef.current;
+    if (!stage || !hitzone) return;
+
+    // Total horizontal finger-travel (in px) that counts as one card
+    // step. Tuned lower than the wheel listener's STEP_THRESHOLD (120)
+    // since these are actual on-screen pixels a thumb dragged, not wheel
+    // -delta units — a comfortable full-width swipe on a phone covers
+    // maybe 150-250px total, so 60px/card lets one flick move through
+    // 2-4 cards, similar in feel to a firm trackpad flick.
+    const TOUCH_STEP_PX = 60;
+
+    let touchActive = false;
+    let isHorizontal = null; // null until the gesture's dominant axis is decided
+    let startX = 0;
+    let startY = 0;
+    let steppedPx = 0; // how much of the drag has already been converted into steps
+
+    function onTouchStart(e) {
+      if (e.touches.length !== 1) return; // ignore pinch/multi-touch
+      const touch = e.touches[0];
+      const zoneRect = hitzone.getBoundingClientRect();
+      if (touch.clientX < zoneRect.left || touch.clientX > zoneRect.right) return;
+      touchActive = true;
+      isHorizontal = null;
+      startX = touch.clientX;
+      startY = touch.clientY;
+      steppedPx = 0;
+    }
+
+    function onTouchMove(e) {
+      if (!touchActive || e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+
+      if (isHorizontal === null) {
+        // Wait for real, deliberate movement before committing to an
+        // axis — a barely-moved touch (basically a tap) shouldn't
+        // prematurely decide the gesture is horizontal.
+        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+        isHorizontal = Math.abs(dx) > Math.abs(dy);
+        if (!isHorizontal) {
+          // Vertical drag — this is a normal page-scroll gesture, not a
+          // carousel swipe. Bail out and let the browser handle it.
+          touchActive = false;
+          return;
+        }
+      }
+
+      // Horizontal swipe over the cards — this IS the carousel gesture,
+      // so prevent the page (and iOS Safari's edge-swipe back/forward
+      // navigation) from also trying to react to it.
+      e.preventDefault();
+
+      const traveled = dx - steppedPx;
+      if (Math.abs(traveled) >= TOUCH_STEP_PX) {
+        // Dragging right (dx > 0, finger moving left-to-right) reveals
+        // the PREVIOUS card, same direction convention as the wheel
+        // listener (scrolling/dragging "forward" = active + 1).
+        const direction = traveled > 0 ? -1 : 1;
+        goTo(activeRef.current + direction);
+        // Consume this step's worth of distance in the SAME sign as the
+        // travel that triggered it (not the resulting `direction`, which
+        // is inverted from `traveled`'s sign) — so the next comparison
+        // (`dx - steppedPx`) measures only the leftover, not-yet-stepped
+        // portion of the drag. Getting this backwards (tying the sign to
+        // `direction` instead of `traveled`) was an actual bug caught
+        // while testing: it made steppedPx walk the WRONG way, so a
+        // rightward drag's accumulated distance never shrank back below
+        // the threshold and no step ever landed.
+        steppedPx += traveled > 0 ? TOUCH_STEP_PX : -TOUCH_STEP_PX;
+      }
+    }
+
+    function onTouchEnd() {
+      touchActive = false;
+      isHorizontal = null;
+    }
+
+    // touchstart/touchend stay passive (never preventDefault) — only
+    // touchmove needs { passive: false }, since that's the only one that
+    // ever calls preventDefault, and only once a horizontal drag is
+    // confirmed.
+    stage.addEventListener("touchstart", onTouchStart, { passive: true });
+    stage.addEventListener("touchmove", onTouchMove, { passive: false });
+    stage.addEventListener("touchend", onTouchEnd, { passive: true });
+    stage.addEventListener("touchcancel", onTouchEnd, { passive: true });
+    return () => {
+      stage.removeEventListener("touchstart", onTouchStart);
+      stage.removeEventListener("touchmove", onTouchMove);
+      stage.removeEventListener("touchend", onTouchEnd);
+      stage.removeEventListener("touchcancel", onTouchEnd);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const current = BOARD[active];
 
   return (
@@ -633,7 +774,13 @@ function Board() {
         <div className="n">{current.n}</div>
         <div className="r">{current.r}</div>
         <div className="links">
-          <a href={current.li} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">in</a>
+          {/* li is now optional (added 2026-08-11 — Kevin Jack's BOARD
+              entry above has no LinkedIn yet) — render the icon only when
+              a real URL is present, instead of a dead href="undefined"
+              link for entries that don't have one. */}
+          {current.li && (
+            <a href={current.li} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">in</a>
+          )}
           <a href="mailto:aeeusc@gmail.com" aria-label="Email">@</a>
         </div>
       </div>

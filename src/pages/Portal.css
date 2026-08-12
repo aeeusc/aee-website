@@ -210,30 +210,16 @@
   line-height: 1.6;
 }
 
-.portal-placeholder {
-  text-align: center;
-  padding: 32px 16px;
-  color: var(--slate);
-}
-.portal-placeholder-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-}
-.portal-placeholder-icon svg { width: 32px; height: 32px; }
-.portal-placeholder h2 {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  color: var(--white);
-  font-size: 20px;
-  margin-bottom: 8px;
-}
-
-/* Bottom quadrants — Calendar (left) | Tasks (right), each roughly a
-   quarter of the overall portal width per the wireframe. */
+/* Bottom row — used to be a two-column "Calendar (left) | Tasks (right)"
+   quadrant split per the original wireframe; Calendar moved out to its
+   own full page (see src/pages/Calendar.jsx) as part of the 2026-08-11
+   Calendar/Tasks rework, so this is now a single full-width column
+   holding just the Tasks panel. Class names kept as-is (not renamed)
+   to minimize churn — "quadrants"/"quadrant" now just means "this
+   panel row," singular. */
 .portal-quadrants {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 16px;
 }
 .portal-quadrant { min-width: 0; }
@@ -358,40 +344,10 @@ select.portal-input { cursor: pointer; }
 .portal-archive-date { font-size: 12px; color: var(--slate); margin-bottom: 8px; }
 .portal-archive-body { font-size: 13px; color: var(--slate-light); white-space: pre-wrap; line-height: 1.6; }
 
-/* ---------- CALENDAR ---------- */
-.portal-event-list { display: flex; flex-direction: column; gap: 4px; }
-.portal-event-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: none;
-  color: var(--white);
-  font-family: inherit;
-  padding: 8px 6px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 13px;
-}
-.portal-event-item:hover { background: rgba(255,255,255,.05); }
-.portal-event-date {
-  flex-shrink: 0;
-  font-weight: 700;
-  color: var(--slate);
-  font-size: 11px;
-  min-width: 44px;
-}
-.portal-event-title { font-weight: 500; }
-.portal-event-detail {
-  padding: 8px 6px 12px 60px;
-  font-size: 12px;
-  color: var(--slate-light);
-}
-.portal-event-detail p { margin: 6px 0 0; }
-
-/* ---------- TASKS ---------- */
+/* ---------- TASKS ----------
+   (the old ".portal-event-*" Calendar rules that used to live in this
+   section were removed 2026-08-11 — Calendar moved to its own page,
+   see src/pages/Calendar.css, which has its own equivalent classes.) */
 .portal-task-list { display: flex; flex-direction: column; gap: 2px; }
 .portal-task-item {
   display: flex;
@@ -405,6 +361,27 @@ select.portal-input { cursor: pointer; }
 .portal-task-item:hover { background: rgba(255,255,255,.05); }
 .portal-task-item input[type="checkbox"] { accent-color: var(--white); cursor: pointer; }
 .portal-task-item.done .portal-task-title { text-decoration: line-through; color: var(--slate); }
+.portal-task-title { flex: 1; }
+/* Due-date label, added for the Calendar/Tasks rework — plain muted text
+   normally, red when the task is overdue (see Portal.jsx's isOverdue
+   check: has a due date, it's passed, and the task isn't done yet). */
+.portal-task-due {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--slate);
+}
+.portal-task-due.overdue { color: #F87171; font-weight: 600; }
+/* The inline add-task form's due-date field — a labeled input rather
+   than a bare placeholder-only one (unlike title/description above),
+   since "optional date" needs a bit more context than a placeholder
+   alone gives. */
+.portal-task-due-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--slate);
+}
 
 /* ---------- RESPONSIVE ---------- */
 @media (max-width: 860px) {

@@ -39,11 +39,17 @@ import './Members.css';
 // TEAMS. full spells out the abbreviation for the filter checkboxes'
 // hover tooltip (title attribute), per explicit feedback 2026-08-10
 // ("a hover tool[tip] would be nice to spell out these full teams").
+// STEP and TREX added 2026-08-12 — like CWC/MECC/HCC, no spelled-out
+// full name is known for these yet, so `full` just repeats the
+// abbreviation rather than guessing at one (same conservative pattern
+// already used for those three).
 const TEAMS = [
   { key: 'CWC', full: 'CWC' },
   { key: 'MECC', full: 'MECC' },
   { key: 'HCC', full: 'HCC' },
   { key: 'STiT', full: 'Solar Table Initiative Team' },
+  { key: 'STEP', full: 'STEP' },
+  { key: 'TREX', full: 'TREX' },
 ];
 
 const SORT_OPTIONS = [

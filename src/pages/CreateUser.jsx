@@ -24,20 +24,40 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createUser, getCurrentUser } from '../lib/api';
 
-// The four design teams a member can be assigned to at creation — kept
-// in sync with routes/auth.js's VALID_TEAMS and Members.jsx's TEAMS.
+// The design teams a member can be assigned to at creation — kept in
+// sync with routes/auth.js's VALID_TEAMS and Members.jsx's TEAMS.
 // Added 2026-08-10 to back the Members page's filter-by-team dropdown.
 // As of 2026-08-11, REQUIRED at creation (no more "No team" option) —
-// see the file comment above the form for why.
-const TEAMS = ['CWC', 'MECC', 'HCC', 'STiT'];
+// see the file comment above the form for why. STEP and TREX added
+// 2026-08-12 ("STEP and TREX PM should be real roles and also make them
+// real design teams") — those titles already existed, they just had no
+// matching team until now.
+const TEAMS = ['CWC', 'MECC', 'HCC', 'STiT', 'STEP', 'TREX'];
 
 // Preset org titles/roles — added 2026-08-11 per explicit feedback
 // ("let's make it so that's mandatory... have a preset title... a
 // dropdown instead of typing something in so it's more organized").
-// PLACEHOLDER LIST: Kev is sending the real org role names separately —
-// swap this array (and routes/auth.js's / AdminUsers.jsx's matching
-// lists) for the actual set once received. Keep all three in sync.
-const TITLES = ['President', 'Vice President', 'Design Team Coordinator', 'Officer', 'Member'];
+// Real org role list received from Kev 2026-08-11, replacing the
+// earlier 5-item placeholder. Keep in sync with routes/auth.js's and
+// AdminUsers.jsx's matching lists if a title is ever added/renamed.
+const TITLES = [
+  'Founder & Advisor',
+  'President',
+  'Vice President',
+  'Executive Project Manager',
+  'Director of Outreach',
+  'Director of Membership',
+  'Director of Finance',
+  'Policy Consortium Director',
+  'Director of Brand',
+  'Executive Coordinator',
+  'HCC PM',
+  'CWC PM',
+  'MECC PM',
+  'STEP PM',
+  'TREX PM',
+  'Member',
+];
 
 export default function CreateUser() {
   const navigate = useNavigate();

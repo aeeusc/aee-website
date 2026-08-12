@@ -1,0 +1,177 @@
+/* src/pages/OrgChart.css
+ *
+ * The real org chart page. Header/page-shell styles mirror Members.css
+ * and Profile.css (same header row: logo, back-to-portal link, spacer)
+ * for visual consistency across the portal's standalone pages. The
+ * chart/tier/connector styles are ported directly from the approved
+ * review sketch (org-chart-sketch.html), just renamed to this page's own
+ * class prefix and sized around the REAL MemberCard component instead of
+ * the sketch's static replica cards.
+ */
+
+.orgchart-page {
+  background: var(--navy-950);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', -apple-system, sans-serif;
+  color: var(--white);
+}
+
+.orgchart-denied {
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.orgchart-denied-card {
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 40px 32px;
+  text-align: center;
+  margin: 0 auto;
+}
+.orgchart-denied-card h1 {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 26px;
+  margin-bottom: 12px;
+}
+.orgchart-denied-card p {
+  color: var(--slate-light);
+  margin-bottom: 24px;
+}
+.orgchart-pill {
+  background: var(--white);
+  color: var(--navy-950);
+  border-radius: 999px;
+  padding: 11px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+}
+
+/* ---------- HEADER (matches Members.css/Profile.css) ---------- */
+.orgchart-header {
+  display: flex;
+  align-items: center;
+  padding: 20px 40px;
+  border-bottom: 1px solid var(--line);
+  gap: 24px;
+}
+.orgchart-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--white);
+  font-weight: 700;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
+.orgchart-logo img { width: 28px; height: 28px; }
+.orgchart-back-link {
+  color: var(--slate);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  margin-left: 8px;
+  transition: color .15s;
+}
+.orgchart-back-link:hover { color: var(--white); }
+.orgchart-header-spacer { flex: 1; }
+
+/* ---------- BODY ---------- */
+.orgchart-body {
+  flex: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 32px 40px 64px;
+}
+.orgchart-title {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 26px;
+  margin: 0 0 28px;
+}
+.orgchart-muted { color: var(--slate); font-size: 14px; }
+.orgchart-error { color: #F87171; font-size: 14px; }
+
+/* ---------- CHART / TREE ---------- */
+.orgchart-scroll {
+  overflow-x: auto;
+  padding-bottom: 24px;
+}
+.orgchart-chart {
+  position: relative;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.orgchart-tier {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 34px 0;
+  z-index: 1;
+}
+.orgchart-tier-label {
+  position: absolute;
+  left: -180px;
+  top: 90px;
+  width: 150px;
+  text-align: right;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--slate);
+}
+.orgchart-tier-label span {
+  display: block;
+  color: rgba(148,163,184,.55);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-top: 2px;
+  font-size: 10px;
+}
+
+.orgchart-connectors {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.orgchart-connector-line {
+  position: absolute;
+  background: rgba(255,255,255,.28);
+  border-radius: 2px;
+}
+
+/* Fixed width per card slot — MemberCard.css sizes the card itself off
+   its parent's width (width: 100%; aspect-ratio: 290/400), so this tree
+   layout (unlike Members.css's responsive grid) needs to hand it an
+   explicit width to size against. 210px roughly matches how wide a
+   MemberCard naturally sits in the Members grid itself (a 1200px-max,
+   5-across grid works out to ~225px/card) — tried the review sketch's
+   narrower 168px first, but the REAL MemberCard's front face has more
+   going on than the sketch's simplified replica (join date AND team
+   abbreviation share the right side, not just a role tier), so at 168px
+   names were truncating harder than intended (e.g. "Jordan ..." instead
+   of "Jordan Avery"). Widened here rather than in MemberCard.css itself,
+   since this is specific to this tree layout's tighter columns — the
+   Members grid's own natural column width already gives cards enough
+   room and doesn't need any change. */
+.orgchart-card-wrap {
+  width: 210px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .orgchart-tier-label { display: none; }
+}

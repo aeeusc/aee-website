@@ -32,6 +32,17 @@ function formatJoinDate(createdAt) {
   return d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 }
 
+// Shorter month/year for past-role date ranges (e.g. "Jan 2025") — long
+// form ("January 2025") reads fine as a single join date under a name,
+// but two of them side by side in a "from – to" range gets wordy, so
+// past roles use the abbreviated month form instead.
+function formatMonthYear(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
+}
+
 export default function MemberCard({ member, team }) {
   const [flipped, setFlipped] = useState(false);
 
@@ -45,11 +56,41 @@ export default function MemberCard({ member, team }) {
     { label: 'Favorite drink', value: member?.favorite_drink },
   ].filter((f) => f.value);
 
+  // Past roles — added 2026-08-11 per explicit feedback: the front of
+  // the card keeps showing the CURRENT role (member.title, unchanged
+  // above), the back additionally shows past roles with a from/to date
+  // range. Sourced from GET /auth/members's `past_roles` (role_history
+  // rows with an ended_at — see routes/auth.js), so e.g. Alex
+  // Bartolomei's card shows "MECC PM — Jan 2026 to Aug 2026" on the back
+  // once his title moves to President, with front still just showing
+  // "President".
+  const pastRoles = Array.isArray(member?.past_roles) ? member.past_roles : [];
+
+  // Social links — added 2026-08-11, same request as past roles above.
+  // Rendered as real <a> tags, which is exactly why the outer wrapper
+  // below is a div (role="button") instead of a <button>: nesting an
+  // <a> inside a <button> is invalid HTML and browsers handle it
+  // inconsistently. stopPropagation on each link's click keeps "open
+  // this link" from also toggling the flip underneath it.
+  const socialLinks = [
+    { label: 'LinkedIn', value: member?.linkedin_url },
+    { label: 'Instagram', value: member?.instagram_url },
+  ].filter((f) => f.value);
+
+  const hasBackContent = backFields.length > 0 || pastRoles.length > 0 || socialLinks.length > 0;
+
   return (
-    <button
-      type="button"
+    <div
       className={`member-card${flipped ? ' flipped' : ''}`}
       onClick={() => setFlipped((v) => !v)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setFlipped((v) => !v);
+        }
+      }}
       aria-label={`${fullName} — click to ${flipped ? 'see front' : 'see more'}`}
     >
       <div className="member-card-inner">
@@ -75,19 +116,58 @@ export default function MemberCard({ member, team }) {
         </div>
 
         <div className="member-card-face member-card-back">
-          {backFields.length > 0 ? (
-            <ul className="member-card-back-list">
-              {backFields.map((f) => (
-                <li key={f.label} className="member-card-back-field">
-                  <span className="member-card-back-label">{f.label}:</span> {f.value}
-                </li>
-              ))}
-            </ul>
+          {hasBackContent ? (
+            <div className="member-card-back-content">
+              {backFields.length > 0 && (
+                <ul className="member-card-back-list">
+                  {backFields.map((f) => (
+                    <li key={f.label} className="member-card-back-field">
+                      <span className="member-card-back-label">{f.label}:</span> {f.value}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {pastRoles.length > 0 && (
+                <div className="member-card-back-section">
+                  <div className="member-card-back-section-title">Past roles</div>
+                  <ul className="member-card-back-list">
+                    {pastRoles.map((r, i) => {
+                      const from = formatMonthYear(r.started_at);
+                      const to = formatMonthYear(r.ended_at);
+                      return (
+                        <li key={`${r.title}-${i}`} className="member-card-back-field">
+                          <span className="member-card-back-label">{r.title}</span>
+                          {from && <> — {to ? `${from} to ${to}` : `since ${from}`}</>}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+
+              {socialLinks.length > 0 && (
+                <div className="member-card-back-links">
+                  {socialLinks.map((f) => (
+                    <a
+                      key={f.label}
+                      href={f.value}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="member-card-back-link"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {f.label}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
           ) : (
             <p className="member-card-back-empty">This member hasn't filled out their profile yet.</p>
           )}
         </div>
       </div>
-    </button>
+    </div>
   );
 }
