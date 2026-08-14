@@ -140,10 +140,16 @@ export function getMembers() {
 // its own request) since the photo payload is much larger — keeping it
 // out of the plain profile-fields save means a small text-only edit
 // never has to re-upload the photo along with it.
-export function updateProfile({ description, hometown, favoriteFood, favoriteDrink, hobbies } = {}) {
+//
+// linkedinUrl/instagramUrl added 2026-08-11 — the backend re-validates
+// these are real linkedin.com/in/... and instagram.com/... profile
+// links (see routes/auth.js's LINKEDIN_URL_REGEX/INSTAGRAM_URL_REGEX)
+// since Profile.jsx's matching client-side check is bypassable via a
+// direct API call.
+export function updateProfile({ description, hometown, favoriteFood, favoriteDrink, hobbies, linkedinUrl, instagramUrl } = {}) {
   return apiRequest('/auth/profile', {
     method: 'PUT',
-    body: JSON.stringify({ description, hometown, favoriteFood, favoriteDrink, hobbies }),
+    body: JSON.stringify({ description, hometown, favoriteFood, favoriteDrink, hobbies, linkedinUrl, instagramUrl }),
   });
 }
 
@@ -200,15 +206,22 @@ export function getNewsletterArchive() {
 //
 // getEvents is for any logged-in member (everyone sees the same shared
 // list). createEvent/deleteEvent require an active admin session — same
-// requireAdmin check on the backend as createUser above.
+// requireAdmin check on the backend as createUser above. As of the
+// 2026-08-11 Calendar/Tasks rework these are called from the standalone
+// src/pages/Calendar.jsx month-grid page rather than Portal.jsx's old
+// quarter-width CalendarPanel — the endpoints themselves are unchanged,
+// still just "give me every event," with month-grouping done client-side.
 export function getEvents() {
   return apiRequest('/portal/events', { method: 'GET' });
 }
 
-export function createEvent(title, description, eventAt) {
+// endAt is OPTIONAL (added 2026-08-12) — pass an ISO string for events
+// that have a known end time, or omit/pass undefined for a single-point
+// event (unchanged prior behavior).
+export function createEvent(title, description, eventAt, endAt) {
   return apiRequest('/portal/events', {
     method: 'POST',
-    body: JSON.stringify({ title, description: description || undefined, eventAt }),
+    body: JSON.stringify({ title, description: description || undefined, eventAt, endAt: endAt || undefined }),
   });
 }
 
@@ -229,14 +242,25 @@ export function getAssignableMembers() {
 // server-side, not by anything passed from here). createTask is
 // admin-only. setTaskDone works for any logged-in member, but only on a
 // task actually assigned to them — see routes/portal.js's WHERE clause.
+//
+// dueDate is OPTIONAL (added 2026-08-11's Calendar/Tasks rework) — pass
+// an ISO string or omit/pass null/undefined for no due date. Tasks stay
+// in their own separate panel (not merged into the Calendar page), so
+// this is only ever used for sorting/display within that panel.
 export function getMyTasks() {
   return apiRequest('/portal/tasks/mine', { method: 'GET' });
 }
 
-export function createTask(title, description, assignedTo) {
+// startAt/endAt are OPTIONAL (added 2026-08-14) — pass ISO strings for a
+// task that has a specific time window to work in, or omit for the
+// prior behavior (no time window, just an optional due date).
+export function createTask(title, description, assignedTo, dueDate, startAt, endAt) {
   return apiRequest('/portal/tasks', {
     method: 'POST',
-    body: JSON.stringify({ title, description: description || undefined, assignedTo }),
+    body: JSON.stringify({
+      title, description: description || undefined, assignedTo,
+      dueDate: dueDate || undefined, startAt: startAt || undefined, endAt: endAt || undefined,
+    }),
   });
 }
 

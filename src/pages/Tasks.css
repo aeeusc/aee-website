@@ -1,0 +1,237 @@
+/* src/pages/Tasks.css
+ *
+ * The standalone Tasks page (Tasks.jsx) — added 2026-08-12 when Tasks
+ * moved out of its old Portal quadrant into its own full page (same move
+ * Calendar made 2026-08-11). Reuses the color tokens defined in Home.css's
+ * :root block (--navy-950, --slate, etc.), same as every other standalone
+ * portal page. Header/page/denied classes mirror Calendar.css's own
+ * pattern (own "tasks-" prefixed classes, own dedicated stylesheet)
+ * rather than importing Portal.css directly.
+ *
+ * The task-list/form visual design (panel header, inline add-task form,
+ * checkbox rows, due-date labels) is ported from Portal.css's old
+ * .portal-panel/.portal-task-*/.portal-inline-form rules — same look,
+ * just renamed to this page own class prefix and given a full page
+ * width instead of a cramped quadrant box.
+ */
+
+.tasks-page {
+  background: var(--navy-950);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', -apple-system, sans-serif;
+  color: var(--white);
+}
+
+.tasks-denied {
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.tasks-denied-card {
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 40px 32px;
+  text-align: center;
+  margin: 0 auto;
+}
+.tasks-denied-card h1 {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 26px;
+  margin-bottom: 12px;
+}
+.tasks-denied-card p {
+  color: var(--slate-light);
+  margin-bottom: 24px;
+}
+
+/* ---------- HEADER (matches Calendar.css/Portal.css) ---------- */
+.tasks-header {
+  display: flex;
+  align-items: center;
+  padding: 20px 40px;
+  border-bottom: 1px solid var(--line);
+  gap: 24px;
+}
+.tasks-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--white);
+  font-weight: 700;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
+.tasks-logo img { width: 28px; height: 28px; }
+.tasks-back-link {
+  color: var(--slate);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  margin-left: 8px;
+  transition: color .15s;
+}
+.tasks-back-link:hover { color: var(--white); }
+.tasks-header-spacer { flex: 1; }
+
+/* ---------- BODY ---------- */
+.tasks-body {
+  flex: 1;
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 32px 40px 64px;
+}
+
+.tasks-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.tasks-title {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 26px;
+  margin: 0;
+}
+.tasks-panel-add {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--white);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.tasks-panel-add:hover { border-color: rgba(255,255,255,.5); }
+
+.tasks-inline-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  max-width: 400px;
+}
+.tasks-input {
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 9px 13px;
+  color: var(--white);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+select.tasks-input { cursor: pointer; }
+.tasks-due-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--slate);
+}
+/* Wraps the start/end time inputs side by side — added 2026-08-14
+   alongside the optional time-window feature, same two-field-in-a-row
+   pattern as Calendar.css's .calendar-time-field. */
+.tasks-time-row {
+  display: flex;
+  gap: 10px;
+}
+.tasks-time-row .tasks-due-label { flex: 1; }
+
+.tasks-pill {
+  background: var(--white);
+  color: var(--navy-950);
+  border-radius: 999px;
+  padding: 11px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  display: inline-block;
+  text-align: center;
+  font-family: inherit;
+  align-self: flex-start;
+}
+.tasks-pill:disabled { opacity: .6; cursor: default; }
+.tasks-pill-sm { padding: 7px 16px; font-size: 13px; }
+
+.tasks-error { color: #F87171; font-size: 13px; margin: 0; }
+.tasks-error-sm { font-size: 12px; }
+.tasks-muted { color: var(--slate); font-size: 14px; }
+
+/* ---------- TASK LIST ---------- */
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 8px;
+}
+.tasks-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.tasks-item:hover { background: rgba(255,255,255,.05); }
+.tasks-item input[type="checkbox"] {
+  accent-color: var(--white);
+  cursor: pointer;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+.tasks-item.done .tasks-item-title { text-decoration: line-through; color: var(--slate); }
+.tasks-item-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.tasks-item-title { font-weight: 500; }
+.tasks-item-description {
+  font-size: 12.5px;
+  color: var(--slate);
+  line-height: 1.4;
+}
+/* The optional start–end time window, added 2026-08-14 — shown as a
+   small time-range line under the title/description, same "1:00 PM –
+   2:00 PM" format Calendar.css's .calendar-event-time uses. */
+.tasks-item-time {
+  font-size: 12px;
+  color: var(--slate);
+}
+/* Due-date label — plain muted text normally, red when the task is
+   overdue (has a due date, it's passed, and it's not done yet — see
+   Tasks.jsx's isOverdue check). */
+.tasks-due {
+  flex-shrink: 0;
+  font-size: 11.5px;
+  color: var(--slate);
+  padding-top: 2px;
+}
+.tasks-due.overdue { color: #F87171; font-weight: 600; }
+
+@media (max-width: 600px) {
+  .tasks-header { padding: 16px 20px; }
+  .tasks-body { padding: 24px 20px 48px; }
+}

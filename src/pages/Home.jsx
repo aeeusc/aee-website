@@ -109,15 +109,19 @@ const TEAMS = [
 //    Mitch since President follows the two Advisor-tier entries at the top.
 //    That leaves MECC PM without a listed PM here — fine unless/until Kev
 //    wants someone else in that slot.
-//  - Kevin Jack (this project's dev) added at the very end, title "Member,"
-//    using PLACEHOLDER_AVATAR until he sends a real photo — swap `img` for
-//    a real `/eboard/<file>.jpg` once he does. LinkedIn omitted (the `li`
-//    field is optional now — see the conditional render below).
 //  - Faculty Advisor: STILL PENDING — Kev wants her added in front of Mitch
 //    Kirby (i.e. as the very first entry) with the title "Faculty Advisor,"
 //    but hasn't sent her name yet, so there's nothing to add here. Once we
 //    have her name (and a photo, or PLACEHOLDER_AVATAR in the meantime),
 //    insert her object as the new first entry in this array.
+//
+// A "Kevin Jack / Member" entry briefly lived at the end of this array
+// (added 2026-08-11) — removed 2026-08-14 per explicit correction: this
+// board is meant to show real officers only, not the project's dev. The
+// `li` field staying optional below (rather than required) is kept as
+// general-purpose defensive rendering, not tied to this removed entry —
+// useful again the moment the still-pending Faculty Advisor is added
+// without a LinkedIn link handy yet.
 const PLACEHOLDER_AVATAR = asset("/eboard/placeholder-avatar.svg");
 
 const BOARD = [
@@ -135,7 +139,6 @@ const BOARD = [
   { n: "Sam Gold", r: "ShadeLA PM & Asst. Director of Policy", img: asset("/eboard/samgold.jpg"), li: "https://www.linkedin.com/in/sam-j-gold/" },
   { n: "Alex Geschwill", r: "HCC PM", img: asset("/eboard/alexgeschwill.jpg"), li: "https://www.linkedin.com/in/alexandra-geschwill/" },
   { n: "Daniela Lopez Escalante", r: "Asst. Director of Brand", img: asset("/eboard/daniela.jpg"), li: "https://www.linkedin.com/in/daniela-lopez-escalante-839a4038a/" },
-  { n: "Kevin Jack", r: "Member", img: PLACEHOLDER_AVATAR },
 ];
 
 // ─── Nav + mobile menu ──────────────────────────────────────────────────────
@@ -774,10 +777,11 @@ function Board() {
         <div className="n">{current.n}</div>
         <div className="r">{current.r}</div>
         <div className="links">
-          {/* li is now optional (added 2026-08-11 — Kevin Jack's BOARD
-              entry above has no LinkedIn yet) — render the icon only when
-              a real URL is present, instead of a dead href="undefined"
-              link for entries that don't have one. */}
+          {/* li is optional — render the icon only when a real URL is
+              present, instead of a dead href="undefined" link for any
+              entry that doesn't have one (e.g. the still-pending Faculty
+              Advisor slot, whenever that's added without a LinkedIn
+              handy). */}
           {current.li && (
             <a href={current.li} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">in</a>
           )}

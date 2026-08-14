@@ -12,6 +12,22 @@
 // capped at 75 characters. An Edit button (top right) toggles edit mode;
 // Cancel/Save appear at the bottom only while editing.
 //
+// Restructured 2026-08-11 to also hold a "Settings" tab, per explicit
+// feedback: "I think profile and settings should be, like, two in one
+// kinda... like, you have a profile thing, and it has the stuff like
+// the profile, and then you could also go to the settings. Like, kind
+// of like an Instagram type of deal or Facebook" — confirmed as a
+// single page at /profile with two in-place tabs, not two separate
+// URLs. The Settings tab (change password + log out) is the same logic
+// that used to live in Portal.jsx as its own in-page section — moved
+// here wholesale (see the SettingsTab component below) rather than
+// duplicated; Portal.jsx's Settings tile/rail-item now links to
+// /profile?tab=settings instead of switching an in-page section, same
+// pattern Dashboard/Send Newsletter/Members already use. Which tab is
+// active lives in the URL (?tab=settings) via useSearchParams, not
+// local-only state, specifically so that link can land directly on the
+// Settings tab rather than always opening to Profile first.
+//
 // Photo handling: cropping happens entirely client-side via <canvas>
 // before upload — the user picks an image, drags/resizes a square crop
 // box over a live preview sized to match how the photo actually displays
@@ -24,8 +40,8 @@
 // Requires an active session, same pattern as Dashboard.jsx/Portal.jsx.
 
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { getCurrentUser, updateProfile, updateProfilePhoto } from '../lib/api';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { getCurrentUser, updateProfile, updateProfilePhoto, changePassword, logout } from '../lib/api';
 import { PlaceholderAvatar } from './Home';
 import './Portal.css';
 import './Profile.css';
@@ -53,6 +69,37 @@ const PRESET_FIELDS = [
   { key: 'hobbies', label: 'Hobbies' },
 ];
 
+// LinkedIn/Instagram profile links — added 2026-08-11 per explicit
+// feedback ("make it so people can put their linkedin and instagram
+// profiles in their bio and make sure they are valid links to those
+// websites so no one can put any other links"). Kept OUT of
+// PRESET_FIELDS on purpose: those are plain character-capped text, these
+// need URL-format validation instead, so they get their own regex + a
+// dedicated inline-error render rather than being shoehorned into the
+// same maxLength-only loop. The regexes here are the client-side
+// UX-only copy of routes/auth.js's LINKEDIN_URL_REGEX/
+// INSTAGRAM_URL_REGEX — the server re-checks the same shape, since this
+// check is trivially bypassable via a direct API call.
+const LINKEDIN_URL_REGEX = /^https:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9\-_%]+\/?$/;
+const INSTAGRAM_URL_REGEX = /^https:\/\/(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/;
+
+const SOCIAL_FIELDS = [
+  {
+    key: 'linkedinUrl',
+    label: 'LinkedIn',
+    placeholder: 'https://linkedin.com/in/yourname',
+    regex: LINKEDIN_URL_REGEX,
+    errorHint: 'Must be a linkedin.com/in/… profile link, e.g. https://linkedin.com/in/yourname',
+  },
+  {
+    key: 'instagramUrl',
+    label: 'Instagram',
+    placeholder: 'https://instagram.com/yourhandle',
+    regex: INSTAGRAM_URL_REGEX,
+    errorHint: 'Must be an instagram.com/… profile link, e.g. https://instagram.com/yourhandle',
+  },
+];
+
 // users.<column> -> the camelCase keys this page/api.js use. Centralized
 // here so reading the initial form state from GET /auth/me's snake_case
 // response and building PUT /auth/profile's camelCase body don't drift
@@ -64,12 +111,22 @@ function fieldsFromUser(user) {
     favoriteFood: user?.favorite_food || '',
     favoriteDrink: user?.favorite_drink || '',
     hobbies: user?.hobbies || '',
+    linkedinUrl: user?.linkedin_url || '',
+    instagramUrl: user?.instagram_url || '',
   };
 }
 
 export default function Profile() {
+  const navigate = useNavigate();
   const [authCheck, setAuthCheck] = useState('checking'); // checking | ok | denied
   const [user, setUser] = useState(null);
+
+  // Which tab is showing — driven by the URL's ?tab= param (not plain
+  // local state) so a link can land directly on Settings (see
+  // Portal.jsx's Settings tile: to="/profile?tab=settings") rather than
+  // always opening to Profile and making the person click again.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') === 'settings' ? 'settings' : 'profile';
 
   const [editMode, setEditMode] = useState(false);
   const [fields, setFields] = useState(fieldsFromUser(null));
@@ -94,6 +151,24 @@ export default function Profile() {
       .catch(() => setAuthCheck('denied'));
   }, []);
 
+  // Switches tabs by updating the URL's ?tab= param (replace: true so
+  // clicking between tabs doesn't spam browser history with an entry
+  // per click). If mid-edit on the Profile tab, cancels out of edit mode
+  // first — there's no sensible "keep editing" state to preserve once
+  // Settings' entirely different form is what's on screen.
+  function switchTab(tab) {
+    if (editMode) cancelEdit();
+    setSearchParams(tab === 'settings' ? { tab: 'settings' } : {}, { replace: true });
+  }
+
+  async function handleLogout() {
+    try {
+      await logout();
+    } finally {
+      navigate('/');
+    }
+  }
+
   function enterEditMode() {
     setFields(fieldsFromUser(user));
     setSaveStatus('idle');
@@ -108,7 +183,26 @@ export default function Profile() {
     setEditMode(false);
   }
 
+  // Inline validation for the two social fields — returns '' when the
+  // field is empty (clearing is always allowed) or valid, otherwise a
+  // human-readable hint. Checked client-side for instant feedback; the
+  // server (routes/auth.js's PUT /auth/profile) re-checks the same shape
+  // regardless, since this is only UX, not the real enforcement.
+  function socialFieldError(key) {
+    const field = SOCIAL_FIELDS.find((f) => f.key === key);
+    if (!field) return '';
+    const value = fields[key];
+    if (!value) return '';
+    return field.regex.test(value) ? '' : field.errorHint;
+  }
+  const hasSocialErrors = SOCIAL_FIELDS.some((f) => socialFieldError(f.key));
+
   async function saveEdit() {
+    if (hasSocialErrors) {
+      setSaveStatus('error');
+      setSaveError('Please fix the highlighted link(s) before saving.');
+      return;
+    }
     setSaveStatus('saving');
     setSaveError('');
     try {
@@ -188,7 +282,7 @@ export default function Profile() {
           ← Back to Member Portal
         </Link>
         <div className="portal-header-spacer" />
-        {!editMode && (
+        {activeTab === 'profile' && !editMode && (
           <button type="button" className="profile-edit-btn" onClick={enterEditMode}>
             <EditIcon />
             Edit
@@ -197,6 +291,32 @@ export default function Profile() {
       </header>
 
       <div className="profile-body">
+        {/* Instagram/Facebook-style in-place tabs, per explicit feedback
+            2026-08-11 — see the file comment above for the full context.
+            Sits inside .profile-body so it lines up with the content's
+            own width, rather than spanning the full page like the header
+            above it does. */}
+        <div className="profile-tabs">
+          <button
+            type="button"
+            className={`profile-tab${activeTab === 'profile' ? ' active' : ''}`}
+            onClick={() => switchTab('profile')}
+          >
+            Profile
+          </button>
+          <button
+            type="button"
+            className={`profile-tab${activeTab === 'settings' ? ' active' : ''}`}
+            onClick={() => switchTab('settings')}
+          >
+            Settings
+          </button>
+        </div>
+
+        {activeTab === 'settings' ? (
+          <SettingsTab user={user} onLogout={handleLogout} />
+        ) : (
+          <>
         <div className="profile-photo-row">
           <button
             type="button"
@@ -279,15 +399,50 @@ export default function Profile() {
           ))}
         </div>
 
+        <div className="portal-content profile-social-grid">
+          {SOCIAL_FIELDS.map(({ key, label, placeholder }) => {
+            const error = socialFieldError(key);
+            return (
+              <div key={key} className="profile-preset-field">
+                <div className="profile-field-label-row">
+                  <div className="portal-label">{label}</div>
+                </div>
+                {editMode ? (
+                  <>
+                    <input
+                      type="url"
+                      className="portal-input"
+                      value={fields[key]}
+                      onChange={(e) => setFields((f) => ({ ...f, [key]: e.target.value.trim() }))}
+                      placeholder={placeholder}
+                    />
+                    {error && <p className="profile-field-error">{error}</p>}
+                  </>
+                ) : (
+                  <p className="profile-social-value">
+                    {fields[key] ? (
+                      <a href={fields[key]} target="_blank" rel="noopener noreferrer">{fields[key]}</a>
+                    ) : (
+                      <span className="portal-muted">—</span>
+                    )}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
         {editMode && (
           <div className="profile-edit-actions">
             <button type="button" className="portal-link-button" onClick={cancelEdit} disabled={saveStatus === 'saving'}>
               Cancel changes
             </button>
-            <button type="button" className="portal-pill" onClick={saveEdit} disabled={saveStatus === 'saving'}>
+            <button type="button" className="portal-pill" onClick={saveEdit} disabled={saveStatus === 'saving' || hasSocialErrors}>
               {saveStatus === 'saving' ? 'Saving…' : 'Save changes'}
             </button>
           </div>
+        )}
+          </>
         )}
       </div>
 
@@ -302,6 +457,103 @@ export default function Profile() {
           onSave={handleCropSave}
         />
       )}
+    </div>
+  );
+}
+
+// ─── Settings tab (change password + log out) ───────────────────────────
+//
+// Moved here wholesale from Portal.jsx 2026-08-11, where it used to live
+// as its own in-page portal section — same form, same logic, just
+// relocated so it's a tab on this page instead. Reuses Portal.css's
+// shared form classes (.portal-form, .portal-label, .portal-input,
+// etc.), same as the rest of this file already does.
+
+function SettingsTab({ user, onLogout }) {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [status, setStatus] = useState('idle');
+  const [feedback, setFeedback] = useState('');
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setStatus('submitting');
+    setFeedback('');
+
+    if (newPassword !== confirmPassword) {
+      setStatus('error');
+      setFeedback('New password and confirmation do not match.');
+      return;
+    }
+
+    try {
+      const data = await changePassword(currentPassword, newPassword);
+      setStatus('success');
+      setFeedback(data?.message || 'Password updated.');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      setStatus('error');
+      setFeedback(err.message || 'Something went wrong. Please try again.');
+    }
+  }
+
+  return (
+    <div className="portal-section">
+      <h2>Settings</h2>
+      <p className="portal-section-sub">
+        {user?.username && <>Username: <strong>{user.username}</strong><br /></>}
+        Manage your account security below.
+      </p>
+
+      <form onSubmit={handleSubmit} className="portal-form">
+        <label className="portal-label">
+          Current password
+          <input
+            type="password"
+            required
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            className="portal-input"
+          />
+        </label>
+        <label className="portal-label">
+          New password
+          <input
+            type="password"
+            required
+            minLength={8}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="portal-input"
+            placeholder="At least 8 characters"
+          />
+        </label>
+        <label className="portal-label">
+          Confirm new password
+          <input
+            type="password"
+            required
+            minLength={8}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="portal-input"
+          />
+        </label>
+
+        {status === 'error' && <p className="portal-error">{feedback}</p>}
+        {status === 'success' && <p className="portal-success">{feedback}</p>}
+
+        <button type="submit" disabled={status === 'submitting'} className="portal-pill">
+          {status === 'submitting' ? 'Updating…' : 'Update Password'}
+        </button>
+      </form>
+
+      <button type="button" onClick={onLogout} className="portal-link-button">
+        Log out
+      </button>
     </div>
   );
 }

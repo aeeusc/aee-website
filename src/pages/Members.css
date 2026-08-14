@@ -188,9 +188,23 @@
 .members-filter-clear:hover { color: var(--slate-light); }
 
 /* ---------- GRID (flat, no team filter) ---------- */
+/* Fixed-width 290px columns (not 1fr fractions) — added 2026-08-14 per
+   explicit feedback that these cards should be "exactly the same size"
+   as the E-board coverflow cards, not just the same aspect ratio.
+   MemberCard.css's aspect-ratio: 290/400 already matched the E-board's
+   shape, but a 1fr-based grid still stretched each card to whatever
+   width its column happened to be — different at 5-across vs 3-across.
+   auto-fill with a fixed 290px track keeps every card pinned to the
+   E-board's exact .cf-card size (see Home.css) regardless of how many
+   fit per row; justify-content centers the row when it doesn't fill the
+   full 1200px body width, and the browser handles column count on its
+   own as the viewport narrows — no more manual breakpoint overrides
+   needed for this (see the removed per-breakpoint .members-grid rules
+   below). */
 .members-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fill, 290px);
+  justify-content: center;
   gap: 18px;
 }
 
@@ -231,15 +245,15 @@
 }
 
 /* ---------- RESPONSIVE ---------- */
-@media (max-width: 1100px) {
-  .members-grid { grid-template-columns: repeat(4, 1fr); }
-}
+/* .members-grid no longer needs per-breakpoint column overrides — its
+   auto-fill(290px) track (see above) already reflows the column count
+   on its own as the viewport narrows. The grouped-by-team view (see
+   .members-sections/.members-section below) reuses this same
+   .members-grid class per team, so it gets the fix for free too. */
 @media (max-width: 860px) {
   .members-body { padding: 24px 20px 48px; }
-  .members-grid { grid-template-columns: repeat(3, 1fr); }
   .members-section-divider { margin: 8px 12px 32px; }
 }
 @media (max-width: 560px) {
-  .members-grid { grid-template-columns: repeat(2, 1fr); }
   .members-toolbar { flex-direction: column; align-items: flex-start; }
 }

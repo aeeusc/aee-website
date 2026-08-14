@@ -51,6 +51,45 @@
   gap: 20px;
 }
 
+/* Instagram/Facebook-style in-place tabs (Profile | Settings), added
+   2026-08-11 — a simple underline-tab bar, first thing in .profile-body
+   so it sits right above whichever tab's content is showing. Deliberately
+   plain text buttons with a bottom-border indicator on the active one,
+   matching the app's existing "no unnecessary chrome" utilitarian style
+   (see Portal.css's own file comment) rather than a heavier pill-toggle
+   treatment. */
+.profile-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 8px;
+}
+.profile-tab {
+  background: none;
+  border: none;
+  color: var(--slate);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 4px;
+  margin-right: 22px;
+  cursor: pointer;
+  position: relative;
+  transition: color .15s;
+}
+.profile-tab:hover { color: var(--slate-light); }
+.profile-tab.active { color: var(--white); }
+.profile-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--white);
+  border-radius: 2px 2px 0 0;
+}
+
 .profile-photo-row {
   display: flex;
   flex-direction: column;
@@ -155,6 +194,35 @@
   color: var(--white);
   font-size: 14px;
   margin: 0;
+}
+
+/* Social links (LinkedIn/Instagram) — added 2026-08-11. Separate grid
+   from .profile-preset-grid (rather than folded into it) since these
+   rows need room for an inline validation error under the input, which
+   the plain preset fields never show. Single column — URLs run long
+   enough that a two-up grid would wrap awkwardly. */
+.profile-social-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px 22px;
+}
+.profile-social-value {
+  color: var(--white);
+  font-size: 14px;
+  margin: 0;
+  word-break: break-all;
+}
+.profile-social-value a {
+  color: var(--white);
+  text-decoration: underline;
+  text-decoration-color: rgba(255,255,255,.35);
+}
+.profile-social-value a:hover { text-decoration-color: var(--white); }
+.profile-field-error {
+  color: #f0908a;
+  font-size: 12px;
+  margin: 6px 0 0;
 }
 
 .profile-edit-actions {
