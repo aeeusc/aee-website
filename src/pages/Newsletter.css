@@ -1,0 +1,224 @@
+/* src/pages/Newsletter.css
+ *
+ * The standalone Newsletter list (Newsletter.jsx) and detail
+ * (NewsletterDetail.jsx) pages — added 2026-08-12 when the member-facing
+ * Newsletter tab moved out of Portal.jsx's in-page tab into its own real
+ * subpage(s), per explicit feedback (see Newsletter.jsx's file comment
+ * for the full quote). Reuses the color tokens defined in Home.css's
+ * :root block, same as every other standalone portal page. Header/page/
+ * denied classes mirror Calendar.css/Tasks.css's own pattern (own
+ * "newsletter-" prefixed classes, own dedicated stylesheet).
+ *
+ * Layout note: per the explicit description ("padding on the left or
+ * right... a good chunk of space"), .newsletter-body is a single centered
+ * column capped at a comfortable reading width, NOT a full-bleed section
+ * — that's what gives it the deliberate side padding/margin look on
+ * anything wider than the column itself.
+ */
+
+.newsletter-page {
+  background: var(--navy-950);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', -apple-system, sans-serif;
+  color: var(--white);
+}
+
+.newsletter-denied {
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.newsletter-denied-card {
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 40px 32px;
+  text-align: center;
+  margin: 0 auto;
+}
+.newsletter-denied-card h1 {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 26px;
+  margin-bottom: 12px;
+}
+.newsletter-denied-card p {
+  color: var(--slate-light);
+  margin-bottom: 24px;
+}
+.newsletter-pill {
+  background: var(--white);
+  color: var(--navy-950);
+  border-radius: 999px;
+  padding: 11px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+}
+
+/* ---------- HEADER (matches Calendar.css/Tasks.css) ---------- */
+.newsletter-header {
+  display: flex;
+  align-items: center;
+  padding: 20px 40px;
+  border-bottom: 1px solid var(--line);
+  gap: 24px;
+}
+.newsletter-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--white);
+  font-weight: 700;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
+.newsletter-logo img { width: 28px; height: 28px; }
+.newsletter-back-link {
+  color: var(--slate);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  margin-left: 8px;
+  transition: color .15s;
+}
+.newsletter-back-link:hover { color: var(--white); }
+.newsletter-header-spacer { flex: 1; }
+
+/* ---------- BODY — the "good chunk of side padding" column ---------- */
+.newsletter-body {
+  flex: 1;
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 40px 40px 64px;
+}
+
+.newsletter-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.newsletter-title {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 26px;
+  margin: 0;
+}
+.newsletter-sub {
+  color: var(--slate);
+  font-size: 13.5px;
+  margin: 0 0 28px;
+}
+.newsletter-muted { color: var(--slate); font-size: 14px; }
+.newsletter-error { color: #F87171; font-size: 14px; }
+
+/* The "little little button" filter — a compact search field rather
+   than a dropdown, since there are no fixed categories in the
+   newsletter_sends schema to pick from. */
+.newsletter-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 14px;
+  color: var(--slate);
+  min-width: 200px;
+}
+.newsletter-search-input {
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--white);
+  font-family: inherit;
+  font-size: 13px;
+  width: 100%;
+}
+.newsletter-search-input::placeholder { color: var(--slate); }
+
+/* ---------- LIST ---------- */
+.newsletter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.newsletter-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px 20px;
+  text-decoration: none;
+  color: var(--white);
+  transition: border-color .15s, background .15s;
+}
+.newsletter-item:hover {
+  border-color: rgba(255,255,255,.35);
+  background: rgba(255,255,255,.02);
+}
+.newsletter-item-main { min-width: 0; flex: 1; }
+.newsletter-item-subject {
+  font-weight: 600;
+  font-size: 15.5px;
+  margin-bottom: 4px;
+}
+.newsletter-item-preview {
+  font-size: 13px;
+  color: var(--slate-light);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.newsletter-item-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  color: var(--slate);
+}
+.newsletter-item-date {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ---------- DETAIL SUBPAGE ---------- */
+.newsletter-detail-body { padding-top: 48px; }
+.newsletter-notfound {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+.newsletter-detail-date {
+  font-size: 13px;
+  color: var(--slate);
+  margin-bottom: 10px;
+}
+.newsletter-detail-subject {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 30px;
+  line-height: 1.25;
+  margin: 0 0 28px;
+}
+.newsletter-detail-message {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--slate-light);
+  white-space: pre-wrap;
+}
+
+@media (max-width: 600px) {
+  .newsletter-header { padding: 16px 20px; }
+  .newsletter-body { padding: 28px 20px 48px; }
+  .newsletter-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .newsletter-item-side { align-self: flex-end; }
+}
