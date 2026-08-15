@@ -11,6 +11,9 @@ import Profile from './pages/Profile'
 import Members from './pages/Members'
 import OrgChart from './pages/OrgChart'
 import CalendarPage from './pages/Calendar'
+import TasksPage from './pages/Tasks'
+import NewsletterPage from './pages/Newsletter'
+import NewsletterDetailPage from './pages/NewsletterDetail'
 import AdminUsers from './pages/AdminUsers'
 import NotFound from './pages/NotFound'
 import './App.css'
@@ -40,6 +43,18 @@ function App() {
         <Route path="/members" element={<Members />} />
         <Route path="/org-chart" element={<OrgChart />} />
         <Route path="/calendar" element={<CalendarPage />} />
+        {/* Tasks became its own standalone page 2026-08-12 (see
+            src/pages/Tasks.jsx) — reached via Portal.jsx's Tasks tile
+            (to: '/tasks'). Was missing from this route table even though
+            the page itself was built, which is why it 404'd. */}
+        <Route path="/tasks" element={<TasksPage />} />
+        {/* Newsletter subpage (list + detail) — reached via Portal.jsx's
+            Newsletter tile (to: '/newsletter'). Detail route takes an
+            :id param for NewsletterDetailPage to look up a single past
+            send. Same "was built, missing from this table" gap as
+            /tasks above. */}
+        <Route path="/newsletter" element={<NewsletterPage />} />
+        <Route path="/newsletter/:id" element={<NewsletterDetailPage />} />
         <Route path="/admin/users" element={<AdminUsers />} />
         {/* Catch-all — anything that doesn't match a route above (like
             the now-removed /signup) gets a real 404 page instead of
