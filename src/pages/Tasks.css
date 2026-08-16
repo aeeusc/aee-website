@@ -10,9 +10,19 @@
  *
  * The task-list/form visual design (panel header, inline add-task form,
  * checkbox rows, due-date labels) is ported from Portal.css's old
- * .portal-panel/.portal-task-*/.portal-inline-form rules — same look,
- * just renamed to this page own class prefix and given a full page
+ * .portal-panel, .portal-task-x, and .portal-inline-form rules — same
+ * look, just renamed to this page own class prefix and given a full page
  * width instead of a cramped quadrant box.
+ *
+ * NOTE: a stray "*-slash" sequence used to appear a few lines up in this
+ * same comment (written as a path-like ".portal-task-STAR/.portal-..."
+ * separator) — CSS comments end at the first "*-slash" they contain, so
+ * that sequence silently closed this comment early. Everything after it,
+ * including the REAL closing "*-slash" below, was then parsed as invalid
+ * CSS and discarded, which broke .tasks-page's background rule further
+ * down this file (it never actually registered — that's why Tasks looked
+ * like a different, lighter blue than every other page). Fixed
+ * 2026-08-16 by rewording the comment to avoid literal "*-slash" text.
  */
 
 .tasks-page {

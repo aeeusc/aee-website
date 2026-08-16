@@ -19,6 +19,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout, getNewsletterArchive, deleteNewsletterSends } from '../lib/api';
+import { useConfirm } from '../components/ConfirmDialog';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -89,11 +90,9 @@ export default function Dashboard() {
 
         <NewsletterCleanup />
 
-        <p style={styles.footerText}>
-          Looking for account settings (password, profile info)? Head to{' '}
-          <Link to="/profile?tab=settings" style={styles.inlineLink}>Settings</Link>.
-        </p>
-
+        {/* The "Looking for account settings? Head to Settings" pointer
+            that used to live here was removed 2026-08-16 per explicit
+            feedback ("Remove this from dashboard"). */}
         <p style={styles.footerText}>
           <button type="button" onClick={handleLogout} style={styles.linkButton}>
             Log out
@@ -114,6 +113,10 @@ export default function Dashboard() {
 // count of what's currently selected, and a single "Delete selected"
 // button that removes all checked sends in one request.
 function NewsletterCleanup() {
+  // In-app confirm modal (added 2026-08-16) — replaces window.confirm()
+  // below. See components/ConfirmDialog.jsx.
+  const confirm = useConfirm();
+
   const [status, setStatus] = useState('loading'); // loading | ok | error
   const [sends, setSends] = useState([]);
   const [error, setError] = useState('');
@@ -156,9 +159,12 @@ function NewsletterCleanup() {
     // A destructive, irreversible action (can't un-delete an archive
     // entry) — confirm before sending, same caution as any other
     // permanent-delete control in this app.
-    const confirmed = window.confirm(
-      `Delete ${selected.size} newsletter${selected.size === 1 ? '' : 's'} from the archive? This can't be undone.`
-    );
+    const confirmed = await confirm({
+      title: 'Delete newsletters?',
+      message: `Delete ${selected.size} newsletter${selected.size === 1 ? '' : 's'} from the archive? This can't be undone.`,
+      confirmLabel: 'Delete',
+      danger: true,
+    });
     if (!confirmed) return;
 
     setDeleteStatus('deleting');

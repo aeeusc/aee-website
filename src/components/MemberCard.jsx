@@ -118,14 +118,31 @@ export default function MemberCard({ member, team }) {
         <div className="member-card-face member-card-back">
           {hasBackContent ? (
             <div className="member-card-back-content">
+              {/* "Extra Info" section — added 2026-08-16 per explicit
+                  feedback ("I'll have like the same text like top left
+                  hobbies... extra info... and then I'll display like the
+                  bullet points of like the filling for hobbies Hometown
+                  favorite food favorite drink"). Same section-title style
+                  as "Past roles" below (.member-card-back-section-title),
+                  now used consistently for both. A thin divider line
+                  above it (.member-card-back-divider — inset from both
+                  edges, doesn't touch the card's sides) separates this
+                  from whatever's above it in the flipped view; when a
+                  member has no hobbies/hometown/food/drink filled in at
+                  all, backFields is empty and this whole block (title +
+                  divider + list) is skipped, same as before. */}
               {backFields.length > 0 && (
-                <ul className="member-card-back-list">
-                  {backFields.map((f) => (
-                    <li key={f.label} className="member-card-back-field">
-                      <span className="member-card-back-label">{f.label}:</span> {f.value}
-                    </li>
-                  ))}
-                </ul>
+                <div className="member-card-back-section">
+                  <div className="member-card-back-divider" />
+                  <div className="member-card-back-section-title">Extra Info</div>
+                  <ul className="member-card-back-list">
+                    {backFields.map((f) => (
+                      <li key={f.label} className="member-card-back-field">
+                        <span className="member-card-back-label">{f.label}:</span> {f.value}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
 
               {pastRoles.length > 0 && (

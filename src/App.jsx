@@ -16,6 +16,7 @@ import NewsletterPage from './pages/Newsletter'
 import NewsletterDetailPage from './pages/NewsletterDetail'
 import AdminUsers from './pages/AdminUsers'
 import NotFound from './pages/NotFound'
+import { ConfirmProvider } from './components/ConfirmDialog'
 import './App.css'
 
 // Derived from Vite's own base setting (vite.config.js) rather than
@@ -29,6 +30,13 @@ const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/'
 function App() {
   return (
     <BrowserRouter basename={basename}>
+      {/* ConfirmProvider added 2026-08-16 — wraps the whole app so
+          useConfirm() (see components/ConfirmDialog.jsx) works from any
+          page without each one setting up its own modal. Replaces
+          window.confirm(), which showed the browser's own generic
+          "aeeusc.com says..." popup instead of something styled to match
+          the site. */}
+      <ConfirmProvider>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
@@ -62,6 +70,7 @@ function App() {
             matches routes in order. */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </ConfirmProvider>
     </BrowserRouter>
   )
 }

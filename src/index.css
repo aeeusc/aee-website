@@ -40,3 +40,28 @@ a {
 button {
   font-family: inherit;
 }
+
+/* Fix for a real cross-browser contrast bug — added 2026-08-16 per
+ * explicit feedback ("when I select a drop-down box it's very hard to
+ * see against like it's like the white text and white background").
+ * Every <select> in this app (Members.jsx's sort dropdown, CreateUser.jsx/
+ * AdminUsers.jsx's title/team dropdowns, etc.) sets color: var(--white)
+ * on the CLOSED select box, which looks fine sitting on this site's dark
+ * background — but browsers render the OPENED dropdown's <option> list
+ * using native OS/browser chrome by default, which is typically a WHITE
+ * background. Since none of those per-page stylesheets ever set an
+ * explicit background/color on <option> itself, the white select text
+ * carries over into the opened list while the background stays the
+ * browser's native white — white text on a white background, exactly
+ * what was reported. Fixed globally here (one rule, not per-page)
+ * because every <select> in the app has this exact same setup.
+ * background-color (not the `background` shorthand) + color together is
+ * the standard fix — this is one of very few properties browsers still
+ * let page CSS control on native <option> elements. */
+select {
+  color-scheme: dark;
+}
+select option {
+  background-color: #101830;
+  color: #FFFFFF;
+}

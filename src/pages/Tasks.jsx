@@ -48,9 +48,15 @@ import {
   getAllTasks,
   deleteAnyTask,
 } from '../lib/api';
+import { useConfirm } from '../components/ConfirmDialog';
 import './Tasks.css';
 
 export default function TasksPage() {
+  // In-app confirm modal (added 2026-08-16) — replaces window.confirm()
+  // below, which showed the browser's own generic popup instead of
+  // something styled to match the site. See components/ConfirmDialog.jsx.
+  const confirm = useConfirm();
+
   const [authCheck, setAuthCheck] = useState('checking'); // checking | ok | denied
   const [user, setUser] = useState(null);
 
@@ -155,8 +161,15 @@ export default function TasksPage() {
   // Any member can delete a task assigned to THEM — "you don't have to
   // keep it" — added 2026-08-15. Confirms first since this is
   // permanent, same caution as every other delete control in this app.
+  // Uses the in-app confirm modal (2026-08-16) instead of
+  // window.confirm() — same "confirmed" boolean shape, just awaited.
   async function handleDelete(task) {
-    const confirmed = window.confirm(`Delete "${task.title}"? This can't be undone.`);
+    const confirmed = await confirm({
+      title: 'Delete this task?',
+      message: `Delete "${task.title}"? This can't be undone.`,
+      confirmLabel: 'Delete',
+      danger: true,
+    });
     if (!confirmed) return;
     setTasks((prev) => prev.filter((t) => t.id !== task.id));
     try {
@@ -171,7 +184,12 @@ export default function TasksPage() {
   // admin. Added 2026-08-15 ("I wanna make it so tasks can be deleted as
   // an admin. Like, you can delete tasks from someone.").
   async function handleAdminDelete(task) {
-    const confirmed = window.confirm(`Delete "${task.title}" (assigned to ${assigneeName(task)})? This can't be undone.`);
+    const confirmed = await confirm({
+      title: 'Delete this task?',
+      message: `Delete "${task.title}" (assigned to ${assigneeName(task)})? This can't be undone.`,
+      confirmLabel: 'Delete',
+      danger: true,
+    });
     if (!confirmed) return;
     setAllTasks((prev) => prev.filter((t) => t.id !== task.id));
     try {
