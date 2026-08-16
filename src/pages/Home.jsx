@@ -124,21 +124,29 @@ const TEAMS = [
 // without a LinkedIn link handy yet.
 const PLACEHOLDER_AVATAR = asset("/eboard/placeholder-avatar.svg");
 
+// ig: Instagram URL — added 2026-08-16 to replace the second icon button
+// under each E-board profile, which used to just be a shared mailto:
+// placeholder for everyone. Real per-person handles aren't collected yet
+// (Kev is generating real portal accounts for these people and will get
+// their actual Instagram from them directly), so every entry points at
+// the generic instagram.com landing page for now — swap each one in
+// individually as real handles come in, same as how `li` (LinkedIn) is
+// already handled per-person.
 const BOARD = [
-  { n: "Mitch Kirby", r: "Founder & Advisor", img: asset("/eboard/mitchkirby.jpg"), li: "https://www.linkedin.com/in/mitchell-kirby/" },
-  { n: "Alex Bartolomei", r: "President", img: asset("/eboard/alexbartolomei.jpg"), li: "https://www.linkedin.com/in/alexbartolomei/" },
-  { n: "Alexandra Somodi", r: "Vice President & Brand Director", img: asset("/eboard/alexandrasomodi.png"), li: "https://www.linkedin.com/in/alexandra-somodi/" },
-  { n: "David Moseley", r: "Design Team Coordinator", img: asset("/eboard/davidmoseley.jpg"), li: "https://www.linkedin.com/in/davidmmoseley/" },
-  { n: "Jordyn Wetherbee", r: "Executive Coordinator & CWC PM", img: asset("/eboard/jordynwetherbee.jpg"), li: "https://www.linkedin.com/in/jordyn-wetherbee/" },
-  { n: "James Hiemstra", r: "Director of Finance", img: asset("/eboard/jameshiemstra.jpg"), li: "https://www.linkedin.com/in/james-hiemstra-78b9872a1/" },
-  { n: "Reeth Kawad", r: "Senior Advisor", img: asset("/eboard/reethkawad.jpg"), li: "https://www.linkedin.com/in/reethkawad/" },
-  { n: "Chloe Flannigan", r: "Director of Membership", img: asset("/eboard/chloeflannigan.jpg"), li: "https://www.linkedin.com/in/chloe-flannigan-0950a2237/" },
-  { n: "Helena Heckmann", r: "Director of Events", img: asset("/eboard/helenaheckmann.jpg"), li: "https://www.linkedin.com/in/helena-heckmann/" },
-  { n: "Jainam Jain", r: "Director of Outreach & CWC PM", img: asset("/eboard/jainamjain.png"), li: "https://www.linkedin.com/in/jainam-jain-937a13214/" },
-  { n: "Ellis Fertig", r: "ShadeLA PM & Director of Policy", img: asset("/eboard/ellisfertig.jpg"), li: "https://www.linkedin.com/in/ellis-fertig-4512b232b/" },
-  { n: "Sam Gold", r: "ShadeLA PM & Asst. Director of Policy", img: asset("/eboard/samgold.jpg"), li: "https://www.linkedin.com/in/sam-j-gold/" },
-  { n: "Alex Geschwill", r: "HCC PM", img: asset("/eboard/alexgeschwill.jpg"), li: "https://www.linkedin.com/in/alexandra-geschwill/" },
-  { n: "Daniela Lopez Escalante", r: "Asst. Director of Brand", img: asset("/eboard/daniela.jpg"), li: "https://www.linkedin.com/in/daniela-lopez-escalante-839a4038a/" },
+  { n: "Mitch Kirby", r: "Founder & Advisor", img: asset("/eboard/mitchkirby.jpg"), li: "https://www.linkedin.com/in/mitchell-kirby/", ig: "https://www.instagram.com" },
+  { n: "Alex Bartolomei", r: "President", img: asset("/eboard/alexbartolomei.jpg"), li: "https://www.linkedin.com/in/alexbartolomei/", ig: "https://www.instagram.com" },
+  { n: "Alexandra Somodi", r: "Vice President & Brand Director", img: asset("/eboard/alexandrasomodi.png"), li: "https://www.linkedin.com/in/alexandra-somodi/", ig: "https://www.instagram.com" },
+  { n: "David Moseley", r: "Design Team Coordinator", img: asset("/eboard/davidmoseley.jpg"), li: "https://www.linkedin.com/in/davidmmoseley/", ig: "https://www.instagram.com" },
+  { n: "Jordyn Wetherbee", r: "Executive Coordinator & CWC PM", img: asset("/eboard/jordynwetherbee.jpg"), li: "https://www.linkedin.com/in/jordyn-wetherbee/", ig: "https://www.instagram.com" },
+  { n: "James Hiemstra", r: "Director of Finance", img: asset("/eboard/jameshiemstra.jpg"), li: "https://www.linkedin.com/in/james-hiemstra-78b9872a1/", ig: "https://www.instagram.com" },
+  { n: "Reeth Kawad", r: "Senior Advisor", img: asset("/eboard/reethkawad.jpg"), li: "https://www.linkedin.com/in/reethkawad/", ig: "https://www.instagram.com" },
+  { n: "Chloe Flannigan", r: "Director of Membership", img: asset("/eboard/chloeflannigan.jpg"), li: "https://www.linkedin.com/in/chloe-flannigan-0950a2237/", ig: "https://www.instagram.com" },
+  { n: "Helena Heckmann", r: "Director of Events", img: asset("/eboard/helenaheckmann.jpg"), li: "https://www.linkedin.com/in/helena-heckmann/", ig: "https://www.instagram.com" },
+  { n: "Jainam Jain", r: "Director of Outreach & CWC PM", img: asset("/eboard/jainamjain.png"), li: "https://www.linkedin.com/in/jainam-jain-937a13214/", ig: "https://www.instagram.com" },
+  { n: "Ellis Fertig", r: "ShadeLA PM & Director of Policy", img: asset("/eboard/ellisfertig.jpg"), li: "https://www.linkedin.com/in/ellis-fertig-4512b232b/", ig: "https://www.instagram.com" },
+  { n: "Sam Gold", r: "ShadeLA PM & Asst. Director of Policy", img: asset("/eboard/samgold.jpg"), li: "https://www.linkedin.com/in/sam-j-gold/", ig: "https://www.instagram.com" },
+  { n: "Alex Geschwill", r: "HCC PM", img: asset("/eboard/alexgeschwill.jpg"), li: "https://www.linkedin.com/in/alexandra-geschwill/", ig: "https://www.instagram.com" },
+  { n: "Daniela Lopez Escalante", r: "Asst. Director of Brand", img: asset("/eboard/daniela.jpg"), li: "https://www.linkedin.com/in/daniela-lopez-escalante-839a4038a/", ig: "https://www.instagram.com" },
 ];
 
 // ─── Nav + mobile menu ──────────────────────────────────────────────────────
@@ -423,6 +431,21 @@ function DesignTeams() {
 }
 
 // ─── Board (3D coverflow carousel) ──────────────────────────────────────────
+
+// Standard Instagram glyph (rounded-square camera outline + lens dot) —
+// sized to sit inside the same 38x38 icon-button box the LinkedIn "in"
+// text glyph already uses (see .cf-info .links a in Home.css), just as
+// an SVG instead of text since there's no simple 1-2 letter abbreviation
+// for Instagram the way "in" works for LinkedIn.
+function InstagramIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="2.5" y="2.5" width="19" height="19" rx="5" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="4.6" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="17.4" cy="6.6" r="1.15" fill="currentColor" />
+    </svg>
+  );
+}
 
 function Board() {
   const [active, setActive] = useState(0);
@@ -777,15 +800,28 @@ function Board() {
         <div className="n">{current.n}</div>
         <div className="r">{current.r}</div>
         <div className="links">
-          {/* li is optional — render the icon only when a real URL is
-              present, instead of a dead href="undefined" link for any
-              entry that doesn't have one (e.g. the still-pending Faculty
-              Advisor slot, whenever that's added without a LinkedIn
+          {/* li/ig are both optional — render each icon only when a real
+              URL is present, instead of a dead href="undefined" link for
+              any entry that doesn't have one (e.g. the still-pending
+              Faculty Advisor slot, whenever that's added without socials
               handy). */}
           {current.li && (
             <a href={current.li} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">in</a>
           )}
-          <a href="mailto:aeeusc@gmail.com" aria-label="Email">@</a>
+          {/* Instagram button — added 2026-08-16, replacing the old
+              shared mailto:aeeusc@gmail.com placeholder that was
+              identical for every person. Every BOARD entry currently
+              points at the generic instagram.com landing page as a
+              placeholder (see the `ig:` field above) until Kev collects
+              each person's real handle when he generates their portal
+              accounts. Uses an actual Instagram glyph icon (matching the
+              LinkedIn "in" wordmark-style icon) rather than reusing the
+              old "@" email glyph, since it no longer links to email. */}
+          {current.ig && (
+            <a href={current.ig} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <InstagramIcon />
+            </a>
+          )}
         </div>
       </div>
       <div className="board-note" />
