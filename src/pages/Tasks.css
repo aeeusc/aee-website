@@ -125,6 +125,105 @@
 }
 .tasks-panel-add:hover { border-color: rgba(255,255,255,.5); }
 
+/* Filter button + dropdown — added 2026-08-16, mirrors Members.css's
+   .members-filter-* rules (same dark dropdown panel, same button style)
+   just renamed with this file's tasks- prefix so it looks and behaves
+   consistently with the rest of the app. Sits next to the admin "+"
+   button, both wrapped in .tasks-panel-header-actions. */
+.tasks-panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.tasks-filter-wrap { position: relative; }
+.tasks-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--white);
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.tasks-filter-btn:hover { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.05); }
+.tasks-filter-btn.active { border-color: var(--white); background: rgba(255,255,255,.08); }
+
+.tasks-filter-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  background: #0C1224;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  min-width: 210px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.4);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.tasks-filter-dropdown-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin-bottom: 6px;
+}
+.tasks-filter-sort-label { margin-top: 10px; }
+.tasks-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 6px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--slate-light);
+  cursor: pointer;
+  transition: background .15s;
+}
+.tasks-filter-option:hover { background: rgba(255,255,255,.05); color: var(--white); }
+.tasks-filter-option input[type="checkbox"],
+.tasks-filter-option input[type="radio"] { accent-color: var(--white); cursor: pointer; }
+.tasks-filter-selectall {
+  align-self: flex-start;
+  margin: 2px 0 2px 6px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--slate);
+  text-decoration: underline;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.tasks-filter-selectall:hover { color: var(--slate-light); }
+.tasks-filter-clear {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  color: var(--slate);
+  text-decoration: underline;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+.tasks-filter-clear:hover { color: var(--slate-light); }
+
 .tasks-inline-form {
   display: flex;
   flex-direction: column;

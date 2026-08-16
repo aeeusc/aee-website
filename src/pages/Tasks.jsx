@@ -91,6 +91,35 @@ export default function TasksPage() {
   const [allTasksError, setAllTasksError] = useState('');
   const [showAllTasks, setShowAllTasks] = useState(false);
 
+  // Status filter + due-date sort — added 2026-08-16 per explicit
+  // feedback ("I want to make it so there's three sections... a way to
+  // filter... I don't wanna add additional clutter on the page. I wanna
+  // have a filter button"). One button (top-right of the header, next
+  // to the admin "+"), same pattern as Members.jsx's own Filter button —
+  // opens a dropdown with a MULTI-select set of status checkboxes
+  // ("past incomplete tasks or, like, completely tasking over to do
+  // tasks... or you could just, like, select all") plus a due-date sort
+  // toggle in the same panel ("filter from, like, the due date. Like,
+  // the soonest... to, like, the farthest... vice versa").
+  //
+  // Filtering/sorting is done entirely CLIENT-side on the already-loaded
+  // `tasks` array — no new API calls, no new backend endpoint needed,
+  // since every task the user can see is already fetched by
+  // getMyTasks()/getAllTasks() above.
+  const STATUS_FILTERS = [
+    { key: 'overdue', label: 'Overdue' },
+    { key: 'completed', label: 'Completed' },
+    { key: 'upcoming', label: 'Upcoming' },
+    { key: 'no-date', label: 'No due date' },
+  ];
+  const [filterOpen, setFilterOpen] = useState(false);
+  // Empty set = no filter applied (show everything) — same "nothing
+  // selected means unfiltered" convention Members.jsx's selectedTeams
+  // uses, so an admin doesn't have to manually check every box just to
+  // see all their tasks by default.
+  const [statusFilters, setStatusFilters] = useState(() => new Set());
+  const [dueDateSort, setDueDateSort] = useState('soonest'); // 'soonest' | 'farthest'
+
   useEffect(() => {
     getCurrentUser()
       .then((data) => {
@@ -220,6 +249,54 @@ export default function TasksPage() {
     setAssignedTo((prev) => (prev.size === members.length ? new Set() : new Set(members.map((m) => m.id))));
   }
 
+  function toggleStatusFilter(key) {
+    setStatusFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  // A single task's status bucket(s) — a task can match more than one
+  // (e.g. "no due date" tasks are simply never "overdue" or "upcoming",
+  // but a completed task with a due date in the past is BOTH "completed"
+  // AND would-have-been "overdue" — shown under "Completed" only, since
+  // once it's done "overdue" stops being a meaningful warning; see
+  // taskMatchesFilter below for the actual precedence).
+  function taskMatchesFilter(task, activeFilters) {
+    if (activeFilters.size === 0) return true; // no filter = show everything
+    const isOverdue = task.due_date && !task.is_done && new Date(task.due_date) < new Date();
+    const isCompleted = task.is_done;
+    const isUpcoming = task.due_date && !task.is_done && new Date(task.due_date) >= new Date();
+    const hasNoDate = !task.due_date;
+    if (activeFilters.has('overdue') && isOverdue) return true;
+    if (activeFilters.has('completed') && isCompleted) return true;
+    if (activeFilters.has('upcoming') && isUpcoming) return true;
+    if (activeFilters.has('no-date') && hasNoDate) return true;
+    return false;
+  }
+
+  // Applies the active status filter(s) + due-date sort to a task list —
+  // shared by both "my tasks" and the admin "all tasks" panel below, so
+  // filtering/sorting behaves identically in both places rather than two
+  // separate implementations drifting apart.
+  function applyFilterAndSort(list) {
+    const filtered = list.filter((t) => taskMatchesFilter(t, statusFilters));
+    return [...filtered].sort((a, b) => {
+      // No-due-date tasks always sort last regardless of direction —
+      // there's no meaningful "soonest/farthest" position for them.
+      if (!a.due_date && !b.due_date) return 0;
+      if (!a.due_date) return 1;
+      if (!b.due_date) return -1;
+      const diff = new Date(a.due_date) - new Date(b.due_date);
+      return dueDateSort === 'soonest' ? diff : -diff;
+    });
+  }
+
+  const visibleTasks = applyFilterAndSort(tasks);
+  const visibleAllTasks = applyFilterAndSort(allTasks);
+
   async function handleAdd(e) {
     e.preventDefault();
     setAddStatus('submitting');
@@ -343,16 +420,96 @@ export default function TasksPage() {
       <div className="tasks-body">
         <div className="tasks-panel-header">
           <h1 className="tasks-title">Tasks</h1>
-          {user?.is_admin && (
-            <button
-              type="button"
-              className="tasks-panel-add"
-              onClick={() => setShowAddForm((v) => !v)}
-              aria-label="Assign task"
-            >
-              {showAddForm ? '×' : '+'}
-            </button>
-          )}
+          <div className="tasks-panel-header-actions">
+            {/* Filter button — available to every user (not admin-only),
+                since it filters/sorts whichever task list YOU'RE looking
+                at (your own tasks, or the admin all-tasks panel below).
+                Same button+dropdown pattern as Members.jsx's Filter
+                control, so it looks and behaves consistently with the
+                rest of the app. */}
+            <div className="tasks-filter-wrap">
+              <button
+                type="button"
+                className={`tasks-filter-btn${statusFilters.size > 0 || dueDateSort !== 'soonest' ? ' active' : ''}`}
+                onClick={() => setFilterOpen((v) => !v)}
+                aria-expanded={filterOpen}
+              >
+                Filter{statusFilters.size > 0 ? ` (${statusFilters.size})` : ''}
+                <FilterIcon />
+              </button>
+
+              {filterOpen && (
+                <div className="tasks-filter-dropdown">
+                  <div className="tasks-filter-dropdown-label">Status</div>
+                  {STATUS_FILTERS.map((f) => (
+                    <label key={f.key} className="tasks-filter-option">
+                      <input
+                        type="checkbox"
+                        checked={statusFilters.has(f.key)}
+                        onChange={() => toggleStatusFilter(f.key)}
+                      />
+                      <span>{f.label}</span>
+                    </label>
+                  ))}
+                  <button
+                    type="button"
+                    className="tasks-filter-selectall"
+                    onClick={() =>
+                      setStatusFilters((prev) =>
+                        prev.size === STATUS_FILTERS.length ? new Set() : new Set(STATUS_FILTERS.map((f) => f.key))
+                      )
+                    }
+                  >
+                    {statusFilters.size === STATUS_FILTERS.length ? 'Deselect all' : 'Select all'}
+                  </button>
+
+                  <div className="tasks-filter-dropdown-label tasks-filter-sort-label">Sort by due date</div>
+                  <label className="tasks-filter-option">
+                    <input
+                      type="radio"
+                      name="due-date-sort"
+                      checked={dueDateSort === 'soonest'}
+                      onChange={() => setDueDateSort('soonest')}
+                    />
+                    <span>Soonest first</span>
+                  </label>
+                  <label className="tasks-filter-option">
+                    <input
+                      type="radio"
+                      name="due-date-sort"
+                      checked={dueDateSort === 'farthest'}
+                      onChange={() => setDueDateSort('farthest')}
+                    />
+                    <span>Farthest first</span>
+                  </label>
+
+                  {(statusFilters.size > 0 || dueDateSort !== 'soonest') && (
+                    <button
+                      type="button"
+                      className="tasks-filter-clear"
+                      onClick={() => {
+                        setStatusFilters(new Set());
+                        setDueDateSort('soonest');
+                      }}
+                    >
+                      Clear filters
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {user?.is_admin && (
+              <button
+                type="button"
+                className="tasks-panel-add"
+                onClick={() => setShowAddForm((v) => !v)}
+                aria-label="Assign task"
+              >
+                {showAddForm ? '×' : '+'}
+              </button>
+            )}
+          </div>
         </div>
 
         {user?.is_admin && showAddForm && (
@@ -435,9 +592,12 @@ export default function TasksPage() {
         {status === 'ok' && tasks.length === 0 && (
           <p className="tasks-muted">No tasks assigned to you right now.</p>
         )}
-        {status === 'ok' && tasks.length > 0 && (
+        {status === 'ok' && tasks.length > 0 && visibleTasks.length === 0 && (
+          <p className="tasks-muted">No tasks match the current filter.</p>
+        )}
+        {status === 'ok' && tasks.length > 0 && visibleTasks.length > 0 && (
           <div className="tasks-list">
-            {tasks.map((task) => {
+            {visibleTasks.map((task) => {
               // "Overdue" = has a due date, that date has passed, and it's
               // not done yet — purely a display flag (a red due-date
               // label), there's no separate backend concept of overdue.
@@ -507,9 +667,12 @@ export default function TasksPage() {
                 {allTasksStatus === 'ok' && allTasks.length === 0 && (
                   <p className="tasks-muted">No tasks assigned to anyone yet.</p>
                 )}
-                {allTasksStatus === 'ok' && allTasks.length > 0 && (
+                {allTasksStatus === 'ok' && allTasks.length > 0 && visibleAllTasks.length === 0 && (
+                  <p className="tasks-muted">No tasks match the current filter.</p>
+                )}
+                {allTasksStatus === 'ok' && allTasks.length > 0 && visibleAllTasks.length > 0 && (
                   <div className="tasks-list">
-                    {allTasks.map((task) => (
+                    {visibleAllTasks.map((task) => (
                       <div key={task.id} className={`tasks-item${task.is_done ? ' done' : ''}`}>
                         <span className="tasks-item-main">
                           <span className="tasks-item-title">
@@ -549,5 +712,17 @@ export default function TasksPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// Same icon as Members.jsx's own Filter button — duplicated locally rather
+// than imported, matching this codebase's established convention of not
+// sharing small per-page components/helpers across files (e.g. requireAdmin
+// is duplicated per backend route file, isValidEmailFormat likewise).
+function FilterIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path d="M3 4h16M6 11h10M9.5 18h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
   );
 }
