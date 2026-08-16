@@ -64,17 +64,25 @@ export function getCurrentUser() {
 // not anything passed from here) — so this only works when called by
 // someone who's already logged in as an admin, via CreateUser.jsx.
 //
-// title and team are now REQUIRED as of 2026-08-11 (previously
-// optional) — both must be one of the preset values from
-// CreateUser.jsx's TITLES/TEAMS dropdowns. The backend re-validates
-// this (see routes/auth.js's VALID_TITLES/VALID_TEAMS) since anything
-// enforced only client-side is bypassable via a direct API call.
-export function createUser(firstName, lastName, email, title, team) {
+// title and team are REQUIRED as of 2026-08-11 (previously optional) —
+// both must be one of the preset values from CreateUser.jsx's
+// TITLES/TEAMS dropdowns. email and uscEmail became BOTH REQUIRED as of
+// 2026-08-16 (previously one optional `email` field) — "I want the
+// Gmail field, and then I want the usc.edu field... I want both of them
+// required." linkedinUrl/instagramUrl are new as of 2026-08-16 and
+// OPTIONAL, letting an admin pre-fill a new member's social links
+// instead of leaving them for the member to fill in themselves later.
+// The backend re-validates all of this (see routes/auth.js's
+// VALID_TITLES/VALID_TEAMS/isValidUscEmail/isValidLinkedInUrl/
+// isValidInstagramUrl) since anything enforced only client-side is
+// bypassable via a direct API call.
+export function createUser(firstName, lastName, email, uscEmail, title, team, linkedinUrl, instagramUrl) {
   return apiRequest('/auth/admin/create-user', {
     method: 'POST',
     body: JSON.stringify({
-      firstName, lastName, title, team,
-      email: email || undefined,
+      firstName, lastName, email, uscEmail, title, team,
+      linkedinUrl: linkedinUrl || undefined,
+      instagramUrl: instagramUrl || undefined,
     }),
   });
 }

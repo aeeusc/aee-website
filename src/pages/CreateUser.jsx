@@ -66,8 +66,16 @@ export default function CreateUser() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [uscEmail, setUscEmail] = useState('');
   const [title, setTitle] = useState('');
   const [team, setTeam] = useState('');
+  // Optional — added 2026-08-16 so an admin can pre-fill a new member's
+  // social links at creation time instead of leaving them for the
+  // member to add themselves later in Profile.jsx. Same fields, same
+  // strict-URL validation on the backend (isValidLinkedInUrl/
+  // isValidInstagramUrl in routes/auth.js) as the self-edit flow.
+  const [linkedinUrl, setLinkedinUrl] = useState('');
+  const [instagramUrl, setInstagramUrl] = useState('');
   const [status, setStatus] = useState('idle'); // idle | submitting | success | error
   const [errorMessage, setErrorMessage] = useState('');
   const [result, setResult] = useState(null); // { username, generatedPassword }
@@ -90,14 +98,17 @@ export default function CreateUser() {
     setErrorMessage('');
 
     try {
-      const data = await createUser(firstName, lastName, email, title, team);
+      const data = await createUser(firstName, lastName, email, uscEmail, title, team, linkedinUrl, instagramUrl);
       setStatus('success');
       setResult({ username: data.username, generatedPassword: data.generatedPassword });
       setFirstName('');
       setLastName('');
       setEmail('');
+      setUscEmail('');
       setTitle('');
       setTeam('');
+      setLinkedinUrl('');
+      setInstagramUrl('');
     } catch (err) {
       setStatus('error');
       setErrorMessage(err.message);
@@ -160,8 +171,9 @@ export default function CreateUser() {
           <>
             <h1 style={styles.heading}>Create an account</h1>
             <p style={styles.body}>
-              Enter the new member's name, title, and design team. A
-              username and password will be generated automatically.
+              Enter the new member's name, both email addresses, title,
+              and design team. A username and password will be generated
+              automatically.
             </p>
 
             <form onSubmit={handleSubmit} style={styles.form}>
@@ -190,13 +202,26 @@ export default function CreateUser() {
               </label>
 
               <label style={styles.label}>
-                Email (optional)
+                Gmail
                 <input
                   type="email"
+                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   style={styles.input}
-                  placeholder="jane@example.com"
+                  placeholder="jane@gmail.com"
+                />
+              </label>
+
+              <label style={styles.label}>
+                USC email (@usc.edu)
+                <input
+                  type="email"
+                  required
+                  value={uscEmail}
+                  onChange={(e) => setUscEmail(e.target.value)}
+                  style={styles.input}
+                  placeholder="jane@usc.edu"
                 />
               </label>
 
@@ -228,6 +253,34 @@ export default function CreateUser() {
                     <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
+              </label>
+
+              {/* LinkedIn/Instagram — optional, added 2026-08-16 so an
+                  admin can pre-fill a new member's social links (e.g.
+                  from what's already on the homepage E-board) instead of
+                  leaving them for the member to add themselves later.
+                  Same strict format the backend already enforces for a
+                  member's own self-edited links in Profile.jsx. */}
+              <label style={styles.label}>
+                LinkedIn (optional)
+                <input
+                  type="url"
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  style={styles.input}
+                  placeholder="https://linkedin.com/in/theirname"
+                />
+              </label>
+
+              <label style={styles.label}>
+                Instagram (optional)
+                <input
+                  type="url"
+                  value={instagramUrl}
+                  onChange={(e) => setInstagramUrl(e.target.value)}
+                  style={styles.input}
+                  placeholder="https://instagram.com/theirhandle"
+                />
               </label>
 
               {status === 'error' && (
