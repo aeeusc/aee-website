@@ -202,6 +202,18 @@ export function getNewsletterArchive() {
   return apiRequest('/newsletter/archive', { method: 'GET' });
 }
 
+// Admin-only. Removes one or more past sends from the archive (what
+// getNewsletterArchive above reads from) — pass an array of ids. Added
+// 2026-08-15 so an admin can clear out test sends from the Dashboard.
+// Only deletes the archive record; it can't un-send an email that
+// already went out.
+export function deleteNewsletterSends(ids) {
+  return apiRequest('/newsletter/sends', {
+    method: 'DELETE',
+    body: JSON.stringify({ ids }),
+  });
+}
+
 // --- Member Portal: events (calendar) ---
 //
 // getEvents is for any logged-in member (everyone sees the same shared
@@ -254,6 +266,12 @@ export function getMyTasks() {
 // startAt/endAt are OPTIONAL (added 2026-08-14) — pass ISO strings for a
 // task that has a specific time window to work in, or omit for the
 // prior behavior (no time window, just an optional due date).
+//
+// assignedTo (as of 2026-08-15) can be a single id OR an array of ids —
+// pass an array to assign the same task to multiple people at once,
+// each getting their own independent copy (see routes/portal.js's POST
+// /tasks comment). Still accepts a plain single id for backwards
+// compatibility with any existing call sites.
 export function createTask(title, description, assignedTo, dueDate, startAt, endAt) {
   return apiRequest('/portal/tasks', {
     method: 'POST',
@@ -269,4 +287,27 @@ export function setTaskDone(id, isDone) {
     method: 'PUT',
     body: JSON.stringify({ isDone }),
   });
+}
+
+// Deletes a task assigned to the CURRENT user — works for any member
+// (not just admins), but only ever on their own task (enforced server-
+// side, not by anything passed here). Added 2026-08-15 so a member can
+// clear a task off their list once they don't need it anymore, done or
+// not.
+export function deleteTask(id) {
+  return apiRequest(`/portal/tasks/${id}`, { method: 'DELETE' });
+}
+
+// --- Admin: every task across every member (Tasks.jsx's admin view) ---
+//
+// getAllTasks/deleteAnyTask are admin-only (checked server-side) —
+// separate from getMyTasks/deleteTask above, which only ever act on the
+// CURRENT user's own tasks. Added 2026-08-15 so an admin can see and
+// delete a task assigned to someone else, not just their own.
+export function getAllTasks() {
+  return apiRequest('/portal/tasks/all', { method: 'GET' });
+}
+
+export function deleteAnyTask(id) {
+  return apiRequest(`/portal/admin/tasks/${id}`, { method: 'DELETE' });
 }

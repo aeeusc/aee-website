@@ -1,33 +1,36 @@
 // src/pages/Dashboard.jsx
 //
-// A logged-in-only account settings page — "how do I change my
-// password" for any member, admin or not. Requires an active session;
-// bounces to /login if getCurrentUser() comes back unauthenticated,
-// same pattern as CreateUser.jsx's admin check.
+// Admin-only landing page — "Hey, {name}" greeting plus quick admin
+// actions. Requires an active ADMIN session; bounces to /login if
+// getCurrentUser() comes back unauthenticated or non-admin, same pattern
+// as CreateUser.jsx's admin check.
 //
-// Kept intentionally simple for now (just change-password) since that
-// was the explicit scope — a natural place to add more account
-// settings (like a second sign-in method) later without restructuring.
+// Reworked 2026-08-15 per explicit feedback: the change-password form
+// that used to live here was removed — "that's kinda redundant because
+// it's for all users. You can find it for all users in profile in, like,
+// settings" (see Profile.jsx's SettingsTab, reached via /profile?tab=
+// settings — same change-password form, correctly scoped to every
+// member instead of duplicated here admin-only). What's left is the
+// smaller "admin quick actions" card (create account / manage accounts,
+// both unchanged links) plus a new "Clear out newsletters" section for
+// deleting test/unwanted sends from the archive (see the
+// NewsletterCleanup component below).
 
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { changePassword, getCurrentUser, logout } from '../lib/api';
+import { getCurrentUser, logout, getNewsletterArchive, deleteNewsletterSends } from '../lib/api';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [authCheck, setAuthCheck] = useState('checking'); // checking | ok | denied
   const [user, setUser] = useState(null);
 
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [status, setStatus] = useState('idle'); // idle | submitting | success | error
-  const [feedback, setFeedback] = useState('');
-
   useEffect(() => {
     getCurrentUser()
       .then((data) => {
-        if (data?.user) {
+        // Admin-only page — a logged-in non-admin gets bounced the same
+        // as a logged-out visitor, same as CreateUser.jsx.
+        if (data?.user?.is_admin) {
           setUser(data.user);
           setAuthCheck('ok');
         } else {
@@ -36,30 +39,6 @@ export default function Dashboard() {
       })
       .catch(() => setAuthCheck('denied'));
   }, []);
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setStatus('submitting');
-    setFeedback('');
-
-    if (newPassword !== confirmPassword) {
-      setStatus('error');
-      setFeedback('New password and confirmation do not match.');
-      return;
-    }
-
-    try {
-      const data = await changePassword(currentPassword, newPassword);
-      setStatus('success');
-      setFeedback(data?.message || 'Password updated.');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (err) {
-      setStatus('error');
-      setFeedback(err.message || 'Something went wrong. Please try again.');
-    }
-  }
 
   async function handleLogout() {
     try {
@@ -79,7 +58,7 @@ export default function Dashboard() {
         <Link to="/portal" style={styles.backLink}>← Back to Member Portal</Link>
         <div style={styles.card}>
           <h1 style={styles.heading}>Please log in</h1>
-          <p style={styles.body}>You need to be logged in to view your dashboard.</p>
+          <p style={styles.body}>You need to be logged in as an admin to view this page.</p>
           <Link to="/login" style={styles.pill}>Go to Log In</Link>
         </div>
       </div>
@@ -96,66 +75,24 @@ export default function Dashboard() {
         <h1 style={styles.heading}>Hey, {displayName}</h1>
         <p style={styles.body}>
           {user?.username && <>Username: <strong>{user.username}</strong><br /></>}
-          Manage your account security below.
+          Admin quick actions.
         </p>
 
-        <h2 style={styles.subheading}>Change password</h2>
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <label style={styles.label}>
-            Current password
-            <input
-              type="password"
-              required
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              style={styles.input}
-            />
-          </label>
+        <div style={styles.actionsRow}>
+          <Link to="/create-user" style={{ ...styles.pill, ...styles.pillButton }}>
+            Create a new account
+          </Link>
+          <Link to="/admin/users" style={{ ...styles.pill, ...styles.pillSecondary }}>
+            Manage accounts
+          </Link>
+        </div>
 
-          <label style={styles.label}>
-            New password
-            <input
-              type="password"
-              required
-              minLength={8}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              style={styles.input}
-              placeholder="At least 8 characters"
-            />
-          </label>
+        <NewsletterCleanup />
 
-          <label style={styles.label}>
-            Confirm new password
-            <input
-              type="password"
-              required
-              minLength={8}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              style={styles.input}
-            />
-          </label>
-
-          {status === 'error' && <p style={styles.error}>{feedback}</p>}
-          {status === 'success' && <p style={styles.success}>{feedback}</p>}
-
-          <button
-            type="submit"
-            disabled={status === 'submitting'}
-            style={{ ...styles.pill, ...styles.pillButton }}
-          >
-            {status === 'submitting' ? 'Updating…' : 'Update Password'}
-          </button>
-        </form>
-
-        {user?.is_admin && (
-          <p style={styles.footerText}>
-            <Link to="/create-user" style={styles.inlineLink}>Create a new account</Link>
-            {' · '}
-            <Link to="/admin/users" style={styles.inlineLink}>Manage accounts</Link>
-          </p>
-        )}
+        <p style={styles.footerText}>
+          Looking for account settings (password, profile info)? Head to{' '}
+          <Link to="/profile?tab=settings" style={styles.inlineLink}>Settings</Link>.
+        </p>
 
         <p style={styles.footerText}>
           <button type="button" onClick={handleLogout} style={styles.linkButton}>
@@ -163,6 +100,134 @@ export default function Dashboard() {
           </button>
         </p>
       </div>
+    </div>
+  );
+}
+
+// "Clear out newsletters" — added 2026-08-15 per explicit feedback ("I
+// wanna be able to clear out the newsletters because I just wanna
+// delete, like, the test. So I just wanna have that as, like, a admin,
+// like, dashboard option"). Lists every past send with a checkbox next
+// to each (Kev's explicit preference: "I want to be able to select
+// send(s) and delete them" — not a single delete-all button, not a
+// one-at-a-time-only flow) plus a "Select all" toggle for convenience, a
+// count of what's currently selected, and a single "Delete selected"
+// button that removes all checked sends in one request.
+function NewsletterCleanup() {
+  const [status, setStatus] = useState('loading'); // loading | ok | error
+  const [sends, setSends] = useState([]);
+  const [error, setError] = useState('');
+  const [selected, setSelected] = useState(() => new Set());
+  const [deleteStatus, setDeleteStatus] = useState('idle'); // idle | deleting | error
+
+  function load() {
+    setStatus('loading');
+    getNewsletterArchive()
+      .then((data) => {
+        setSends(data?.sends || []);
+        setSelected(new Set());
+        setStatus('ok');
+      })
+      .catch((err) => {
+        setError(err.message || 'Could not load past newsletters.');
+        setStatus('error');
+      });
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  function toggle(id) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    setSelected((prev) => (prev.size === sends.length ? new Set() : new Set(sends.map((s) => s.id))));
+  }
+
+  async function handleDelete() {
+    if (selected.size === 0) return;
+    // A destructive, irreversible action (can't un-delete an archive
+    // entry) — confirm before sending, same caution as any other
+    // permanent-delete control in this app.
+    const confirmed = window.confirm(
+      `Delete ${selected.size} newsletter${selected.size === 1 ? '' : 's'} from the archive? This can't be undone.`
+    );
+    if (!confirmed) return;
+
+    setDeleteStatus('deleting');
+    try {
+      await deleteNewsletterSends(Array.from(selected));
+      setDeleteStatus('idle');
+      load();
+    } catch (err) {
+      setDeleteStatus('error');
+      setError(err.message || 'Could not delete the selected newsletters.');
+    }
+  }
+
+  return (
+    <div style={styles.section}>
+      <h2 style={styles.subheading}>Clear out newsletters</h2>
+      <p style={styles.body}>
+        Remove past sends from the archive (e.g. test sends) — members won't see deleted entries in the portal's Newsletter tab.
+      </p>
+
+      {status === 'loading' && <p style={styles.muted}>Loading…</p>}
+      {status === 'error' && <p style={styles.error}>{error}</p>}
+      {status === 'ok' && sends.length === 0 && <p style={styles.muted}>No newsletters sent yet.</p>}
+
+      {status === 'ok' && sends.length > 0 && (
+        <>
+          <label style={styles.selectAllRow}>
+            <input
+              type="checkbox"
+              checked={selected.size === sends.length}
+              onChange={toggleAll}
+            />
+            Select all
+          </label>
+
+          <div style={styles.sendsList}>
+            {sends.map((send) => (
+              <label key={send.id} style={styles.sendRow}>
+                <input
+                  type="checkbox"
+                  checked={selected.has(send.id)}
+                  onChange={() => toggle(send.id)}
+                />
+                <span style={styles.sendSubject}>{send.subject}</span>
+                <span style={styles.sendDate}>
+                  {new Date(send.sent_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                </span>
+              </label>
+            ))}
+          </div>
+
+          {deleteStatus === 'error' && <p style={styles.error}>{error}</p>}
+
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={selected.size === 0 || deleteStatus === 'deleting'}
+            style={{
+              ...styles.pill,
+              ...styles.pillDanger,
+              opacity: selected.size === 0 ? 0.5 : 1,
+            }}
+          >
+            {deleteStatus === 'deleting'
+              ? 'Deleting…'
+              : `Delete selected${selected.size > 0 ? ` (${selected.size})` : ''}`}
+          </button>
+        </>
+      )}
     </div>
   );
 }
@@ -178,6 +243,7 @@ const colors = {
   ink: '#0B0F1A',
   white: '#FFFFFF',
   line: 'rgba(255,255,255,.16)',
+  danger: '#F87171',
 };
 
 const styles = {
@@ -201,20 +267,23 @@ const styles = {
     fontWeight: 500,
     fontFamily: "'Inter', -apple-system, sans-serif",
   },
+  // Smaller than before (was sized for a full change-password form) —
+  // per explicit feedback to shrink this box now that it's just quick
+  // actions. maxWidth trimmed from 440px to 400px.
   card: {
     width: '100%',
-    maxWidth: '440px',
+    maxWidth: '400px',
     border: `1px solid ${colors.line}`,
     background: 'transparent',
     borderRadius: '16px',
-    padding: '40px 32px',
+    padding: '32px 28px',
     margin: '80px 0 40px',
   },
   heading: {
     fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif",
     fontWeight: 700,
     color: colors.white,
-    fontSize: '28px',
+    fontSize: '26px',
     letterSpacing: '-.02em',
     marginBottom: '10px',
   },
@@ -222,39 +291,71 @@ const styles = {
     fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif",
     fontWeight: 600,
     color: colors.white,
-    fontSize: '18px',
+    fontSize: '16px',
     marginTop: '8px',
-    marginBottom: '16px',
+    marginBottom: '10px',
   },
   body: {
     fontFamily: "'Inter', -apple-system, sans-serif",
     color: colors.slateLight,
-    fontSize: '15px',
+    fontSize: '14px',
     lineHeight: 1.6,
-    marginBottom: '20px',
+    marginBottom: '16px',
   },
-  form: {
+  muted: {
+    fontFamily: "'Inter', -apple-system, sans-serif",
+    color: colors.slate,
+    fontSize: '13px',
+  },
+  actionsRow: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '18px',
+    gap: '10px',
   },
-  label: {
+  section: {
+    marginTop: '28px',
+    paddingTop: '24px',
+    borderTop: `1px solid ${colors.line}`,
+  },
+  selectAllRow: {
     display: 'flex',
-    flexDirection: 'column',
+    alignItems: 'center',
     gap: '8px',
     fontFamily: "'Inter', -apple-system, sans-serif",
     color: colors.slate,
-    fontSize: '14px',
+    fontSize: '13px',
+    marginBottom: '8px',
+    cursor: 'pointer',
   },
-  input: {
-    background: 'rgba(255,255,255,.05)',
-    border: `1px solid ${colors.line}`,
-    borderRadius: '10px',
-    padding: '12px 16px',
-    color: colors.white,
+  sendsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+    marginBottom: '14px',
+    maxHeight: '260px',
+    overflowY: 'auto',
+  },
+  sendRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '8px 6px',
+    borderRadius: '8px',
+    cursor: 'pointer',
     fontFamily: "'Inter', -apple-system, sans-serif",
-    fontSize: '15px',
-    outline: 'none',
+    fontSize: '13px',
+  },
+  sendSubject: {
+    flex: 1,
+    color: colors.white,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  sendDate: {
+    color: colors.slate,
+    fontSize: '12px',
+    flexShrink: 0,
   },
   pill: {
     background: colors.white,
@@ -271,26 +372,29 @@ const styles = {
     cursor: 'pointer',
   },
   pillButton: {
-    marginTop: '8px',
+    width: '100%',
+  },
+  pillSecondary: {
+    background: 'transparent',
+    color: colors.white,
+    border: `1px solid ${colors.line}`,
+  },
+  pillDanger: {
+    background: colors.danger,
+    color: colors.white,
     width: '100%',
   },
   error: {
-    color: '#F87171',
+    color: colors.danger,
     fontFamily: "'Inter', -apple-system, sans-serif",
-    fontSize: '14px',
-    margin: 0,
-  },
-  success: {
-    color: '#4ADE80',
-    fontFamily: "'Inter', -apple-system, sans-serif",
-    fontSize: '14px',
-    margin: 0,
+    fontSize: '13px',
+    margin: '0 0 10px',
   },
   footerText: {
     marginTop: '20px',
     fontFamily: "'Inter', -apple-system, sans-serif",
     color: colors.slate,
-    fontSize: '14px',
+    fontSize: '13px',
     textAlign: 'center',
   },
   inlineLink: {

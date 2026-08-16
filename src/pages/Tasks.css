@@ -183,16 +183,33 @@ select.tasks-input { cursor: pointer; }
   border-radius: 14px;
   padding: 8px;
 }
+/* .tasks-item is now the OUTER row (a plain div, not a label) — added
+   2026-08-15 alongside the delete button, since a delete "x" can't sit
+   inside a <label> without accidentally toggling the checkbox when
+   clicked. .tasks-item-label is the label that used to BE .tasks-item —
+   same flex/spacing/cursor behavior, just wrapping only the
+   checkbox+content instead of the whole row. The admin "all tasks"
+   panel reuses .tasks-item directly (no checkbox/label there at all,
+   just a static row + delete button), so .tasks-item itself stays a
+   plain flex row rather than assuming a label is always inside it. */
 .tasks-item {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 10px;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 4px 10px;
   border-radius: 10px;
-  cursor: pointer;
   font-size: 14px;
 }
 .tasks-item:hover { background: rgba(255,255,255,.05); }
+.tasks-item-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 6px 8px 0;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
 .tasks-item input[type="checkbox"] {
   accent-color: var(--white);
   cursor: pointer;
@@ -200,6 +217,33 @@ select.tasks-input { cursor: pointer; }
   flex-shrink: 0;
 }
 .tasks-item.done .tasks-item-title { text-decoration: line-through; color: var(--slate); }
+/* Delete "x" — added 2026-08-15 for both self-delete (any member, their
+   own tasks) and admin-delete (any task, in the "all tasks" panel
+   below). Muted by default, brightens to red on hover so it doesn't
+   visually compete with the task content but is still easy to find. */
+.tasks-item-delete {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--slate);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tasks-item-delete:hover { color: #F87171; background: rgba(248,113,113,.12); }
+/* Assignee name in the admin "all tasks" panel — e.g. "Set up booth —
+   Mia Member". Muted so the task title still reads as the primary text. */
+.tasks-item-assignee {
+  font-weight: 400;
+  color: var(--slate);
+  font-size: 12.5px;
+}
 .tasks-item-main {
   flex: 1;
   display: flex;
@@ -230,6 +274,76 @@ select.tasks-input { cursor: pointer; }
   padding-top: 2px;
 }
 .tasks-due.overdue { color: #F87171; font-weight: 600; }
+
+/* ---------- ASSIGNEE PICKER (multi-select, added 2026-08-15) ----------
+   Replaces the old single <select> — a checkbox list plus a "Select
+   all" toggle, so a task can be assigned to several people in one
+   action. Same bordered-box visual language as .tasks-inline-form
+   itself, just nested one level in. */
+.tasks-assignee-picker {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.tasks-assignee-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--slate);
+  margin-bottom: 8px;
+}
+.tasks-select-all {
+  background: none;
+  border: none;
+  color: var(--white);
+  text-decoration: underline;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+.tasks-assignee-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+.tasks-assignee-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.tasks-assignee-row input[type="checkbox"] {
+  accent-color: var(--white);
+  cursor: pointer;
+}
+
+/* ---------- ADMIN "ALL TASKS" PANEL (added 2026-08-15) ----------
+   Collapsed by default — a toggle button (matches .tasks-pill-sm's
+   general weight but left-aligned/full-width, not a pill) reveals every
+   task across every member below the current user's own task list. */
+.tasks-admin-section {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.tasks-admin-toggle {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--white);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 16px;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+.tasks-admin-toggle:hover { border-color: rgba(255,255,255,.5); }
 
 @media (max-width: 600px) {
   .tasks-header { padding: 16px 20px; }
