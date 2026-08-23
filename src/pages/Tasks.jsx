@@ -463,11 +463,23 @@ export default function TasksPage() {
                     {statusFilters.size === STATUS_FILTERS.length ? 'Deselect all' : 'Select all'}
                   </button>
 
+                  {/* Checkboxes, not radios — changed 2026-08-16 per
+                      explicit feedback ("for the soonest first and the
+                      farthest first I think you should just also do check
+                      boxes as well, it's very hard to visually see if my
+                      thing is checked or not"). A radio's filled dot is
+                      genuinely low-contrast at this size against the dark
+                      panel, whereas a checkbox's checkmark reads clearly —
+                      and it now matches the Status checkboxes right above
+                      instead of mixing two control shapes in one panel.
+                      Behavior stays mutually exclusive (you can't sort
+                      both directions at once): checking one unchecks the
+                      other, and clicking the already-checked one is a
+                      no-op rather than leaving no sort selected. */}
                   <div className="tasks-filter-dropdown-label tasks-filter-sort-label">Sort by due date</div>
                   <label className="tasks-filter-option">
                     <input
-                      type="radio"
-                      name="due-date-sort"
+                      type="checkbox"
                       checked={dueDateSort === 'soonest'}
                       onChange={() => setDueDateSort('soonest')}
                     />
@@ -475,8 +487,7 @@ export default function TasksPage() {
                   </label>
                   <label className="tasks-filter-option">
                     <input
-                      type="radio"
-                      name="due-date-sort"
+                      type="checkbox"
                       checked={dueDateSort === 'farthest'}
                       onChange={() => setDueDateSort('farthest')}
                     />
@@ -657,7 +668,12 @@ export default function TasksPage() {
               className="tasks-admin-toggle"
               onClick={() => setShowAllTasks((v) => !v)}
             >
-              {showAllTasks ? 'Hide all tasks' : 'Manage all tasks (admin)'}
+              {/* "(admin)" parenthetical dropped 2026-08-16 per explicit
+                  feedback ("it doesn't need to be specified as in
+                  parentheses admin and parentheses") — this button only
+                  renders inside a user?.is_admin block anyway, so a
+                  non-admin never sees it and the label was redundant. */}
+              {showAllTasks ? 'Hide all tasks' : 'Manage all tasks'}
             </button>
 
             {showAllTasks && (

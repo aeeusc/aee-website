@@ -33,7 +33,15 @@
   border: 1px solid var(--line, rgba(255,255,255,.16));
   border-radius: 16px;
   padding: 24px 24px 20px;
-  box-shadow: 0 24px 60px rgba(0,0,0,.5);
+  /* No box-shadow — removed 2026-08-16 per explicit feedback ("we need
+     to remove the UI background like shadow like underlay for deleting
+     tasks... I love the blurring but I'm just not loving this"). The
+     card used to sit on a large soft drop shadow
+     (0 24px 60px rgba(0,0,0,.5)) which, against this site's already
+     near-black background, read as a murky grey blob spreading out
+     under the dialog rather than as depth. The overlay's
+     backdrop-filter blur above is deliberately KEPT — that's the part
+     that was working. */
   animation: confirm-pop-in .18s cubic-bezier(.22,.61,.36,1);
 }
 
@@ -58,6 +66,31 @@
   margin: 0 0 20px;
 }
 
+/* Type-the-name field for irreversible actions — see ConfirmDialog.jsx's
+   optional confirmPhrase prop. Added 2026-08-16 for permanently deleting
+   member accounts. */
+.confirm-phrase-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 20px;
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 13px;
+  color: var(--slate, #94A3B8);
+}
+.confirm-phrase-field strong { color: var(--white, #fff); font-weight: 600; }
+.confirm-phrase-input {
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--line, rgba(255,255,255,.16));
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: var(--white, #fff);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+}
+.confirm-phrase-input:focus { border-color: rgba(255,255,255,.45); }
+
 .confirm-actions {
   display: flex;
   justify-content: flex-end;
@@ -72,6 +105,12 @@
   font-family: inherit;
   cursor: pointer;
   border: none;
+}
+/* Disabled state exists for the confirmPhrase flow above — the confirm
+   button stays greyed out until the typed name matches. */
+.confirm-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
 }
 
 .confirm-btn-secondary {

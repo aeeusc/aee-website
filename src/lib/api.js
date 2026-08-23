@@ -129,6 +129,18 @@ export function demoteUser(id) {
   return apiRequest(`/auth/admin/users/${id}/demote`, { method: 'PUT' });
 }
 
+// PERMANENT account deletion — added 2026-08-16 ("I need to be able to
+// purge members... someone graduates and then it's just clutter").
+// Distinct from deactivateUser above, which is reversible: this removes
+// the account row, every task assigned to them, their role history, and
+// any calendar events they created. Tasks they assigned to OTHER people
+// survive (those are the other member's work). The backend refuses to
+// delete your own account or the last remaining admin — see
+// routes/auth.js's DELETE /admin/users/:id.
+export function deleteUser(id) {
+  return apiRequest(`/auth/admin/users/${id}`, { method: 'DELETE' });
+}
+
 // --- Members directory (Members.jsx) ---
 //
 // Any logged-in member can view the full directory — not admin-gated,
@@ -183,6 +195,39 @@ export function subscribeToNewsletter(email) {
   return apiRequest('/newsletter/subscribe', {
     method: 'POST',
     body: JSON.stringify({ email }),
+  });
+}
+
+// Called by the /unsubscribe page (Unsubscribe.jsx) with the token from
+// the link in a newsletter email. No session needed — the token itself
+// is the authorization, and most subscribers don't have portal accounts.
+// Added 2026-08-16 alongside moving the unsubscribe flow onto the site
+// (it used to be a GET straight to the Render backend, which both
+// exposed the backend URL and could be triggered by mail-client link
+// prefetchers — see routes/newsletter.js).
+export function unsubscribeFromNewsletter(token) {
+  return apiRequest('/newsletter/unsubscribe', {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  });
+}
+
+// A logged-in member's OWN newsletter subscription, for the checkbox in
+// Profile.jsx's Settings tab — added 2026-08-16 ("do the members for the
+// portal unsubscribe in the settings for them... so it could be a
+// checkbox"). Before this, members had no way to opt in or out from
+// inside the portal at all: `subscribers` is a separate table from
+// `users`, so the only opt-out was the token link buried in an email.
+// Both endpoints act only on req.session.userId's own addresses — the
+// member id is never passed from here.
+export function getNewsletterPreference() {
+  return apiRequest('/newsletter/preference', { method: 'GET' });
+}
+
+export function setNewsletterPreference(subscribed) {
+  return apiRequest('/newsletter/preference', {
+    method: 'PUT',
+    body: JSON.stringify({ subscribed }),
   });
 }
 

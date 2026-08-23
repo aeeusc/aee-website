@@ -208,6 +208,20 @@
 .admin-users-action:hover:not(:disabled) { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.05); }
 .admin-users-action:disabled { opacity: .35; cursor: not-allowed; }
 
+/* Permanent-delete button — added 2026-08-16. Deliberately the only red
+   control on the row so it reads as different in kind from Deactivate
+   sitting next to it (that one's reversible, this one isn't). Same red
+   used for destructive actions elsewhere in the app (ConfirmDialog's
+   danger button, Tasks.css's overdue state). */
+.admin-users-action-danger {
+  border-color: rgba(248,113,113,.45);
+  color: #F87171;
+}
+.admin-users-action-danger:hover:not(:disabled) {
+  border-color: #F87171;
+  background: rgba(248,113,113,.12);
+}
+
 /* ---------- INLINE EDIT FORM ---------- */
 .admin-users-edit-form { width: 100%; }
 .admin-users-edit-grid {

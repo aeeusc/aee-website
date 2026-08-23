@@ -15,6 +15,7 @@ import TasksPage from './pages/Tasks'
 import NewsletterPage from './pages/Newsletter'
 import NewsletterDetailPage from './pages/NewsletterDetail'
 import AdminUsers from './pages/AdminUsers'
+import Unsubscribe from './pages/Unsubscribe'
 import NotFound from './pages/NotFound'
 import { ConfirmProvider } from './components/ConfirmDialog'
 import './App.css'
@@ -64,6 +65,11 @@ function App() {
         <Route path="/newsletter" element={<NewsletterPage />} />
         <Route path="/newsletter/:id" element={<NewsletterDetailPage />} />
         <Route path="/admin/users" element={<AdminUsers />} />
+        {/* Where the unsubscribe link in every newsletter email lands
+            (added 2026-08-16). Public — no login, since most newsletter
+            subscribers don't have portal accounts. Reads ?token=... and
+            calls the API itself; see Unsubscribe.jsx. */}
+        <Route path="/unsubscribe" element={<Unsubscribe />} />
         {/* Catch-all — anything that doesn't match a route above (like
             the now-removed /signup) gets a real 404 page instead of
             silently rendering blank. Must stay LAST; React Router

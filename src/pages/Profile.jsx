@@ -41,7 +41,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { getCurrentUser, updateProfile, updateProfilePhoto, changePassword, logout } from '../lib/api';
+import {
+  getCurrentUser, updateProfile, updateProfilePhoto, changePassword, logout,
+  getNewsletterPreference, setNewsletterPreference,
+} from '../lib/api';
 import { PlaceholderAvatar } from './Home';
 import './Portal.css';
 import './Profile.css';
@@ -551,9 +554,96 @@ function SettingsTab({ user, onLogout }) {
         </button>
       </form>
 
+      <NewsletterPreference />
+
       <button type="button" onClick={onLogout} className="portal-link-button">
         Log out
       </button>
+    </div>
+  );
+}
+
+// ─── Newsletter opt-in (Settings) ────────────────────────────────────────
+//
+// Added 2026-08-16 per explicit feedback: "do the members for the portal
+// unsubscribe in the settings for them, if they want to get notified to
+// their email about notifications from newsletter so it could be a
+// checkbox."
+//
+// Why this didn't already exist: the `subscribers` table is completely
+// separate from `users` — subscribing has never required an account and
+// having an account has never implied a subscription. So a member's only
+// way to opt out was the token link at the bottom of a newsletter email
+// they'd have to go dig up. This puts it where they'd actually look.
+//
+// Saves immediately on toggle rather than needing a separate Save button:
+// it's a single boolean, and an unsaved checkbox is a classic way for
+// someone to *think* they've unsubscribed when they haven't — which for
+// an email preference is the one outcome worth designing against.
+function NewsletterPreference() {
+  const [status, setStatus] = useState('loading'); // loading | ready | saving | error
+  const [subscribed, setSubscribed] = useState(false);
+  const [email, setEmail] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    getNewsletterPreference()
+      .then((data) => {
+        setSubscribed(Boolean(data?.subscribed));
+        setEmail(data?.email || null);
+        setStatus('ready');
+      })
+      .catch((err) => {
+        setStatus('error');
+        setErrorMessage(err.message || 'Could not load your newsletter setting.');
+      });
+  }, []);
+
+  async function handleToggle(e) {
+    const next = e.target.checked;
+    const previous = subscribed;
+    // Optimistic: flip immediately so the checkbox feels responsive,
+    // then roll back if the request fails — otherwise the box would sit
+    // unchanged for a beat and read as a broken click.
+    setSubscribed(next);
+    setStatus('saving');
+    setErrorMessage('');
+    try {
+      await setNewsletterPreference(next);
+      setStatus('ready');
+    } catch (err) {
+      setSubscribed(previous);
+      setStatus('error');
+      setErrorMessage(err.message || 'Could not save that. Please try again.');
+    }
+  }
+
+  return (
+    <div className="profile-newsletter-pref">
+      <h3 className="profile-newsletter-pref-title">Newsletter emails</h3>
+
+      {status === 'loading' ? (
+        <p className="portal-section-sub">Loading…</p>
+      ) : (
+        <>
+          <label className="profile-newsletter-pref-row">
+            <input
+              type="checkbox"
+              checked={subscribed}
+              onChange={handleToggle}
+              disabled={status === 'saving'}
+            />
+            <span>Email me when AEE sends a newsletter</span>
+          </label>
+          <p className="profile-newsletter-pref-note">
+            {subscribed
+              ? <>Newsletters go to <strong>{email}</strong>. Uncheck to stop receiving them — you'll still see every newsletter in the portal.</>
+              : <>You won't get newsletter emails{email ? <> at <strong>{email}</strong></> : null}. You can still read them anytime in the portal.</>}
+          </p>
+        </>
+      )}
+
+      {status === 'error' && <p className="portal-error">{errorMessage}</p>}
     </div>
   );
 }

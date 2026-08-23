@@ -132,6 +132,197 @@
 }
 .calendar-today-btn:hover { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.05); }
 
+/* ---------- VIEW SWITCHER (Month / Week / Day) ---------- */
+/* Added 2026-08-16. Segmented control sitting next to Today, same
+   position and role as Google Calendar's own view control. */
+.calendar-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.calendar-view-switch {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.calendar-view-btn {
+  background: transparent;
+  border: none;
+  color: var(--slate);
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.calendar-view-btn:hover { background: rgba(255,255,255,.06); color: var(--white); }
+.calendar-view-btn.active { background: var(--white); color: var(--navy-950); }
+
+/* ---------- WEEK / DAY TIME GRID ---------- */
+/* One stylesheet section for both, since Calendar.jsx's TimeGrid renders
+   day view as the 1-column case of the 7-column week. The only thing
+   that differs is how many column tracks the rows have, handled by the
+   .week / .day modifier on the container. */
+.calendar-timegrid {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255,255,255,.02);
+}
+/* --cols drives every row's grid-template-columns below, so the gutter
+   and the day columns always line up across the header, the all-day
+   strip and the scrolling body. */
+.calendar-timegrid.week { --cols: repeat(7, 1fr); }
+.calendar-timegrid.day { --cols: 1fr; }
+
+.calendar-timegrid-header {
+  display: grid;
+  grid-template-columns: 64px var(--cols);
+  border-bottom: 1px solid var(--line);
+}
+.calendar-timegrid-gutter-spacer { border-right: 1px solid var(--line); }
+.calendar-timegrid-daylabel {
+  background: none;
+  border: none;
+  border-right: 1px solid var(--line);
+  color: var(--slate);
+  font-family: inherit;
+  padding: 10px 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: background .15s;
+}
+.calendar-timegrid-daylabel:last-child { border-right: none; }
+.calendar-timegrid-daylabel:hover { background: rgba(255,255,255,.04); }
+.calendar-timegrid-daylabel.selected { background: rgba(255,255,255,.07); }
+.calendar-timegrid-dayname {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.calendar-timegrid-daynum {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--white);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.calendar-timegrid-daylabel.today .calendar-timegrid-daynum {
+  background: var(--white);
+  color: var(--navy-950);
+}
+
+/* All-day strip — only rendered when something in view actually spans
+   days (see the .some() guard in Calendar.jsx), so a normal week has no
+   empty band across the top. */
+.calendar-timegrid-allday {
+  display: grid;
+  grid-template-columns: 64px var(--cols);
+  border-bottom: 1px solid var(--line);
+  min-height: 34px;
+}
+.calendar-timegrid-gutter {
+  border-right: 1px solid var(--line);
+  color: var(--slate);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 8px;
+}
+.calendar-timegrid-allday-col {
+  border-right: 1px solid var(--line);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.calendar-timegrid-allday-col:last-child { border-right: none; }
+.calendar-allday-block {
+  background: rgba(129,140,248,.22);
+  border-left: 2px solid #818CF8;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Scrolling hour area. Capped height so the page itself doesn't become
+   1152px of calendar before you reach the day panel underneath. */
+.calendar-timegrid-scroll {
+  max-height: 560px;
+  overflow-y: auto;
+}
+.calendar-timegrid-body {
+  display: grid;
+  grid-template-columns: 64px var(--cols);
+  position: relative;
+}
+.calendar-timegrid-gutter-col { border-right: 1px solid var(--line); }
+.calendar-timegrid-hourlabel {
+  color: var(--slate);
+  font-size: 11px;
+  text-align: right;
+  padding-right: 8px;
+  /* Nudged up so the label sits ON its hour line rather than inside the
+     band below it — same alignment Google Calendar uses. */
+  transform: translateY(-6px);
+}
+.calendar-timegrid-col {
+  position: relative;
+  border-right: 1px solid var(--line);
+  min-width: 0;
+}
+.calendar-timegrid-col:last-child { border-right: none; }
+.calendar-timegrid-col.selected { background: rgba(255,255,255,.03); }
+.calendar-timegrid-hourline { border-bottom: 1px solid rgba(255,255,255,.07); }
+
+.calendar-timegrid-block {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  background: rgba(96,165,250,.26);
+  border-left: 2px solid #60A5FA;
+  border-radius: 4px;
+  padding: 2px 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: default;
+}
+.calendar-timegrid-block-time {
+  font-size: 10px;
+  color: var(--slate-light);
+  line-height: 1.2;
+}
+.calendar-timegrid-block-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ---------- MONTH GRID ---------- */
 .calendar-grid {
   border: 1px solid var(--line);
@@ -214,10 +405,35 @@
   width: 100%;
   box-sizing: border-box;
 }
+/* Multi-day events get the same indigo accent as the all-day strip in
+   week/day view, so an event that spans days is recognizable as the
+   same thing in either view rather than looking like a different kind
+   of item in each. Added 2026-08-16. */
+.calendar-day-chip.multiday {
+  background: rgba(129,140,248,.22);
+  border-left: 2px solid #818CF8;
+  color: var(--white);
+}
 .calendar-day-chip-more {
   background: none;
   color: var(--slate);
   padding: 1px 5px 0;
+}
+
+/* "Multi-day" pill next to an event's title in the day panel — makes it
+   obvious why the same event is appearing on several days at once. */
+.calendar-event-badge {
+  display: inline-block;
+  margin-left: 8px;
+  vertical-align: middle;
+  background: rgba(129,140,248,.22);
+  color: #C7CDFB;
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
 }
 
 /* ---------- SELECTED-DAY PANEL ---------- */
@@ -274,6 +490,17 @@
   font-family: inherit;
   font-size: 13px;
   outline: none;
+}
+
+/* Wraps the start/end time inputs with a small label above each — added
+   2026-08-12 alongside the optional end-time field, so it's clear which
+   input is which rather than two bare time pickers in a row. */
+.calendar-time-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11.5px;
+  color: var(--slate);
 }
 
 .calendar-pill {
@@ -348,4 +575,26 @@
   .calendar-day-number { width: 18px; height: 18px; font-size: 11px; }
   .calendar-day-chip { font-size: 9px; padding: 0 3px; }
   .calendar-day-panel { padding: 18px 16px; }
+
+  /* Time grid on narrow screens: a 7-column week view can't fit a phone
+     without each column collapsing to unreadable slivers, so the whole
+     grid scrolls horizontally inside its own container (the page body
+     itself never scrolls sideways) with a minimum usable column width.
+     The hour gutter narrows too, since the AM/PM labels are short. */
+  .calendar-timegrid-scroll { overflow-x: auto; }
+  .calendar-timegrid.week .calendar-timegrid-header,
+  .calendar-timegrid.week .calendar-timegrid-allday,
+  .calendar-timegrid.week .calendar-timegrid-body {
+    min-width: 620px;
+  }
+  .calendar-timegrid.week .calendar-timegrid-header,
+  .calendar-timegrid.week .calendar-timegrid-allday {
+    overflow-x: auto;
+  }
+  .calendar-timegrid-header,
+  .calendar-timegrid-allday,
+  .calendar-timegrid-body { grid-template-columns: 48px var(--cols); }
+  .calendar-timegrid-daynum { width: 24px; height: 24px; font-size: 15px; }
+  .calendar-view-btn { padding: 7px 12px; font-size: 12px; }
+  .calendar-toolbar-right { gap: 8px; }
 }

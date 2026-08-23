@@ -330,6 +330,51 @@
 }
 .profile-crop-cancel:hover { background: rgba(255,255,255,.08); }
 
+/* ---------- NEWSLETTER OPT-IN (Settings tab) ---------- */
+/* Added 2026-08-16. Sits between the change-password form and Log out in
+   Profile.jsx's SettingsTab, separated by a rule so it reads as its own
+   setting rather than as part of the password form above it. */
+.profile-newsletter-pref {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line, rgba(255,255,255,.16));
+}
+.profile-newsletter-pref-title {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white, #fff);
+  margin: 0 0 12px;
+}
+.profile-newsletter-pref-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--slate-light, #C9D4E4);
+  cursor: pointer;
+}
+.profile-newsletter-pref-row input[type="checkbox"] {
+  accent-color: var(--white, #fff);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.profile-newsletter-pref-row input[type="checkbox"]:disabled { cursor: wait; }
+.profile-newsletter-pref-note {
+  margin: 8px 0 0 26px;
+  font-size: 13px;
+  color: var(--slate, #94A3B8);
+  line-height: 1.5;
+}
+.profile-newsletter-pref-note strong { color: var(--slate-light, #C9D4E4); font-weight: 600; }
+/* Log out follows this section in SettingsTab; without this it butts
+   right up against the note above and reads as part of the newsletter
+   setting rather than as its own action. */
+.profile-newsletter-pref + .portal-link-button { margin-top: 24px; }
+
 @media (max-width: 560px) {
   .profile-preset-grid { grid-template-columns: 1fr; }
+  .profile-newsletter-pref-note { margin-left: 0; }
 }

@@ -32,7 +32,9 @@ import {
   reactivateUser,
   promoteUser,
   demoteUser,
+  deleteUser,
 } from '../lib/api';
+import { useConfirm } from '../components/ConfirmDialog';
 import './AdminUsers.css';
 
 // Kept in sync with routes/auth.js's VALID_TITLES/VALID_TEAMS and
@@ -66,6 +68,7 @@ function fullName(u) {
 
 export default function AdminUsers() {
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const [authCheck, setAuthCheck] = useState('checking'); // checking | ok | denied
   const [me, setMe] = useState(null);
 
@@ -197,6 +200,38 @@ export default function AdminUsers() {
     } catch (err) {
       setRowStatus((s) => ({ ...s, [u.id]: 'error' }));
       setRowError((s) => ({ ...s, [u.id]: err.message || 'Could not update admin status.' }));
+    }
+  }
+
+  // PERMANENT delete — added 2026-08-16 ("I need to be able to purge
+  // members... someone graduates and then it's just clutter"). Separate
+  // from Deactivate above and deliberately harder to trigger: this one
+  // makes you type the person's full name first (see ConfirmDialog's
+  // confirmPhrase option), because unlike every other action on this
+  // page there is no undo.
+  async function handleDelete(u) {
+    const fullName = `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.username;
+    const confirmed = await confirm({
+      title: 'Permanently delete this account?',
+      message:
+        `This removes ${fullName}'s account, every task assigned to them, and any calendar ` +
+        `events they created. Tasks they assigned to other people stay put. This cannot be undone — ` +
+        `use Deactivate instead if you might want them back.`,
+      confirmLabel: 'Delete forever',
+      danger: true,
+      confirmPhrase: fullName,
+    });
+    if (!confirmed) return;
+
+    setRowStatus((s) => ({ ...s, [u.id]: 'saving' }));
+    setRowError((s) => ({ ...s, [u.id]: '' }));
+    try {
+      await deleteUser(u.id);
+      setRowStatus((s) => ({ ...s, [u.id]: undefined }));
+      loadUsers();
+    } catch (err) {
+      setRowStatus((s) => ({ ...s, [u.id]: 'error' }));
+      setRowError((s) => ({ ...s, [u.id]: err.message || 'Could not delete account.' }));
     }
   }
 
@@ -353,6 +388,15 @@ export default function AdminUsers() {
                           title={isSelf && u.is_admin ? "You can't remove your own admin access" : undefined}
                         >
                           {u.is_admin ? 'Remove admin' : 'Make admin'}
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-users-action admin-users-action-danger"
+                          onClick={() => handleDelete(u)}
+                          disabled={saving || isSelf}
+                          title={isSelf ? "You can't delete your own account" : 'Permanently delete this account'}
+                        >
+                          Delete
                         </button>
                       </div>
                     </>
