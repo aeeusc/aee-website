@@ -5,11 +5,14 @@
 // name (no password to think up) and gets back a generated username +
 // password to relay to the new member directly.
 //
-// Title and team became REQUIRED (dropdowns, not free text) as of
-// 2026-08-11 per explicit feedback — see the TITLES/TEAMS comments
-// below. Existing accounts created before this change may still have a
-// NULL title/team (not retroactively backfilled); this only affects
-// accounts created from now on.
+// Title and team became dropdowns (not free text) as of 2026-08-11, and
+// both were REQUIRED at that point. Team went back to OPTIONAL on
+// 2026-08-23 — title is still required. Existing accounts created before
+// any of this may have a NULL title/team (never retroactively
+// backfilled), which the rest of the app already tolerates.
+//
+// Required now: first name, last name, USC email, title.
+// Optional now: Gmail, design team, LinkedIn, Instagram.
 //
 // Requires an admin session — the backend's POST /auth/admin/create-user
 // checks req.session server-side and returns 401/403 if you're not
@@ -27,8 +30,8 @@ import { createUser, getCurrentUser } from '../lib/api';
 // The design teams a member can be assigned to at creation — kept in
 // sync with routes/auth.js's VALID_TEAMS and Members.jsx's TEAMS.
 // Added 2026-08-10 to back the Members page's filter-by-team dropdown.
-// As of 2026-08-11, REQUIRED at creation (no more "No team" option) —
-// see the file comment above the form for why. STEP and TREX added
+// Was REQUIRED at creation from 2026-08-11; optional again as of
+// 2026-08-23, so the "No team" option is back. STEP and TREX added
 // 2026-08-12 ("STEP and TREX PM should be real roles and also make them
 // real design teams") — those titles already existed, they just had no
 // matching team until now.
@@ -171,9 +174,8 @@ export default function CreateUser() {
           <>
             <h1 style={styles.heading}>Create an account</h1>
             <p style={styles.body}>
-              Enter the new member's name, USC email, title, and design
-              team. A username and password will be generated
-              automatically.
+              Enter the new member's name, USC email, and title. A username
+              and password will be generated automatically.
             </p>
 
             <form onSubmit={handleSubmit} style={styles.form}>
@@ -242,15 +244,19 @@ export default function CreateUser() {
                 </select>
               </label>
 
+              {/* Design team went OPTIONAL 2026-08-23 ("make assigning a
+                  design team optional when creating accounts"). The
+                  placeholder option is no longer `disabled` — it's now a
+                  real, selectable "No team" choice rather than a prompt
+                  you're forced to move off of. Title stays required. */}
               <label style={styles.label}>
-                Design team
+                Design team (optional)
                 <select
-                  required
                   value={team}
                   onChange={(e) => setTeam(e.target.value)}
                   style={{ ...styles.input, cursor: 'pointer' }}
                 >
-                  <option value="" disabled>Select a team…</option>
+                  <option value="">No team</option>
                   {TEAMS.map((t) => (
                     <option key={t} value={t}>{t}</option>
                   ))}

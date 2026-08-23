@@ -64,9 +64,10 @@ export function getCurrentUser() {
 // not anything passed from here) — so this only works when called by
 // someone who's already logged in as an admin, via CreateUser.jsx.
 //
-// title and team are REQUIRED as of 2026-08-11 (previously optional) —
-// both must be one of the preset values from CreateUser.jsx's
-// TITLES/TEAMS dropdowns. uscEmail is REQUIRED; `email` (the Gmail) is
+// title is REQUIRED and must be one of CreateUser.jsx's preset TITLES.
+// team is OPTIONAL as of 2026-08-23 ("make assigning a design team
+// optional") — still validated against the preset TEAMS list when one is
+// given, stored as NULL when it isn't. uscEmail is REQUIRED; `email` (the Gmail) is
 // OPTIONAL as of 2026-08-23 ("make it so putting a gmail is optional") —
 // it was briefly required alongside the USC address when both fields
 // were introduced on 2026-08-16. An empty string is fine to send; the
