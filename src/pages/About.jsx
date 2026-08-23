@@ -37,7 +37,52 @@ const STATS = [
   { count: 9, suffix: "", label: "Policy Consortium Organizations" },
 ];
 
-const STATEMENT = "We put student engineers at the center of the energy transition.";
+// Headline changed 2026-08-23. The founding vision — "build the Hub for
+// Energy at USC" — is the through-line of everything else on this page,
+// so it leads. The previous headline ("We put student engineers at the
+// center of the energy transition.") wasn't dropped; it moved down to
+// become the supporting line underneath, where it still does its job.
+const STATEMENT = "The Hub for Energy at USC.";
+
+// What AEE offers — the "values" row. Deliberately four short cards
+// rather than prose: this is the part of the page a prospective member
+// scans rather than reads, so each one is a single scannable promise
+// with one sentence of substance under it.
+//
+// Content drawn from the founding brief: a hub "for engineers and non
+// engineers alike" spanning technology, policy, and innovation, plus the
+// three things the org already measurably does (design teams, the policy
+// consortium, and industry access).
+const OFFERINGS = [
+  {
+    title: "Open to every major",
+    body: "Built for engineers and non-engineers alike — anyone with a stake in how energy gets made, moved, governed, and paid for.",
+  },
+  {
+    title: "Nationally competing design teams",
+    body: "Three teams building real hardware against real deadlines, judged against schools across the country.",
+  },
+  {
+    title: "Policy that ships",
+    body: "A consortium of nine organizations turning energy research into positions that reach the people who set the rules.",
+  },
+  {
+    title: "A launchpad, not a line item",
+    body: "Direct access to industry, founders, and competitions — the kind that turns a class project into a company.",
+  },
+];
+
+// The Olympic Week numbers. A handful of headline figures like these is
+// a KPI row of stat tiles, NOT a chart — there's no trend, no comparison
+// between series, and no part-to-whole relationship here; each number is
+// its own standalone fact. Rendering them as bars or a pie would invent
+// a relationship that doesn't exist in the data.
+const OLYMPIC_STATS = [
+  { count: 350, suffix: "+", label: "Students across five days" },
+  { count: 25, suffix: "+", label: "LA28 and industry speakers" },
+  { count: 5, suffix: "", label: "Panels plus an innovation hackathon" },
+  { count: 25, suffix: "+", label: "Teams in the hackathon" },
+];
 
 // ─── Interactive Three.js atom ──────────────────────────────────────────────
 //
@@ -281,8 +326,8 @@ export default function About() {
         <div className="label">ABOUT</div>
         <StatementReveal text={STATEMENT} />
         <p className="about-body">
-          Entirely student-led in USC's Sonny Astani Department — leading initiatives in
-          sustainable design, policy, and professional development.
+          We put student engineers at the center of the energy transition — entirely
+          student-led, open to every major, and building in public.
         </p>
 
         <div className="stats">
@@ -297,6 +342,95 @@ export default function About() {
           </div>
         </div>
       </section>
+
+      {/* ─── Origin ─────────────────────────────────────────────────
+          Added 2026-08-23. The founding story, told as a pull quote
+          plus two short columns rather than one long paragraph — the
+          same content reads as a wall of text at this width otherwise,
+          and the "sandbox on the frontier" line is the most quotable
+          thing on the page, so it gets to be the thing you actually
+          see. */}
+      <section className="about-origin">
+        <div className="about-inner">
+          <div className="label">ORIGIN</div>
+          <h2 className="about-h2">Founded in 2024.</h2>
+
+          <div className="about-origin-grid">
+            <p>
+              The Association of Energy Engineers at USC was founded in 2024. The original
+              vision, from founder <strong>Mitchell Kirby&nbsp;'26</strong>, was to build the
+              Hub for Energy at USC — a home for engineers and non-engineers alike with an
+              interest in the advancement of energy, its technologies and innovations, and
+              the policy surrounding its development and outcomes.
+            </p>
+            <p>
+              Since then AEE has become a sandbox on the frontier of emerging technologies,
+              unconstrained by energy and engineering alone. It resides within the USC Viterbi
+              School of Engineering's Sonny Astani Department of Civil and Environmental
+              Engineering.
+            </p>
+          </div>
+
+          <blockquote className="about-quote">
+            A sandbox on the frontier of emerging technologies — unconstrained by energy and
+            engineering alone.
+          </blockquote>
+        </div>
+      </section>
+
+      {/* ─── What we offer ──────────────────────────────────────────
+          The "values" half of the brief. Four cards, one promise each. */}
+      <section className="about-offer">
+        <div className="about-inner">
+          <div className="label">WHAT WE OFFER</div>
+          <h2 className="about-h2">Built to be used.</h2>
+
+          <div className="about-offer-grid">
+            {OFFERINGS.map((o) => (
+              <div className="about-offer-card" key={o.title}>
+                <h3>{o.title}</h3>
+                <p>{o.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Successes ──────────────────────────────────────────────
+          Olympic Week as a featured case study. Structured as
+          headline → stat row → outcome, because the outcome (a
+          hackathon team going on to win a real startup competition) is
+          the strongest single fact here and shouldn't be buried inside
+          a paragraph of setup. */}
+      <section className="about-success">
+        <div className="about-inner">
+          <div className="label">SUCCESSES</div>
+          <h2 className="about-h2">The first USC Olympic Week.</h2>
+          <p className="about-lead">
+            The upcoming 2028 Los Angeles Summer Olympics found a home in AEE. Our team hosted
+            the LA28 organization and 25 corresponding speakers for the first-ever USC Olympic
+            Week — five days of panels and an innovation hackathon built around the real
+            challenges of the 2028 Games.
+          </p>
+
+          <div className="stats about-success-stats">
+            {OLYMPIC_STATS.map((s, i) => (
+              <StatCounter key={i} count={s.count} suffix={s.suffix} label={s.label} />
+            ))}
+          </div>
+
+          <div className="about-outcome">
+            <div className="about-outcome-tag">The winning team</div>
+            <h3 className="about-outcome-name">Matterflow</h3>
+            <p className="about-outcome-body">
+              Over 25 teams competed for the $1,000 grand prize. Matterflow took it with a
+              compact, low-cost, onsite recycling and sorting machine — then went on to win the
+              annual 2026 Innovate Los Angeles Startup Incubator Competition.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <Footer />
     </div>
   );

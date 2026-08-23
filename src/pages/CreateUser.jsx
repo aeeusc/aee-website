@@ -171,8 +171,8 @@ export default function CreateUser() {
           <>
             <h1 style={styles.heading}>Create an account</h1>
             <p style={styles.body}>
-              Enter the new member's name, both email addresses, title,
-              and design team. A username and password will be generated
+              Enter the new member's name, USC email, title, and design
+              team. A username and password will be generated
               automatically.
             </p>
 
@@ -201,11 +201,13 @@ export default function CreateUser() {
                 />
               </label>
 
+              {/* Gmail went back to OPTIONAL 2026-08-23 ("make it so
+                  putting a gmail is optional") — the USC address below
+                  stays required, so every account still has an email. */}
               <label style={styles.label}>
-                Gmail
+                Gmail (optional)
                 <input
                   type="email"
-                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   style={styles.input}

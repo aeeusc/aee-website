@@ -236,6 +236,162 @@
 .atom-canvas:active { cursor: grabbing; }
 .about-note { font-size: 12px; color: rgba(148,163,184,.5); }
 
+/* ---------- ABOUT: ORIGIN / OFFERINGS / SUCCESSES ---------- */
+/* Added 2026-08-23 for the About page build-out ("a visual display of
+   our success and values"). These sections live below the existing
+   .about block on the /about route (see About.jsx) and sit on the flat
+   navy background the .about gradient resolves to, so the page reads as
+   one continuous surface rather than a stack of banded strips.
+   Everything here reuses the existing type scale and .stat card, so the
+   new content looks native to the site rather than bolted on. */
+.about-origin,
+.about-offer,
+.about-success {
+  background: var(--navy-950);
+  padding: 88px 24px;
+}
+.about-success { padding-bottom: 120px; }
+
+/* Shared centered column. Left-aligned text inside a centered container
+   (rather than centered text) because these sections carry real
+   paragraphs — centered body copy gets hard to read past a line or two,
+   unlike the short centered statement up top. */
+.about-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  text-align: left;
+}
+.about-inner .label { display: block; }
+
+.about-h2 {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: clamp(28px, 3vw, 40px);
+  letter-spacing: -.015em;
+  line-height: 1.15;
+  color: var(--white);
+  margin: 14px 0 0;
+}
+.about-lead {
+  margin: 22px 0 0;
+  max-width: 720px;
+  font-size: 16.5px;
+  line-height: 1.7;
+  color: var(--slate-light);
+}
+
+/* Origin: two columns of body copy, then the pull quote. */
+.about-origin-grid {
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px 40px;
+}
+.about-origin-grid p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.72;
+  color: var(--slate);
+}
+.about-origin-grid strong { color: var(--white); font-weight: 600; }
+
+.about-quote {
+  margin: 44px 0 0;
+  padding: 0 0 0 22px;
+  border-left: 2px solid rgba(255,255,255,.35);
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: clamp(19px, 2.1vw, 26px);
+  font-weight: 500;
+  line-height: 1.42;
+  letter-spacing: -.01em;
+  color: var(--white);
+  max-width: 780px;
+}
+
+/* Offerings: four scannable cards. auto-fit keeps them 4-up on a wide
+   screen, 2-up on a tablet and 1-up on a phone with no breakpoints of
+   their own. */
+.about-offer-grid {
+  margin-top: 34px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+  gap: 18px;
+}
+.about-offer-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255,255,255,.015);
+  padding: 26px 22px;
+  transition: border-color .25s, transform .25s;
+}
+.about-offer-card:hover { border-color: rgba(255,255,255,.42); transform: translateY(-3px); }
+.about-offer-card h3 {
+  margin: 0 0 10px;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--white);
+}
+.about-offer-card p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--slate);
+}
+
+/* Success stat row. Same .stat card as the top of the page, just
+   narrower so four sit comfortably on one line instead of the three
+   wider ones above. */
+.about-success-stats { margin-top: 40px; justify-content: flex-start; }
+.about-success-stats .stat { width: 232px; padding: 30px 22px 26px; }
+.about-success-stats .stat .num { font-size: 44px; }
+.about-success-stats .stat .cap { font-size: 14px; }
+
+/* The outcome block — deliberately the most emphasized thing in this
+   section, because a hackathon team going on to win a real startup
+   competition is the strongest single fact on the page. */
+.about-outcome {
+  margin-top: 44px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--white);
+  border-radius: 16px;
+  background: rgba(255,255,255,.04);
+  padding: 30px 30px 28px;
+  max-width: 780px;
+}
+.about-outcome-tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--slate);
+}
+.about-outcome-name {
+  margin: 10px 0 12px;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: clamp(24px, 2.6vw, 32px);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--white);
+}
+.about-outcome-body {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.68;
+  color: var(--slate-light);
+}
+
+@media (max-width: 760px) {
+  .about-origin,
+  .about-offer,
+  .about-success { padding: 64px 20px; }
+  .about-origin-grid { grid-template-columns: 1fr; gap: 20px; }
+  .about-success-stats { justify-content: center; }
+  .about-success-stats .stat { width: 100%; max-width: 320px; }
+  .about-outcome { padding: 24px 22px; }
+}
+
 /* ---------- CONNECTIONS ---------- */
 .connections { padding: 32px 0 84px; text-align: center; overflow: hidden; }
 .marquee {

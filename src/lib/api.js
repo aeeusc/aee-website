@@ -66,10 +66,11 @@ export function getCurrentUser() {
 //
 // title and team are REQUIRED as of 2026-08-11 (previously optional) —
 // both must be one of the preset values from CreateUser.jsx's
-// TITLES/TEAMS dropdowns. email and uscEmail became BOTH REQUIRED as of
-// 2026-08-16 (previously one optional `email` field) — "I want the
-// Gmail field, and then I want the usc.edu field... I want both of them
-// required." linkedinUrl/instagramUrl are new as of 2026-08-16 and
+// TITLES/TEAMS dropdowns. uscEmail is REQUIRED; `email` (the Gmail) is
+// OPTIONAL as of 2026-08-23 ("make it so putting a gmail is optional") —
+// it was briefly required alongside the USC address when both fields
+// were introduced on 2026-08-16. An empty string is fine to send; the
+// backend stores it as NULL. linkedinUrl/instagramUrl are also
 // OPTIONAL, letting an admin pre-fill a new member's social links
 // instead of leaving them for the member to fill in themselves later.
 // The backend re-validates all of this (see routes/auth.js's
