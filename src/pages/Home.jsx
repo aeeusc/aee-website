@@ -236,27 +236,56 @@ export function Nav() {
         <div className="nav-ctas">
           <a className="contact" href="mailto:aeeusc@gmail.com">Contact</a>
           {currentUser ? (
-            // Logged in: the "Log In" pill is replaced entirely — a
-            // small placeholder profile icon (goes to /profile) sits to
-            // the LEFT of the person's first name (goes to /portal),
-            // per the explicit layout: "on the left side of the login
-            // is gonna have a little profile icon... click on that,
-            // I'll redirect to... their profile" while the name itself
-            // opens the Member Portal. Two separate click targets, not
-            // one combined button — clicking the icon and clicking the
-            // name go to two different places.
-            <div className="nav-account">
-              <Link to="/profile" className="nav-avatar" aria-label="Your profile">
+            // Logged in: the "Log In" pill is replaced by ONE control —
+            // the profile photo and the name sit inside a single pill
+            // that opens the Member Portal.
+            //
+            // This used to be two separate click targets side by side
+            // (icon -> /profile, name -> /portal), which was the original
+            // 2026-08-08 layout. Changed 2026-08-24 per Kev: "combine pfp
+            // and member portal pill redirect into one". Two adjacent
+            // targets that looked like one button but went to different
+            // places was a coin flip every time — and nothing is lost,
+            // because /portal's own tile grid has Profile in it, so the
+            // profile page is still one click further on.
+            //
+            // The "MEMBER PORTAL" line underneath is the other half of
+            // that request ("subtext for button where it displays user to
+            // show that it is member portal"). A pill that just says
+            // "Kevin" tells you whose account you're in but not what
+            // pressing it does.
+            <Link
+              to="/portal"
+              className="nav-account"
+              aria-label={
+                currentUser.first_name || currentUser.username
+                  ? `Member Portal — signed in as ${currentUser.first_name || currentUser.username}`
+                  : "Member Portal"
+              }
+            >
+              <span className="nav-account-avatar">
                 {currentUser.photo_url ? (
                   <img src={currentUser.photo_url} alt="" />
                 ) : (
                   <PlaceholderAvatar />
                 )}
-              </Link>
-              <Link to="/portal" className="nav-firstname">
-                {currentUser.first_name || currentUser.username || "Member Portal"}
-              </Link>
-            </div>
+              </span>
+              {/* With no name on the account there's nothing to put above
+                  the subtext, and stacking "Member Portal" over itself
+                  would be silly — so it collapses to a single line. */}
+              {currentUser.first_name || currentUser.username ? (
+                <span className="nav-account-text">
+                  <span className="nav-account-name">
+                    {currentUser.first_name || currentUser.username}
+                  </span>
+                  <span className="nav-account-sub">Member Portal</span>
+                </span>
+              ) : (
+                <span className="nav-account-text">
+                  <span className="nav-account-name">Member Portal</span>
+                </span>
+              )}
+            </Link>
           ) : (
             <Link className="pill pill-ghost" to="/login">Log In</Link>
           )}
@@ -288,10 +317,14 @@ export function Nav() {
           )
         )}
         {currentUser ? (
+          // Labelled by destination, not by name — this entry used to read
+          // just "Kevin", which in a list of Home / About / Board / Contact
+          // gave no clue where it went. Changed 2026-08-24 alongside the
+          // desktop pill's subtext, for the same reason. Profile stays its
+          // own entry here: a menu list has room for both, so there's no
+          // reason to make people go through the portal to reach it.
           <>
-            <Link to="/portal" onClick={() => setMenuOpen(false)}>
-              {currentUser.first_name || currentUser.username || "Member Portal"}
-            </Link>
+            <Link to="/portal" onClick={() => setMenuOpen(false)}>Member Portal</Link>
             <Link to="/profile" onClick={() => setMenuOpen(false)}>Profile</Link>
           </>
         ) : (
@@ -306,7 +339,7 @@ export function Nav() {
 }
 
 // Simple person-silhouette placeholder avatar — used in the nav's
-// logged-in state (see nav-avatar above) and reused on Profile.jsx (a
+// logged-in state (see nav-account-avatar above) and reused on Profile.jsx (a
 // larger version) until real profile photo uploads exist. Plain inline
 // SVG rather than an image file so there's no extra asset to manage for
 // what's explicitly a temporary placeholder.

@@ -76,37 +76,70 @@
 .pill-ghost:hover { background: rgba(255, 255, 255, .08); box-shadow: none; }
 
 /* Logged-in nav state — replaces the "Log In" pill (see Nav in Home.jsx).
-   Two independent click targets side by side: a small round profile
-   icon (-> /profile) on the left, the person's first name (-> /portal)
-   on the right, matching the layout described for the feature ("profile
-   icon on the left of the login [replacement]... name... redirects to
-   the member portal").
-   .nav-firstname reuses .pill-ghost's exact look (white outline, same
-   radius/weight/hover) so swapping "Log In" for the person's name reads
-   as the SAME button with different text, not a different kind of
-   control — per explicit feedback 2026-08-08: "I don't want you to get
-   rid of this outline... I literally just want you to change the text."
-   Kept as its own class (rather than just applying "pill pill-ghost" in
-   JSX) so it can sit flush next to the avatar icon just to its left
-   without fighting that icon's own spacing. */
-.nav-account { display: flex; align-items: center; gap: 10px; }
-.nav-avatar { display: flex; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex-shrink: 0; transition: opacity .2s; }
-.nav-avatar:hover { opacity: .8; }
-.nav-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.nav-firstname {
+   ONE control: the profile photo and the person's name live inside a
+   single outlined pill that opens the Member Portal.
+
+   Rewritten 2026-08-24 ("combine pfp and member portal pill redirect
+   into one"). It used to be two independent click targets sitting flush
+   against each other — a round avatar going to /profile, and a pill with
+   the first name going to /portal. They read as one button and behaved
+   as two, which is a coin flip for anyone who doesn't already know the
+   trick. Now the avatar is INSIDE the pill and the whole thing has one
+   destination.
+
+   Still the .pill-ghost look — transparent fill, same white outline,
+   same radius and hover — per explicit feedback 2026-08-08: "I don't
+   want you to get rid of this outline... I literally just want you to
+   change the text." Kept as its own class rather than composing
+   "pill pill-ghost" in JSX because the padding is asymmetric here (see
+   below) in a way that would fight .pill's own. */
+.nav-account {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   background: transparent;
   color: var(--white);
   border: 1px solid rgba(255, 255, 255, .35);
   border-radius: 999px;
-  padding: 11px 22px;
-  font-size: 14px;
-  font-weight: 600;
+  /* Tight on the left so the round avatar sits flush inside the pill's
+     curve, roomy on the right for the text — a symmetric 22px would
+     leave the circle stranded in the middle of a gap. */
+  padding: 5px 20px 5px 5px;
   text-decoration: none;
-  white-space: nowrap;
-  display: inline-block;
-  transition: background .2s, box-shadow .2s;
+  transition: background .2s;
 }
-.nav-firstname:hover { background: rgba(255, 255, 255, .08); }
+.nav-account:hover { background: rgba(255, 255, 255, .08); }
+
+.nav-account-avatar {
+  display: flex;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.nav-account-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.nav-account-text {
+  display: flex;
+  flex-direction: column;
+  /* Tight leading so two stacked lines still fit the pill's height
+     without making it taller than the "Get Involved" pill beside it. */
+  line-height: 1.15;
+  min-width: 0;
+}
+.nav-account-name { font-size: 14px; font-weight: 600; white-space: nowrap; }
+/* The "what does this button do" line. Small caps in the muted slate so
+   it reads as a label rather than competing with the name above it. */
+.nav-account-sub {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--slate);
+  white-space: nowrap;
+  margin-top: 1px;
+}
 
 /* hamburger (mobile only) */
 .hamburger {

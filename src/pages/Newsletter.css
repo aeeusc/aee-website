@@ -143,51 +143,304 @@
 }
 .newsletter-search-input::placeholder { color: var(--slate); }
 
-/* ---------- LIST ---------- */
-.newsletter-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* ---------- BOOKSTACK ---------- */
+/* Added 2026-08-24, replacing the plain row list this page used to
+   render. Kev's spec plus his sketch: a vertical stack of books lying
+   FLAT, titles reading left-to-right along each spine, newest on top.
+   Hovering one slides it out to the left "as if a person were in the
+   process of taking a book away from the stack", and a preview card
+   appears beside it. See Newsletter.jsx's file comment for the full
+   reasoning, including why the books lie flat rather than standing
+   upright like the reference sites he sent.
+
+   How the 3D works, since it is not obvious from the rules alone: each
+   book is a plain rectangle (the spine you read), and the box is
+   implied by two skewed child elements. The right-hand end face is a
+   parallelogram sheared UP by --depth, the top face is one sheared
+   RIGHT by the same amount, so the two meet exactly at the corner.
+   Because every book's end face is sheared by the same amount and the
+   books sit flush, those faces tile into one continuous surface down
+   the side of the stack - and when a single book slides out, it takes
+   its slice of that surface with it, which is what sells the pull.
+
+   Deliberately NOT real CSS 3D transforms. A perspective container
+   would rotate the titles too, and these are sentence-length subject
+   lines that have to stay readable. */
+
+/* The stack is capped narrower than the column it sits in; the space
+   left over on the right is where the preview cards float. */
+.newsletter-body-shelf { max-width: 980px; }
+
+.nl-stack {
+  list-style: none;
+  margin: 0;
+  padding: 20px 0 34px;
+  position: relative;
+  max-width: 560px;
+
+  /* Isometric depth of every book. One value shared by both faces so
+     they meet at the corner instead of nearly meeting. */
+  --depth: 16px;
+  /* How far a book slides out of the stack when it opens. */
+  --pull: 46px;
 }
-.newsletter-item {
+
+/* Grounding shadow under the bottom of the stack, so it sits on
+   something instead of floating in the page. */
+.nl-stack::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: calc(-1 * var(--depth));
+  bottom: 8px;
+  height: 24px;
+  background: radial-gradient(ellipse at 45% 0%, rgba(0, 0, 0, .55), transparent 72%);
+  pointer-events: none;
+}
+
+/* One row of the stack. No height of its own - the book inside sets it,
+   which is what lets the card drop into normal flow on narrow screens
+   without any of these rules needing to change. */
+.nl-slot { position: relative; }
+.nl-slot.is-open { z-index: 5; }
+
+/* The book. --nudge is a small per-book left offset (0-9px, derived
+   from the send's id in Newsletter.jsx) - nobody stacks books to the
+   pixel, and without it the stack reads as a bar chart. */
+.nl-book {
+  position: relative;
+  display: block;
+  height: var(--thickness);
+  margin-left: var(--nudge);
+  background: var(--spine);
+  color: var(--ink);
+  text-decoration: none;
+  border-radius: 3px 2px 2px 3px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .10),
+    inset 0 -1px 0 rgba(0, 0, 0, .38),
+    0 1px 0 rgba(0, 0, 0, .45);
+  transition: transform .3s cubic-bezier(.22, .61, .36, 1), box-shadow .3s ease;
+}
+.nl-book:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 3px;
+}
+
+.nl-slot.is-open .nl-book {
+  transform: translateX(calc(-1 * var(--pull)));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .14),
+    inset 0 -1px 0 rgba(0, 0, 0, .38),
+    -16px 8px 30px rgba(0, 0, 0, .6);
+}
+
+/* The readable face of the spine. The two background gradients are
+   hairline bands across it, the way a hardback has raised bands near
+   each end of its spine - positioned in px rather than percentages so
+   they stay put whatever the title length. */
+.nl-book-face {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 18px 20px;
-  text-decoration: none;
-  color: var(--white);
-  transition: border-color .15s, background .15s;
+  gap: 14px;
+  padding: 0 16px 0 30px;
+  background-image:
+    linear-gradient(var(--band), var(--band)),
+    linear-gradient(var(--band), var(--band));
+  background-size: 1px 100%, 1px 100%;
+  background-position: 20px 0, calc(100% - 58px) 0;
+  background-repeat: no-repeat;
 }
-.newsletter-item:hover {
-  border-color: rgba(255,255,255,.35);
-  background: rgba(255,255,255,.02);
-}
-.newsletter-item-main { min-width: 0; flex: 1; }
-.newsletter-item-subject {
+.nl-book-title {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 15px;
   font-weight: 600;
-  font-size: 15.5px;
-  margin-bottom: 4px;
-}
-.newsletter-item-preview {
-  font-size: 13px;
-  color: var(--slate-light);
+  letter-spacing: .005em;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
-.newsletter-item-side {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+/* Publisher's imprint at the foot of the spine - texture, not content. */
+.nl-book-mark {
   flex-shrink: 0;
-  color: var(--slate);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  opacity: .45;
 }
-.newsletter-item-date {
+
+/* Right-hand end face: sheared UP so its far edge sits --depth higher
+   than its near edge. The 1px vertical overlap closes the antialiasing
+   hairline that otherwise shows where two adjacent faces abut. */
+.nl-book-edge {
+  position: absolute;
+  left: 100%;
+  top: -0.5px;
+  width: var(--depth);
+  height: calc(100% + 1px);
+  background: var(--edge);
+  transform: skewY(-45deg);
+  transform-origin: left center;
+}
+
+/* Top face: sheared RIGHT by the same --depth. Only the topmost book
+   has one, because in a real stack every other top face is covered by
+   the book above it. */
+.nl-book-top { display: none; }
+.nl-slot:first-child .nl-book-top {
+  display: block;
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  width: 100%;
+  height: var(--depth);
+  background: var(--top);
+  transform: skewX(-45deg);
+  transform-origin: bottom left;
+}
+
+/* ---------- PREVIEW CARD ---------- */
+/* Date, title, description, button - the shape of the reference
+   screenshot. Floats to the right of the stack on a wide screen and
+   drops inline under the book on a narrow one. */
+.nl-card {
+  position: absolute;
+  left: calc(100% + 22px);
+  top: 50%;
+  width: 320px;
+  transform: translateY(-50%) translateX(-6px);
+  background: var(--navy-900);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px 18px 18px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .55);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 6;
+  transition: opacity .18s ease, transform .18s ease, visibility .18s;
+}
+/* Invisible bridge across the gap between the book and the card. The
+   card is a DOM child of the slot, so mouseleave does not fire while
+   the pointer is on it - but the empty gap between them belongs to
+   nobody, and crossing it would close the card just as someone reaches
+   for the button. */
+.nl-card::before {
+  content: '';
+  position: absolute;
+  left: -26px;
+  top: 0;
+  bottom: 0;
+  width: 26px;
+}
+.nl-slot.is-open .nl-card {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* Deliberately NOT uppercased. Kev spelled the format out with an
+   example - "abbreviated month, ex: Nov 11, 2026" - and small-caps
+   styling would render that as NOV 11, 2026, which is a different thing
+   from what he asked for even though the markup underneath matches. */
+.nl-card-date {
   font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .01em;
+  color: var(--slate);
+  margin-bottom: 8px;
+}
+.nl-card-title {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+.nl-card-desc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--slate-light);
+  margin: 0 0 16px;
+}
+.nl-card-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--white);
+  color: var(--navy-950);
+  border-radius: 999px;
+  padding: 9px 14px 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform .15s ease;
+}
+.nl-card-btn:hover { transform: translateY(-1px); }
+
+/* "Hover a spine" is wrong advice on a touchscreen, so the verb swaps
+   on devices that cannot hover. Two spans and a media query rather than
+   JS state - this never needs to change after first paint. */
+.nl-hint-tap { display: none; }
+@media (hover: none) {
+  .nl-hint-hover { display: none; }
+  .nl-hint-tap { display: inline; }
+}
+
+.nl-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
   white-space: nowrap;
+  border: 0;
+}
+
+/* The pull is the affordance, so it stays - it just stops being an
+   animation. */
+@media (prefers-reduced-motion: reduce) {
+  .nl-book, .nl-card, .nl-card-btn { transition: none; }
+}
+
+/* Below this width there is no room beside the stack for a floating
+   card, so it drops into normal flow underneath the book instead and
+   the stack goes full width. Same markup, same state - only where the
+   card sits changes. */
+@media (max-width: 1000px) {
+  .newsletter-body-shelf { max-width: 760px; }
+  .nl-stack {
+    max-width: none;
+    --pull: 26px;
+    /* Somewhere for a pulled book to GO. Full-bleed, the stack starts at
+       the edge of the screen, so sliding left just walked the spine off
+       it - the title was the first thing to disappear, which is the one
+       part that had to stay. Indenting the stack by exactly the pull
+       distance means an open book lands flush with the column edge
+       instead of past it. */
+    padding-left: var(--pull);
+  }
+  .nl-card {
+    position: static;
+    display: none;
+    width: auto;
+    transform: none;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    margin: 12px 0 16px;
+    box-shadow: none;
+  }
+  .nl-card::before { display: none; }
+  .nl-slot.is-open .nl-card { display: block; transform: none; }
 }
 
 /* ---------- DETAIL SUBPAGE ---------- */
@@ -219,6 +472,16 @@
 @media (max-width: 600px) {
   .newsletter-header { padding: 16px 20px; }
   .newsletter-body { padding: 28px 20px 48px; }
-  .newsletter-item { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .newsletter-item-side { align-self: flex-end; }
+  /* Titles get one size smaller so more of a long subject line survives
+     before the ellipsis on a phone. */
+  .nl-book-title { font-size: 14px; }
+  /* The imprint is texture, and on a phone it is texture costing ~50px
+     of a title that is already being truncated. Drop it and pull the
+     second band in to where it was. */
+  .nl-book-mark { display: none; }
+  .nl-book-face {
+    padding-left: 22px;
+    padding-right: 14px;
+    background-position: 13px 0, calc(100% - 14px) 0;
+  }
 }

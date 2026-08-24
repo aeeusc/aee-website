@@ -43,11 +43,52 @@ async function apiRequest(path, options = {}) {
 // Public self-signup is gone — accounts are created by an admin (see
 // createUser below). login() now takes `identifier`, which can be
 // either a username or an email, matching routes/auth.js's /login.
+//
+// As of 2026-08-24 this is only the FIRST half of logging in. Every
+// account requires a 6-digit code emailed at this point, so a successful
+// call here usually does NOT mean the person is logged in — check the
+// response:
+//
+//   { twoFactorRequired: true, sentTo: ['k••••@usc.edu'], ... }
+//        -> show the code step and call verifyLoginCode() next
+//   { twoFactorRequired: false, message: 'Welcome back, ...' }
+//        -> already logged in; this browser is a remembered device
+//
+// Login.jsx branches on exactly that field.
 export function login(identifier, password) {
   return apiRequest('/auth/login', {
     method: 'POST',
     body: JSON.stringify({ identifier, password }),
   });
+}
+
+// Second half of the login flow. Which account this applies to lives in
+// the server-side session, so there's no user id to pass — just the code
+// the person typed, and whether to skip the code on this browser for the
+// next 30 days.
+export function verifyLoginCode(code, rememberDevice) {
+  return apiRequest('/auth/login/verify', {
+    method: 'POST',
+    body: JSON.stringify({ code, rememberDevice: Boolean(rememberDevice) }),
+  });
+}
+
+// "Didn't get it? Send another." The backend enforces a cooldown and a
+// per-login cap, so this can throw with a message worth showing as-is.
+export function resendLoginCode() {
+  return apiRequest('/auth/login/resend', { method: 'POST' });
+}
+
+// --- Trusted devices (Settings tab) ---
+// The counterpart to the "remember this device" checkbox on the code
+// screen: see how many browsers are currently allowed to skip 2FA, and
+// revoke all of them.
+export function getTrustedDevices() {
+  return apiRequest('/auth/trusted-devices', { method: 'GET' });
+}
+
+export function forgetTrustedDevices() {
+  return apiRequest('/auth/trusted-devices', { method: 'DELETE' });
 }
 
 export function logout() {

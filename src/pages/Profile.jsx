@@ -44,6 +44,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   getCurrentUser, updateProfile, updateProfilePhoto, changePassword, logout,
   getNewsletterPreference, setNewsletterPreference,
+  getTrustedDevices, forgetTrustedDevices,
 } from '../lib/api';
 import { PlaceholderAvatar } from './Home';
 import './Portal.css';
@@ -571,6 +572,8 @@ function SettingsTab({ user, onLogout }) {
 
       <NewsletterPreference />
 
+      <TrustedDevices />
+
       <button type="button" onClick={onLogout} className="portal-link-button">
         Log out
       </button>
@@ -655,6 +658,102 @@ function NewsletterPreference() {
               ? <>Newsletters go to <strong>{email}</strong>. Uncheck to stop receiving them — you'll still see every newsletter in the portal.</>
               : <>You won't get newsletter emails{email ? <> at <strong>{email}</strong></> : null}. You can still read them anytime in the portal.</>}
           </p>
+        </>
+      )}
+
+      {status === 'error' && <p className="portal-error">{errorMessage}</p>}
+    </div>
+  );
+}
+
+// ─── Trusted devices ────────────────────────────────────────────────────
+//
+// Added 2026-08-24 with two-factor authentication. Logging in emails a
+// 6-digit code, and the code screen offers "remember this device for 30
+// days" — which is what keeps required-for-everyone 2FA bearable, but
+// also means a box ticked on a library computer, a borrowed laptop, or a
+// phone that later goes missing quietly skips the second factor for a
+// month.
+//
+// This is the undo. Without it the only way to take that back is asking
+// an admin to reset your password (which clears trusted devices as a
+// side effect) — a support request for something the person can perfectly
+// well decide for themselves.
+//
+// Shows a count rather than a per-device list on purpose: the backend
+// stores only a hash of each device token, with no user agent or IP, so
+// there is genuinely nothing to label the rows WITH. "3 devices" that you
+// can clear beats three indistinguishable "Unknown device" entries, and
+// storing browser fingerprints just to make a nicer list would be
+// collecting data for the sake of the UI.
+function TrustedDevices() {
+  const [status, setStatus] = useState('loading'); // loading | ready | working | error
+  const [count, setCount] = useState(0);
+  const [currentIsTrusted, setCurrentIsTrusted] = useState(false);
+  const [feedback, setFeedback] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    getTrustedDevices()
+      .then((data) => {
+        setCount(data?.count || 0);
+        setCurrentIsTrusted(Boolean(data?.currentIsTrusted));
+        setStatus('ready');
+      })
+      .catch((err) => {
+        setStatus('error');
+        setErrorMessage(err.message || 'Could not load your trusted devices.');
+      });
+  }, []);
+
+  async function handleForget() {
+    setStatus('working');
+    setFeedback('');
+    setErrorMessage('');
+    try {
+      await forgetTrustedDevices();
+      setCount(0);
+      setCurrentIsTrusted(false);
+      setFeedback('Done. Every login will ask for an emailed code again.');
+      setStatus('ready');
+    } catch (err) {
+      setStatus('error');
+      setErrorMessage(err.message || 'Could not forget those devices. Please try again.');
+    }
+  }
+
+  return (
+    <div className="profile-newsletter-pref">
+      <h3 className="profile-newsletter-pref-title">Trusted devices</h3>
+
+      {status === 'loading' ? (
+        <p className="portal-section-sub">Loading…</p>
+      ) : (
+        <>
+          <p className="profile-newsletter-pref-note profile-devices-note">
+            {count === 0 ? (
+              <>No remembered devices. Every login asks for a code emailed to you.</>
+            ) : (
+              <>
+                <strong>{count}</strong> {count === 1 ? 'device skips' : 'devices skip'} the emailed
+                login code for 30 days{currentIsTrusted ? ', including this one' : ''}. Forget them if
+                you ticked "remember this device" somewhere you shouldn't have.
+              </>
+            )}
+          </p>
+
+          {count > 0 && (
+            <button
+              type="button"
+              onClick={handleForget}
+              disabled={status === 'working'}
+              className="portal-link-button profile-devices-forget"
+            >
+              {status === 'working' ? 'Forgetting…' : 'Forget all devices'}
+            </button>
+          )}
+
+          {feedback && <p className="portal-success profile-devices-feedback">{feedback}</p>}
         </>
       )}
 

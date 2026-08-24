@@ -374,6 +374,22 @@
    setting rather than as its own action. */
 .profile-newsletter-pref + .portal-link-button { margin-top: 24px; }
 
+/* ---------- TRUSTED DEVICES (Settings tab) ---------- */
+/* Added 2026-08-24 with two-factor auth. Reuses the newsletter opt-in's
+   section chrome (same top rule, same title) so the two settings read as
+   a matched pair, with only the bits that differ overridden here. */
+
+/* No checkbox in this section, so the 26px indent that lines the
+   newsletter note up under its checkbox would leave this one floating
+   for no visible reason. */
+.profile-devices-note { margin-left: 0; }
+
+.profile-devices-forget { margin-top: 12px; }
+
+/* Sits directly under the Forget button when the section still has a
+   count, and under the note when it doesn't — 10px works for both. */
+.profile-devices-feedback { margin-top: 10px; }
+
 @media (max-width: 560px) {
   .profile-preset-grid { grid-template-columns: 1fr; }
   .profile-newsletter-pref-note { margin-left: 0; }
