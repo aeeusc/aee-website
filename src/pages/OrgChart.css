@@ -126,39 +126,42 @@
   padding: 17px 0;
   z-index: 1;
 }
-.orgchart-tier-label {
-  position: absolute;
-  left: -180px;
-  top: 90px;
-  width: 150px;
-  text-align: right;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--slate);
-}
-.orgchart-tier-label span {
-  display: block;
-  color: rgba(148,163,184,.55);
-  font-weight: 500;
-  text-transform: none;
-  letter-spacing: 0;
-  margin-top: 2px;
-  font-size: 10px;
-}
+/* .orgchart-tier-label is GONE as of 2026-08-24, along with the labels
+   themselves. It was positioned at left: -180px, outside its own row and
+   therefore inside the clipped region of .orgchart-scroll (overflow-x:
+   auto) - so every label lost its leading characters: "President" read
+   as "resident", "Directors" as "rectors", "Executive Coordinator" was
+   cut in half. See the TIERS comment in OrgChart.jsx for why the labels
+   were removed rather than repositioned. */
 
 /* ---------- ADVISORS (detached from the tree) ---------- */
-/* Added 2026-08-23. Sits above the chart, pushed to the right, joined by
-   a short horizontal stub instead of a vertical connector — deliberately
-   NOT wired into the tier connector system, so nothing links it into the
-   hierarchy. See the matching comment in OrgChart.jsx. */
+/* Added 2026-08-23, moved BELOW the chart 2026-08-24. Joined by a short
+   horizontal stub instead of a vertical connector, and deliberately NOT
+   wired into the tier connector system, so nothing links it into the
+   hierarchy.
+
+   Sitting above the tree put the advisors visually over the President,
+   and vertical position in a chart reads as authority whether or not a
+   line is drawn between the boxes. Below and off to the side makes the
+   same "adjacent to the org" point without the accidental claim. See the
+   matching comment in OrgChart.jsx. */
 .orgchart-advisors {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 14px;
-  margin: 0 auto 10px;
+  /* Was `0 auto 10px` when this sat above the chart. Two changes:
+
+     The generous TOP margin is what visually separates the advisors from
+     the last tier of the tree - without it they read as one more row of
+     the hierarchy.
+
+     And `auto` on the left only, so the block sits at the RIGHT rather
+     than centred. Centred under the tree, a card with a stub line still
+     reads as hanging off the bottom of the chain of command; pushed to
+     the side it reads as standing beside the organisation, which is
+     Kev's "off branch". */
+  margin: 46px 0 10px auto;
   width: fit-content;
   padding-right: 40px;
 }
@@ -221,6 +224,4 @@
   flex-shrink: 0;
 }
 
-@media (max-width: 900px) {
-  .orgchart-tier-label { display: none; }
-}
+

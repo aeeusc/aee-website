@@ -171,42 +171,67 @@
    left over on the right is where the preview cards float. */
 .newsletter-body-shelf { max-width: 980px; }
 
-.nl-stack {
-  list-style: none;
-  margin: 0;
-  padding: 20px 0 34px;
+/* Wrapper around the list. Owns the width and is the positioning context
+   for the wheel-capture zone, so the <ol> can stay a list of nothing but
+   list items - a stray <div> in there became :first-child and silently
+   took the top face off the topmost book. */
+.nl-shelf {
   position: relative;
   max-width: 560px;
 
-  /* Isometric depth of every book. One value shared by both faces so
-     they meet at the corner instead of nearly meeting. */
-  --depth: 16px;
-  /* How far a book slides out of the stack when it opens. */
-  --pull: 46px;
+  /* --depth and --pull are declared HERE, on the wrapper, not on the
+     <ol>. Custom properties inherit down, not sideways: when these lived
+     on .nl-stack, .nl-hitzone - which is a SIBLING of the list, not a
+     descendant - resolved var(--pull) and var(--depth) to nothing. Its
+     left/right became invalid, fell back to auto, and the zone computed
+     to zero width, so the wheel handler's bounds check rejected every
+     event and scroll-to-select silently did nothing at all. */
+
+  /* Isometric depth of every book. Raised 16px -> 26px on 2026-08-24
+     ("deeper stack perspective") - at 16px the side of the stack read as
+     a hairline; at 26px it is a slab you can see paper in. */
+  --depth: 26px;
+  /* How far a book slides out of the stack when it opens. Scaled up with
+     the depth so the pull still clears the stack's own side. */
+  --pull: 52px;
 }
 
-/* Grounding shadow under the bottom of the stack, so it sits on
-   something instead of floating in the page. */
-.nl-stack::after {
-  content: '';
+.nl-stack {
+  list-style: none;
+  margin: 0;
+  padding: 30px 0 40px;
+  position: relative;
+}
+
+/* Wheel-capture zone. Only the horizontal bounds matter - see the
+   scroll-to-select comment in Newsletter.jsx. Invisible and
+   pointer-events: none; it exists purely as something to measure. */
+.nl-hitzone {
   position: absolute;
-  left: 10px;
+  top: 0;
+  bottom: 0;
+  left: calc(-1 * var(--pull));
   right: calc(-1 * var(--depth));
-  bottom: 8px;
-  height: 24px;
-  background: radial-gradient(ellipse at 45% 0%, rgba(0, 0, 0, .55), transparent 72%);
   pointer-events: none;
 }
 
-/* One row of the stack. No height of its own - the book inside sets it,
-   which is what lets the card drop into normal flow on narrow screens
-   without any of these rules needing to change. */
+/* Grounding shadow under the bottom of the stack. */
+.nl-stack::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: calc(-1 * var(--depth));
+  bottom: 10px;
+  height: 26px;
+  background: radial-gradient(ellipse at 45% 0%, rgba(0, 0, 0, .6), transparent 72%);
+  pointer-events: none;
+}
+
 .nl-slot { position: relative; }
 .nl-slot.is-open { z-index: 5; }
 
-/* The book. --nudge is a small per-book left offset (0-9px, derived
-   from the send's id in Newsletter.jsx) - nobody stacks books to the
-   pixel, and without it the stack reads as a bar chart. */
+/* The book board itself. The rounded left edge is the folded spine; the
+   right stays square because that end is cut paper, not a fold. */
 .nl-book {
   position: relative;
   display: block;
@@ -215,11 +240,8 @@
   background: var(--spine);
   color: var(--ink);
   text-decoration: none;
-  border-radius: 3px 2px 2px 3px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .10),
-    inset 0 -1px 0 rgba(0, 0, 0, .38),
-    0 1px 0 rgba(0, 0, 0, .45);
+  border-radius: 5px 1px 1px 5px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .5);
   transition: transform .3s cubic-bezier(.22, .61, .36, 1), box-shadow .3s ease;
 }
 .nl-book:focus-visible {
@@ -229,35 +251,70 @@
 
 .nl-slot.is-open .nl-book {
   transform: translateX(calc(-1 * var(--pull)));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .14),
-    inset 0 -1px 0 rgba(0, 0, 0, .38),
-    -16px 8px 30px rgba(0, 0, 0, .6);
+  box-shadow: -18px 10px 34px rgba(0, 0, 0, .62);
 }
 
-/* The readable face of the spine. The two background gradients are
-   hairline bands across it, the way a hardback has raised bands near
-   each end of its spine - positioned in px rather than percentages so
-   they stay put whatever the title length. */
+/* ---------- THE SPINE FACE ---------- */
+/* Five stacked background layers, painted first-listed on top:
+     1-2. the two raised bands, near each end
+     3-4. a cloth weave (fine warp and weft)
+     5.   the curved-spine shading
+
+   The shading is what stops the spine reading as a flat rectangle. It
+   runs across the book's SHORT axis, which on a book lying flat is the
+   curve of the spine: dark at the two edges where the cover rolls away
+   from you, bright through the middle. All five layers are rgba
+   overlays rather than fixed colours, so the same rules work on a
+   near-black spine and a near-white one without a second set. */
 .nl-book-face {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 0 16px 0 30px;
+  gap: 12px;
+  padding: 0 14px 0 24px;
+  border-radius: inherit;
   background-image:
-    linear-gradient(var(--band), var(--band)),
-    linear-gradient(var(--band), var(--band));
-  background-size: 1px 100%, 1px 100%;
-  background-position: 20px 0, calc(100% - 58px) 0;
-  background-repeat: no-repeat;
+    linear-gradient(90deg, rgba(255,255,255,.16), rgba(0,0,0,.26) 50%, rgba(255,255,255,.16)),
+    linear-gradient(90deg, rgba(255,255,255,.16), rgba(0,0,0,.26) 50%, rgba(255,255,255,.16)),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.022) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.03) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg,
+      rgba(0,0,0,.16) 0%,
+      rgba(0,0,0,.02) 12%,
+      rgba(255,255,255,.07) 34%,
+      rgba(255,255,255,.08) 50%,
+      rgba(255,255,255,.02) 68%,
+      rgba(0,0,0,.05) 86%,
+      rgba(0,0,0,.18) 100%);
+  background-size: 3px 100%, 3px 100%, auto, auto, auto;
+  background-position: 14px 0, calc(100% - 52px) 0, 0 0, 0 0, 0 0;
+  background-repeat: no-repeat, no-repeat, repeat, repeat, no-repeat;
+}
+
+/* The blocked title panel - a hardback has its title stamped into a
+   plate on the spine rather than printed onto the cloth. */
+/* DEBOSSED, not drawn. The first attempt gave this a 1px border and a
+   lighter fill, which on the pale spines read as a text input sitting on
+   top of the book rather than a panel stamped into it. An inset shadow
+   with no border is what actually says "pressed in". */
+.nl-book-plate {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  padding: 4px 11px;
+  border-radius: 2px;
+  background-color: rgba(0,0,0,.07);
+  box-shadow:
+    inset 0 1px 2px rgba(0,0,0,.20),
+    inset 0 -1px 0 rgba(255,255,255,.09);
 }
 .nl-book-title {
   flex: 1;
   min-width: 0;
   font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 600;
   letter-spacing: .005em;
   white-space: nowrap;
@@ -273,23 +330,42 @@
   opacity: .45;
 }
 
-/* Right-hand end face: sheared UP so its far edge sits --depth higher
-   than its near edge. The 1px vertical overlap closes the antialiasing
-   hairline that otherwise shows where two adjacent faces abut. */
+/* ---------- THE CUT END: COVER, PAGES, COVER ---------- */
+/* Sheared UP by --depth so the far edge sits higher than the near one.
+   Because every book shears identically and the books sit flush, these
+   tile into one continuous surface down the side of the stack - and a
+   book sliding out takes its slice with it, which is what sells the
+   pull.
+
+   This used to be one flat panel in the cover colour. Now it is what
+   you actually see when you look at the end of a closed book: a thin
+   cover board top and bottom with the block of pages between them. The
+   repeating gradient is the individual leaves; the soft dark wash at
+   the top is the shadow the upper board casts onto them. Of everything
+   in this file, the cream page block is the single detail that makes
+   these read as books rather than as coloured bars. */
 .nl-book-edge {
   position: absolute;
   left: 100%;
   top: -0.5px;
   width: var(--depth);
   height: calc(100% + 1px);
-  background: var(--edge);
   transform: skewY(-45deg);
   transform-origin: left center;
+  background-image:
+    repeating-linear-gradient(180deg,
+      rgba(120,105,70,.16) 0 1px,
+      transparent 1px 2.5px),
+    linear-gradient(180deg, rgba(0,0,0,.30), transparent 22%, transparent 78%, rgba(0,0,0,.20)),
+    linear-gradient(180deg,
+      var(--edge) 0, var(--edge) 5px,
+      var(--paper) 5px, var(--paper) calc(100% - 5px),
+      var(--edge) calc(100% - 5px), var(--edge) 100%);
 }
 
-/* Top face: sheared RIGHT by the same --depth. Only the topmost book
-   has one, because in a real stack every other top face is covered by
-   the book above it. */
+/* Top face: sheared RIGHT by the same --depth, so it meets the end face
+   exactly at the corner. Only the topmost book has one, because in a
+   real stack every other one is covered by the book above it. */
 .nl-book-top { display: none; }
 .nl-slot:first-child .nl-book-top {
   display: block;
@@ -298,7 +374,11 @@
   bottom: 100%;
   width: 100%;
   height: var(--depth);
-  background: var(--top);
+  background-color: var(--top);
+  /* Same weave as the spine, plus a light rake across the board. */
+  background-image:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.14));
   transform: skewX(-45deg);
   transform-origin: bottom left;
 }
@@ -417,9 +497,8 @@
    card sits changes. */
 @media (max-width: 1000px) {
   .newsletter-body-shelf { max-width: 760px; }
+  .nl-shelf { max-width: none; --pull: 26px; }
   .nl-stack {
-    max-width: none;
-    --pull: 26px;
     /* Somewhere for a pulled book to GO. Full-bleed, the stack starts at
        the edge of the screen, so sliding left just walked the spine off
        it - the title was the first thing to disappear, which is the one

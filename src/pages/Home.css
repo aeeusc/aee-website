@@ -496,7 +496,18 @@
 .cf-card {
   position: absolute; top: 0; left: 50%; width: 290px; height: 400px; margin-left: -145px; border-radius: 18px;
   overflow: hidden; border: 1px solid rgba(255,255,255,.14); background: #0C1224; cursor: pointer;
-  transition: transform .55s cubic-bezier(.22,.61,.36,1), filter .55s, opacity .55s; will-change: transform;
+  transition: transform .55s cubic-bezier(.22,.61,.36,1), opacity .55s; will-change: transform;
+}
+/* Replaces `filter: brightness(.38)` on the card - see the comment at
+   .cf-dim's element in Home.jsx for why a filter transition was costing
+   a full re-rasterise of every card on every frame. The colour is tuned
+   to land on roughly the same darkness the brightness filter produced
+   against these cards. */
+.cf-card .cf-dim {
+  position: absolute; inset: 0;
+  background: rgba(6,9,18,.62);
+  transition: opacity .55s;
+  pointer-events: none;
 }
 .cf-card img { width: 100%; height: 100%; object-fit: cover; }
 .cf-card .cf-grad { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(10,14,26,.88) 100%); }
@@ -505,7 +516,11 @@
 .cf-arrow:hover { border-color: rgba(255,255,255,.8); background: rgba(10,14,26,.8); }
 .cf-arrow.left { left: max(24px, calc(50% - 560px)); }
 .cf-arrow.right { right: max(24px, calc(50% - 560px)); }
-.cf-info { margin-top: 34px; min-height: 92px; transition: opacity .3s; }
+/* Crossfade driven by a keyed remount plus this animation, not by React
+   state and a timer - see the .cf-info element in Home.jsx. */
+.cf-info { margin-top: 34px; min-height: 92px; animation: cf-info-in .32s ease both; }
+@keyframes cf-info-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .cf-info { animation: none; } }
 .cf-info .n { font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
 .cf-info .r { margin-top: 6px; font-size: 15px; color: var(--slate); }
 .cf-info .links { margin-top: 16px; display: flex; justify-content: center; gap: 10px; }

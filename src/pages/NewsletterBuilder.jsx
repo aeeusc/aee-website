@@ -41,6 +41,7 @@ import {
   previewNewsletter,
   sendNewsletterTemplate,
   draftNewsletterWithAI,
+  getSubscribers,
 } from '../lib/api';
 import { useConfirm } from '../components/ConfirmDialog';
 import './NewsletterBuilder.css';
@@ -118,8 +119,22 @@ export default function NewsletterBuilder() {
   const [previewHtml, setPreviewHtml] = useState('');
   const [previewStatus, setPreviewStatus] = useState('idle');
 
-  const [status, setStatus] = useState('idle'); // idle | saving | sending | error | success
+  const [status, setStatus] = useState('idle'); // idle | saving | sending | error | success | warn
   const [feedback, setFeedback] = useState('');
+
+  // How many people a send would actually reach. Loaded on mount and
+  // shown next to the Send button — added 2026-08-24 after a send that
+  // "didn't go out".
+  //
+  // The send path itself was fine. With an empty list the backend does
+  // exactly the right thing: it posts the edition to the members portal
+  // and reports "no email subscribers to send to yet". But that arrived
+  // in the same green success line as a real send, AFTER the click, and
+  // after a confirm dialog that had already promised the newsletter was
+  // going "to every current subscriber". Nothing said the list was empty
+  // beforehand. Quick News Blast has had a subscriber count since it was
+  // built; the builder simply never got one.
+  const [subscriberCount, setSubscriberCount] = useState(null);
 
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiStatus, setAiStatus] = useState('idle'); // idle | working | error
@@ -130,6 +145,16 @@ export default function NewsletterBuilder() {
       .then((data) => setAuthCheck(data?.user?.is_admin ? 'ok' : 'denied'))
       .catch(() => setAuthCheck('denied'));
   }, []);
+
+  useEffect(() => {
+    if (authCheck !== 'ok') return;
+    // Failure is left silent on purpose: not knowing the count is a
+    // worse Send button, not a broken page, and the send itself still
+    // reports what happened.
+    getSubscribers()
+      .then((data) => setSubscriberCount(data?.count ?? 0))
+      .catch(() => setSubscriberCount(null));
+  }, [authCheck]);
 
   function loadLibrary() {
     getNewsletterTemplates()
@@ -275,11 +300,20 @@ export default function NewsletterBuilder() {
       setFeedback('Add at least one block before sending.');
       return;
     }
+    // Say the actual number in the dialog. "Every current subscriber"
+    // sounds like a lot of people even when it is nobody.
+    const audience =
+      subscriberCount === null
+        ? 'every current subscriber'
+        : `${subscriberCount} email subscriber${subscriberCount === 1 ? '' : 's'}`;
     const ok = await confirm({
-      title: 'Send this newsletter?',
-      message: `"${subject}" goes out to every current subscriber and is posted to the members portal. This cannot be unsent.`,
-      confirmLabel: 'Send it',
-      danger: true,
+      title: subscriberCount === 0 ? 'No email subscribers yet' : 'Send this newsletter?',
+      message:
+        subscriberCount === 0
+          ? `Nobody is on the email list, so "${subject}" will only be posted to the members portal — no email will go out. Members can join the list from Settings in the portal.`
+          : `"${subject}" goes out to ${audience} and is posted to the members portal. This cannot be unsent.`,
+      confirmLabel: subscriberCount === 0 ? 'Post to the portal' : 'Send it',
+      danger: subscriberCount !== 0,
     });
     if (!ok) return;
 
@@ -287,8 +321,27 @@ export default function NewsletterBuilder() {
     setFeedback('');
     try {
       const data = await sendNewsletterTemplate(subject, blocks);
-      setStatus('success');
-      setFeedback(data.message || 'Sent.');
+
+      // A send that reached nobody is not a success, whatever the HTTP
+      // status says. `firstError` carries the reason the backend saw —
+      // most often Resend refusing every address because
+      // RESEND_FROM_EMAIL is unset and mail is going out from the shared
+      // onboarding@resend.dev sandbox, which may only deliver to the
+      // Resend account owner. That sentence used to exist only in the
+      // Render logs.
+      const reachedNobody = data?.sent === 0;
+      setStatus(reachedNobody ? 'warn' : 'success');
+      setFeedback(
+        [data?.message || 'Sent.', reachedNobody && data?.firstError ? `Reason: ${data.firstError}` : null]
+          .filter(Boolean)
+          .join(' ')
+      );
+
+      // Refresh the count — an unsubscribe between page load and send
+      // would otherwise leave a stale number on the button.
+      getSubscribers()
+        .then((d) => setSubscriberCount(d?.count ?? 0))
+        .catch(() => {});
     } catch (err) {
       setStatus('error');
       setFeedback(err.message || 'Could not send the newsletter.');
@@ -371,13 +424,27 @@ export default function NewsletterBuilder() {
               {status === 'saving' ? 'Saving…' : templateId ? 'Save' : 'Save as template'}
             </button>
             <button type="button" className="nb-btn nb-btn-primary" onClick={handleSend} disabled={status === 'sending'}>
-              {status === 'sending' ? 'Sending…' : 'Send'}
+              {status === 'sending'
+                ? 'Sending…'
+                : subscriberCount === null
+                  ? 'Send'
+                  : `Send to ${subscriberCount}`}
             </button>
           </div>
         </div>
 
+        {/* An empty list is worth saying before the click, not after. */}
+        {subscriberCount === 0 && (
+          <p className="nb-notice">
+            No email subscribers yet — sending will only post this to the members portal.
+            Members can join the list under Settings in the portal.
+          </p>
+        )}
+
         {feedback && (
-          <p className={status === 'error' ? 'nb-error' : 'nb-success'}>{feedback}</p>
+          <p className={status === 'error' ? 'nb-error' : status === 'warn' ? 'nb-notice' : 'nb-success'}>
+            {feedback}
+          </p>
         )}
 
         <div className="nb-layout">

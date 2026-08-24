@@ -491,33 +491,77 @@ function InstagramIcon() {
 
 function Board() {
   const [active, setActive] = useState(0);
-  const [infoVisible, setInfoVisible] = useState(true);
   const stageRef = useRef(null);
   const hitzoneRef = useRef(null);
   const N = BOARD.length;
+
+  // Declared up here (it used to sit further down, next to the wheel
+  // listener) so the keyboard effect below can read the live value
+  // without listing `active` as a dependency — see that effect.
+  const activeRef = useRef(active);
+  activeRef.current = active;
 
   function goTo(i) {
     const next = ((i % N) + N) % N;
     setActive(next);
   }
 
-  // Fade the name/role/links out, swap, then fade back in — mirrors the
-  // mock's setTimeout-based crossfade.
-  useEffect(() => {
-    setInfoVisible(false);
-    const t = setTimeout(() => setInfoVisible(true), 160);
-    return () => clearTimeout(t);
-  }, [active]);
+  // The name/role/links crossfade used to be React state: an effect on
+  // [active] set infoVisible=false, started a 160ms timer, then set it
+  // back to true. Replaced with a CSS animation keyed off `active` (see
+  // .cf-info in Home.css) on 2026-08-24, as part of fixing scroll lag.
+  //
+  // The state version cost TWO extra renders of this whole component per
+  // card step, plus a timer to create and clear. That is invisible when
+  // you press an arrow key once. During a fast scroll the drain loop
+  // steps every 90ms, so a flick through ten cards was ~30 renders of
+  // all fourteen cards in under a second, two thirds of them existing
+  // only to fade a caption. The animation does the same thing on the
+  // compositor with no renders at all.
 
+  // Keyboard: bound ONCE. This effect used to depend on [active], so
+  // every single card step tore down and re-added a window keydown
+  // listener — fourteen add/remove pairs during one flick, for a handler
+  // whose only use of `active` is reading the current value, which
+  // activeRef already provides.
   useEffect(() => {
     function onKeyDown(e) {
-      if (e.key === "ArrowLeft") goTo(active - 1);
-      if (e.key === "ArrowRight") goTo(active + 1);
+      if (e.key === "ArrowLeft") goTo(activeRef.current - 1);
+      if (e.key === "ArrowRight") goTo(activeRef.current + 1);
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active]);
+  }, []);
+
+  // Cached horizontal bounds of the center hitzone.
+  //
+  // THIS is the main thing that made scrolling the board feel heavy. The
+  // wheel handler used to call hitzone.getBoundingClientRect() on every
+  // single wheel event to decide whether the cursor was over the cards.
+  // getBoundingClientRect forces the browser to flush layout
+  // synchronously before it can answer — and it was being asked while
+  // fourteen cards were mid-flight through a .55s 3D transform
+  // transition, i.e. at the most expensive possible moment. A trackpad
+  // emits 60-120 wheel events a second, so that is 60-120 forced
+  // reflows a second during exactly the animation they interrupt.
+  //
+  // The zone's left/right edges only move when the window resizes (it is
+  // a centered, fixed-max-width box), so measuring once and on resize is
+  // not an approximation — it is the same number, read without stopping
+  // the renderer to get it.
+  const zoneRef = useRef({ left: 0, right: Infinity });
+  useEffect(() => {
+    const hitzone = hitzoneRef.current;
+    if (!hitzone) return;
+    function measure() {
+      const r = hitzone.getBoundingClientRect();
+      zoneRef.current = { left: r.left, right: r.right };
+    }
+    measure();
+    window.addEventListener("resize", measure, { passive: true });
+    return () => window.removeEventListener("resize", measure);
+  }, []);
 
   // Mouse-wheel / trackpad scroll advances the carousel, same direction as
   // ArrowRight/ArrowLeft above. Several things this needs that a naive
@@ -573,14 +617,11 @@ function Board() {
   //    The accumulator itself still works the same as before: it's NEVER
   //    blocked or reset while draining, so scrolling many times in a row
   //    doesn't lose any of that input — see onWheel below.
-  const activeRef = useRef(active);
-  activeRef.current = active;
   const wheelAccumRef = useRef(0); // running pixel total not yet converted to card-steps
   const drainingRef = useRef(false); // true while the queued steps are being walked through
   useEffect(() => {
     const stage = stageRef.current;
-    const hitzone = hitzoneRef.current;
-    if (!stage || !hitzone) return;
+    if (!stage) return;
 
     // Pixel distance (in wheel-event delta units) that equals one card
     // step once accumulated. Same tuning as before: an ordinary slow
@@ -647,8 +688,9 @@ function Board() {
     }
 
     function onWheel(e) {
-      const zoneRect = hitzone.getBoundingClientRect();
-      if (e.clientX < zoneRect.left || e.clientX > zoneRect.right) {
+      // Cached bounds, not a live measurement — see zoneRef above.
+      const zone = zoneRef.current;
+      if (e.clientX < zone.left || e.clientX > zone.right) {
         return; // cursor is over the sides — let the page scroll normally
       }
 
@@ -697,8 +739,7 @@ function Board() {
   // desktop.
   useEffect(() => {
     const stage = stageRef.current;
-    const hitzone = hitzoneRef.current;
-    if (!stage || !hitzone) return;
+    if (!stage) return;
 
     // Total horizontal finger-travel (in px) that counts as one card
     // step. Tuned lower than the wheel listener's STEP_THRESHOLD (120)
@@ -717,8 +758,8 @@ function Board() {
     function onTouchStart(e) {
       if (e.touches.length !== 1) return; // ignore pinch/multi-touch
       const touch = e.touches[0];
-      const zoneRect = hitzone.getBoundingClientRect();
-      if (touch.clientX < zoneRect.left || touch.clientX > zoneRect.right) return;
+      const zone = zoneRef.current;
+      if (touch.clientX < zone.left || touch.clientX > zone.right) return;
       touchActive = true;
       isHorizontal = null;
       startX = touch.clientX;
@@ -819,7 +860,6 @@ function Board() {
           const ao = Math.abs(o);
           const style = {
             transform: `translateX(${o * 205}px) translateZ(${-ao * 150}px) rotateY(${o > 0 ? -16 : o < 0 ? 16 : 0}deg)`,
-            filter: o === 0 ? "none" : "brightness(.38)",
             opacity: ao > 3 ? 0 : 1,
             pointerEvents: ao > 3 ? "none" : "auto",
             zIndex: 20 - ao,
@@ -834,11 +874,29 @@ function Board() {
               <img src={m.img} alt={m.n} />
               <div className="cf-grad" />
               <div className="cf-name" style={{ opacity: o === 0 ? 0 : 1 }}>{m.n}</div>
+              {/* The dimming of the off-center cards used to be
+                  `filter: brightness(.38)` on the card itself, animated
+                  by a `filter .55s` transition. Replaced with this
+                  overlay on 2026-08-24 as part of fixing the scroll lag.
+
+                  A filter transition cannot run on the compositor: the
+                  browser has to re-rasterise the whole card - a 290x400
+                  photo, its gradient and its border - on every frame of
+                  the fade, for up to fourteen cards at once. Animating an
+                  overlay's opacity is a compositor-only property, so the
+                  same fade costs nothing per frame.
+
+                  It sits ABOVE .cf-name deliberately, because brightness
+                  dimmed the name too and the overlay should match. */}
+              <div className="cf-dim" style={{ opacity: o === 0 ? 0 : 1 }} />
             </div>
           );
         })}
       </div>
-      <div className="cf-info" style={{ opacity: infoVisible ? 1 : 0 }}>
+      {/* key={active} restarts the CSS fade-in on every change — this is
+          the crossfade that used to be driven by infoVisible state and a
+          160ms timer. */}
+      <div className="cf-info" key={active}>
         <div className="n">{current.n}</div>
         <div className="r">{current.r}</div>
         <div className="links">

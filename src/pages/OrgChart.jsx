@@ -61,14 +61,37 @@ import './OrgChart.css';
 //
 // The Advisor is deliberately NOT in this list — see ADVISOR_TITLES
 // below. It renders detached from the tree.
+//
+// There are deliberately NO tier labels here any more. Each tier used to
+// carry a `label` (and sometimes a `sub`) rendered in the left margin —
+// "PRESIDENT", "DIRECTORS / same tier", and so on. Removed 2026-08-24,
+// for two reasons.
+//
+// The first is that they were broken, and in a way that made the whole
+// chart look broken: .orgchart-tier-label was absolutely positioned at
+// left: -180px, i.e. OUTSIDE its own tier row — but the chart lives
+// inside .orgchart-scroll, which is overflow-x: auto. An overflow
+// container clips what hangs off its left edge, so every label lost its
+// first few characters. "President" rendered as "resident", "Directors"
+// as "rectors", and "Executive Coordinator" was simply cut in half. That
+// is exactly what Kev was seeing.
+//
+// The second is that they were redundant even when they rendered. Every
+// card already prints the person's real title on its face, so the margin
+// label restated it — and the "same tier" / "one per team" sub-labels
+// annotated the layout rather than describing the organisation. Kev's
+// call: "I don't want it to be called rectors... you can remove the same
+// tier text. Like, you don't have to keep that."
+//
+// Fixing the clipping instead (a left margin on the scroll container,
+// say) was the other option, but it would have bought back labels nobody
+// wanted, so the whole concept goes.
 const TIERS = [
-  { key: 'president', label: 'President', titles: ['President'] },
-  { key: 'vp', label: 'Vice President', titles: ['Vice President'] },
-  { key: 'coordinator', label: 'Executive Coordinator', titles: ['Executive Coordinator'] },
+  { key: 'president', titles: ['President'] },
+  { key: 'vp', titles: ['Vice President'] },
+  { key: 'coordinator', titles: ['Executive Coordinator'] },
   {
     key: 'directors',
-    label: 'Directors',
-    sub: 'same tier',
     titles: [
       'Executive Project Director',
       'Director of Outreach',
@@ -80,13 +103,10 @@ const TIERS = [
   },
   {
     key: 'asst-policy',
-    label: 'Assistant Policy Consortium Director',
     titles: ['Assistant Policy Consortium Director'],
   },
   {
     key: 'pms',
-    label: 'Project Managers',
-    sub: 'one per team',
     titles: ['HCC PM', 'CWC PM', 'MECC PM', 'STEP PM', 'TREX PM'],
   },
 ];
@@ -160,7 +180,8 @@ export default function OrgChart() {
       .filter((tier) => tier.members.length > 0);
   }, [chartMembers]);
 
-  // Advisors — rendered detached, above and beside the tree.
+  // Advisors — rendered detached, BELOW the tree (moved down from above
+  // it on 2026-08-24; see the render for why).
   const advisors = useMemo(
     () => chartMembers
       .filter((m) => ADVISOR_TITLES.includes(m.title))
@@ -209,14 +230,38 @@ export default function OrgChart() {
 
         {status === 'ok' && (populatedTiers.length > 0 || advisors.length > 0) && (
           <div className="orgchart-scroll">
-            {/* Advisors sit ABOVE and to the side of the tree, joined by
-                a short horizontal line rather than a vertical connector.
-                Rendered outside .orgchart-chart entirely, and without
-                the data-orgchart-tier attribute, so the connector
-                renderer never treats them as a tier and never draws a
-                line into the hierarchy — which is the whole point: an
-                advisor advises the org, they aren't above or below
-                anyone in it. */}
+            <div className="orgchart-chart" id="orgchart-chart">
+              <div className="orgchart-connectors" id="orgchart-connectors" />
+              {populatedTiers.map((tier) => (
+                <div className="orgchart-tier" key={tier.key} data-orgchart-tier>
+                  {tier.members.map((m) => (
+                    <div className="orgchart-card-wrap" key={m.id}>
+                      <MemberCard member={m} team={m.team} />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+
+            {/* Advisors sit BELOW the whole tree, off to one side, joined
+                by a short horizontal stub instead of a vertical
+                connector. Rendered outside .orgchart-chart entirely and
+                without the data-orgchart-tier attribute, so the
+                connector renderer never treats them as a tier and never
+                draws a line into the hierarchy.
+
+                They used to sit ABOVE the chart, which put them visually
+                over the President — and "above the President" is a claim
+                about authority that a chart makes whether or not a line
+                is drawn. Kev: "I don't want the founder and adviser role
+                to display... on top of, like, president... I want founder
+                and adviser at the bottom, like, all below the leadership.
+                So then it isn't connected, and it's, like, off branch."
+                Below and detached says the true thing: an advisor advises
+                the organisation and isn't in its chain of command.
+
+                Both advisor titles render here — Kelly Twomey Sanders as
+                'Advisor' and Mitchell Kirby as 'Founder & Advisor'. */}
             {advisors.length > 0 && (
               <div className="orgchart-advisors">
                 {advisors.map((m) => (
@@ -234,23 +279,6 @@ export default function OrgChart() {
                 ))}
               </div>
             )}
-
-            <div className="orgchart-chart" id="orgchart-chart">
-              <div className="orgchart-connectors" id="orgchart-connectors" />
-              {populatedTiers.map((tier) => (
-                <div className="orgchart-tier" key={tier.key} data-orgchart-tier>
-                  <div className="orgchart-tier-label">
-                    {tier.label}
-                    {tier.sub && <span>{tier.sub}</span>}
-                  </div>
-                  {tier.members.map((m) => (
-                    <div className="orgchart-card-wrap" key={m.id}>
-                      <MemberCard member={m} team={m.team} />
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
           </div>
         )}
       </div>

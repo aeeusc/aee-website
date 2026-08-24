@@ -72,17 +72,22 @@ import './Newsletter.css';
 //   ink   - title colour; flips to dark on the pale spines
 //   band  - the two hairlines across the spine, like a hardback's raised
 //           bands; also has to flip with the spine
+//   paper - the page block at the right-hand end. Real books are not
+//           white inside; the slight yellow is most of what makes the
+//           end read as paper rather than as another painted surface.
+//           Varied a little per book so the stack does not look like one
+//           extruded object.
 const SPINES = [
-  { spine: '#0B0F1A', edge: '#04070F', top: '#171D2C', ink: '#E8EDF7', band: 'rgba(255,255,255,.14)' },
-  { spine: '#101830', edge: '#080D1E', top: '#1C2848', ink: '#E8EDF7', band: 'rgba(255,255,255,.14)' },
-  { spine: '#F1F5F9', edge: '#CBD5E1', top: '#FFFFFF', ink: '#0B0F1A', band: 'rgba(11,15,26,.16)' },
-  { spine: '#16213E', edge: '#0D1528', top: '#24325A', ink: '#E8EDF7', band: 'rgba(255,255,255,.14)' },
-  { spine: '#1A1F2B', edge: '#10141C', top: '#282F3F', ink: '#E8EDF7', band: 'rgba(255,255,255,.13)' },
-  { spine: '#1D2B52', edge: '#131E3C', top: '#2C3E6E', ink: '#E8EDF7', band: 'rgba(255,255,255,.15)' },
-  { spine: '#E2E8F0', edge: '#B8C4D4', top: '#F6F9FC', ink: '#0B0F1A', band: 'rgba(11,15,26,.15)' },
-  { spine: '#080D1C', edge: '#03060E', top: '#141A2E', ink: '#E8EDF7', band: 'rgba(255,255,255,.12)' },
-  { spine: '#2A3A63', edge: '#1D294A', top: '#3B4E7E', ink: '#E8EDF7', band: 'rgba(255,255,255,.16)' },
-  { spine: '#C9D4E4', edge: '#9FAFC5', top: '#DFE7F1', ink: '#0B0F1A', band: 'rgba(11,15,26,.14)' },
+  { spine: '#0B0F1A', edge: '#04070F', top: '#171D2C', ink: '#E8EDF7', band: 'rgba(255,255,255,.18)', paper: '#E7E0CE' },
+  { spine: '#101830', edge: '#080D1E', top: '#1C2848', ink: '#E8EDF7', band: 'rgba(255,255,255,.18)', paper: '#EFE9DA' },
+  { spine: '#F1F5F9', edge: '#C3CEDC', top: '#FFFFFF', ink: '#0B0F1A', band: 'rgba(11,15,26,.20)', paper: '#F2EDE1' },
+  { spine: '#16213E', edge: '#0D1528', top: '#24325A', ink: '#E8EDF7', band: 'rgba(255,255,255,.18)', paper: '#E3DCC8' },
+  { spine: '#1A1F2B', edge: '#10141C', top: '#282F3F', ink: '#E8EDF7', band: 'rgba(255,255,255,.16)', paper: '#EDE7D7' },
+  { spine: '#1D2B52', edge: '#131E3C', top: '#2C3E6E', ink: '#E8EDF7', band: 'rgba(255,255,255,.20)', paper: '#E9E2D0' },
+  { spine: '#E2E8F0', edge: '#AFBCCC', top: '#F6F9FC', ink: '#0B0F1A', band: 'rgba(11,15,26,.18)', paper: '#F0EBDE' },
+  { spine: '#080D1C', edge: '#03060E', top: '#141A2E', ink: '#E8EDF7', band: 'rgba(255,255,255,.15)', paper: '#E5DECB' },
+  { spine: '#2A3A63', edge: '#1D294A', top: '#3B4E7E', ink: '#E8EDF7', band: 'rgba(255,255,255,.20)', paper: '#EEE8D8' },
+  { spine: '#C9D4E4', edge: '#9BAABF', top: '#DFE7F1', ink: '#0B0F1A', band: 'rgba(11,15,26,.16)', paper: '#F1ECE0' },
 ];
 
 // Books are as thick as they have something to say — a long newsletter
@@ -165,6 +170,47 @@ export default function NewsletterPage() {
   // This ref only ever changes in response to a real touch.
   const touchOpenedId = useRef(null);
 
+  // ── Scroll-to-select ────────────────────────────────────────────────
+  // Kev: "make it so you could also scroll on PC to, like, select. Like,
+  // what we do with the e board." Same idea as the homepage board
+  // carousel (see Board in Home.jsx): the wheel moves a selection rather
+  // than the page, and the selected book slides out with its card.
+  //
+  // Two things had to be got right that the board does not have to worry
+  // about, because the board is one fixed-height section and this is a
+  // list that can be longer than the screen:
+  //
+  //   1. The page must still be scrollable. Capturing every wheel event
+  //      over a tall stack would trap the reader on this page. Solved the
+  //      same way the board solves it — only a narrow centre zone over
+  //      the spines captures; the margins either side scroll normally.
+  //
+  //   2. The capture RELEASES at the ends. When the selection is already
+  //      on the last book and you keep scrolling down, preventDefault is
+  //      not called at all, so the wheel goes back to the page and the
+  //      reader carries on past the stack. Without that the stack is a
+  //      roach motel.
+  const stackRef = useRef(null);
+  const hitzoneRef = useRef(null);
+  const zoneRef = useRef({ left: 0, right: Infinity });
+  const wheelAccumRef = useRef(0);
+  const drainingRef = useRef(false);
+  // Set when the wheel moves the selection, cleared by a real mouse
+  // move. Without it, scrolling the selection past the book the cursor
+  // happens to be resting on would immediately snap back the moment the
+  // page shifted under the pointer and fired a stray enter event.
+  const suppressHoverRef = useRef(false);
+  // Where the pointer was when the wheel last drove the selection.
+  // Needed because "the mouse moved" cannot be inferred from a
+  // pointermove event alone: after scrollIntoView shifts the page,
+  // Chromium fires a synthetic pointermove at the UNCHANGED cursor
+  // position so hover state can be recalculated for whatever is now
+  // underneath. Treating that as a real move handed control straight
+  // back to hover on every step, so the selection snapped to whichever
+  // book had slid under the stationary cursor and refused to advance
+  // past it. Comparing coordinates tells the two apart.
+  const lastPointRef = useRef({ x: null, y: null });
+
   useEffect(() => {
     getCurrentUser()
       .then((data) => {
@@ -232,6 +278,141 @@ export default function NewsletterPage() {
   // that has been filtered away.
   useEffect(() => { setOpenId(null); }, [query]);
 
+  // Live copies for the wheel listener, which is bound once and must not
+  // be re-bound on every selection change (the board carousel used to
+  // re-bind its keyboard listener per step; see Home.jsx).
+  const booksRef = useRef(books);
+  booksRef.current = books;
+  const openIdRef = useRef(openId);
+  openIdRef.current = openId;
+
+  // Cached zone bounds. Measured on mount and on resize rather than per
+  // wheel event — reading getBoundingClientRect inside a wheel handler
+  // forces a synchronous layout flush on every one of the 60–120 events
+  // a trackpad emits per second, which is precisely the bug that made
+  // the homepage board feel heavy.
+  useEffect(() => {
+    const hitzone = hitzoneRef.current;
+    if (!hitzone) return undefined;
+    function measure() {
+      const r = hitzone.getBoundingClientRect();
+      zoneRef.current = { left: r.left, right: r.right };
+    }
+    measure();
+    window.addEventListener('resize', measure, { passive: true });
+    return () => window.removeEventListener('resize', measure);
+  }, [status]);
+
+  useEffect(() => {
+    const stack = stackRef.current;
+    if (!stack) return undefined;
+
+    // Same tuning as the board carousel: an ordinary notch takes a few
+    // events to cross the threshold, a hard flick crosses it several
+    // times and queues several steps.
+    const STEP_THRESHOLD = 120;
+    const STEP_INTERVAL_MS = 90;
+
+    function indexOfOpen() {
+      return booksRef.current.findIndex((b) => b.send.id === openIdRef.current);
+    }
+
+    // Can the selection actually move that way? This is what decides
+    // whether the wheel belongs to the stack or to the page.
+    function canStep(direction) {
+      const list = booksRef.current;
+      if (list.length === 0) return false;
+      const i = indexOfOpen();
+      // Nothing selected yet: scrolling DOWN picks up the top book,
+      // scrolling up is left to the page.
+      if (i === -1) return direction > 0;
+      const next = i + direction;
+      return next >= 0 && next < list.length;
+    }
+
+    function step(direction) {
+      const list = booksRef.current;
+      const i = indexOfOpen();
+      const next = i === -1 ? 0 : i + direction;
+      const target = list[next];
+      if (!target) return;
+      suppressHoverRef.current = true;
+      openIdRef.current = target.send.id; // so a queued step reads the new position
+      setOpenId(target.send.id);
+      // Keep the selection on screen. 'nearest' means a book already in
+      // view does not move the page at all, so the stack only drags the
+      // page along once the selection reaches an edge.
+      const el = stack.querySelector(`[data-book-id="${target.send.id}"]`);
+      if (el) el.scrollIntoView({ block: 'nearest' });
+    }
+
+    function drain() {
+      if (drainingRef.current) return;
+      function tick() {
+        const magnitude = Math.abs(wheelAccumRef.current);
+        if (magnitude < STEP_THRESHOLD) {
+          drainingRef.current = false;
+          return;
+        }
+        const direction = wheelAccumRef.current > 0 ? 1 : -1;
+        wheelAccumRef.current -= direction * STEP_THRESHOLD;
+        if (!canStep(direction)) {
+          // Ran out of stack mid-drain — drop the rest of the backlog
+          // rather than spinning on it.
+          wheelAccumRef.current = 0;
+          drainingRef.current = false;
+          return;
+        }
+        drainingRef.current = true;
+        step(direction);
+        setTimeout(tick, STEP_INTERVAL_MS);
+      }
+      tick();
+    }
+
+    function onWheel(e) {
+      const zone = zoneRef.current;
+      if (e.clientX < zone.left || e.clientX > zone.right) return;
+
+      const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+      if (Math.abs(delta) < 4) return;
+
+      // The release valve. Not preventing here is what lets the reader
+      // scroll past a stack they have reached the end of.
+      if (!canStep(delta > 0 ? 1 : -1)) return;
+
+      e.preventDefault();
+      lastPointRef.current = { x: e.clientX, y: e.clientY };
+      wheelAccumRef.current += delta;
+      drain();
+    }
+
+    stack.addEventListener('wheel', onWheel, { passive: false });
+    return () => stack.removeEventListener('wheel', onWheel);
+  }, [status]);
+
+  // Did the pointer genuinely move since the wheel last drove the
+  // selection? Used by BOTH the move and the enter handlers, because the
+  // two can arrive in either order. Crossing from one book to the next
+  // fires pointerenter BEFORE the first pointermove inside the new
+  // element — so checking only on move meant a quick flick of the mouse
+  // was ignored: the enter that mattered had already been suppressed,
+  // and no further enter was coming.
+  function pointerReallyMoved(e) {
+    const last = lastPointRef.current;
+    if (last.x === null) return true;
+    return Math.abs(e.clientX - last.x) > 2 || Math.abs(e.clientY - last.y) > 2;
+  }
+
+  // Records the pointer position, releases the wheel's hold on the
+  // selection if this was a real move, and answers "should hover drive
+  // the selection right now?".
+  function hoverShouldDrive(e) {
+    if (pointerReallyMoved(e)) suppressHoverRef.current = false;
+    lastPointRef.current = { x: e.clientX, y: e.clientY };
+    return !suppressHoverRef.current;
+  }
+
   function handleBookClick(event, id) {
     // A mouse click always goes straight through: the card is already
     // open by then, since hovering opened it on the way to clicking.
@@ -297,8 +478,8 @@ export default function NewsletterPage() {
             nothing, and this needs no state to get right. */}
         <p className="newsletter-sub">
           Every edition we've sent, newest on top.{' '}
-          <span className="nl-hint-hover">Hover</span>
-          <span className="nl-hint-tap">Tap</span> a spine to preview it.
+          <span className="nl-hint-hover">Hover or scroll over the stack to preview an edition.</span>
+          <span className="nl-hint-tap">Tap a spine to preview it.</span>
         </p>
 
         {status === 'loading' && <p className="newsletter-muted">Loading…</p>}
@@ -311,7 +492,27 @@ export default function NewsletterPage() {
         )}
 
         {status === 'ok' && books.length > 0 && (
-          <ol className="nl-stack">
+          <div
+            className="nl-shelf"
+            ref={stackRef}
+            // A real mouse move hands control back to hover after the
+            // wheel has been driving the selection.
+            onPointerMove={(e) => {
+              if ((e.pointerType || 'mouse') !== 'touch') hoverShouldDrive(e);
+            }}
+          >
+            {/* Horizontal bounds of the wheel-capture zone — the same
+                geometry-reference trick the homepage board uses. It is
+                pointer-events: none and invisible; the listener just
+                reads its cached rect to decide whether a wheel event
+                belongs to the stack or to the page.
+
+                It lives OUT here rather than inside the <ol>, for two
+                reasons: an ordered list may only contain list items, and
+                a stray div in there became :first-child and silently
+                took the top face off the topmost book. */}
+            <div className="nl-hitzone" ref={hitzoneRef} aria-hidden="true" />
+            <ol className="nl-stack">
             {books.map(({ send, colors, thickness, nudge }) => {
               const isOpen = openId === send.id;
               const sentDate = formatSentDate(send.sent_at);
@@ -327,6 +528,7 @@ export default function NewsletterPage() {
                     '--top': colors.top,
                     '--ink': colors.ink,
                     '--band': colors.band,
+                    '--paper': colors.paper,
                   }}
                   // Pointer and focus handlers live on the SLOT, not the
                   // book. pointerleave only fires when the pointer leaves
@@ -355,11 +557,18 @@ export default function NewsletterPage() {
                   onPointerEnter={(e) => {
                     const type = e.pointerType || e.nativeEvent?.pointerType || 'mouse';
                     lastPointerType.current = type;
-                    if (type !== 'touch') setOpenId(send.id);
+                    // Ignored while the wheel is driving the selection —
+                    // unless the pointer has actually moved, which is
+                    // what hands control back to hover.
+                    if (type !== 'touch' && hoverShouldDrive(e)) setOpenId(send.id);
                   }}
                   onPointerLeave={(e) => {
                     const type = e.pointerType || e.nativeEvent?.pointerType || 'mouse';
-                    if (type !== 'touch') setOpenId(null);
+                    // Deliberately does NOT clear the suppression: leaving
+                    // a book is not evidence the reader wants hover back,
+                    // and clearing here would let a page shift under a
+                    // still cursor close the card the wheel just opened.
+                    if (type !== 'touch' && !suppressHoverRef.current) setOpenId(null);
                   }}
                   onFocus={() => setOpenId(send.id)}
                   onBlur={(e) => {
@@ -369,6 +578,7 @@ export default function NewsletterPage() {
                   <Link
                     to={`/newsletter/${send.id}`}
                     className="nl-book"
+                    data-book-id={send.id}
                     // Fires before click, so handleBookClick below always
                     // knows whether a finger or a mouse is responsible.
                     onPointerDown={(e) => {
@@ -377,7 +587,13 @@ export default function NewsletterPage() {
                     onClick={(e) => handleBookClick(e, send.id)}
                   >
                     <span className="nl-book-face">
-                      <span className="nl-book-title">{send.subject}</span>
+                      {/* The title sits on a stamped plate, the way a
+                          hardback has its title blocked into a panel on
+                          the spine rather than printed straight onto the
+                          cloth. */}
+                      <span className="nl-book-plate">
+                        <span className="nl-book-title">{send.subject}</span>
+                      </span>
                       {/* A publisher's imprint at the foot of the spine.
                           Purely to sell the book, and small enough to
                           read as texture rather than content. */}
@@ -407,7 +623,8 @@ export default function NewsletterPage() {
                 </li>
               );
             })}
-          </ol>
+            </ol>
+          </div>
         )}
       </div>
     </div>

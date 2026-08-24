@@ -90,6 +90,16 @@
 .nb-error { color: #F87171; font-size: 14px; margin: 0 0 14px; }
 .nb-error-sm { font-size: 12.5px; margin-top: 8px; }
 .nb-success { color: #4ADE80; font-size: 14px; margin: 0 0 14px; }
+/* Block-level warning line - an empty subscriber list before the click,
+   or a send that reached nobody after it. Its own class rather than
+   reusing .nb-warn, which is a colour-only modifier on an inline span
+   inside .nb-sub and would inherit these box rules if they went there. */
+.nb-notice {
+  color: #FBBF24;
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 0 0 14px;
+}
 .nb-muted { color: var(--slate, #94A3B8); font-size: 13.5px; }
 .nb-hint { margin-top: 8px; line-height: 1.5; }
 
