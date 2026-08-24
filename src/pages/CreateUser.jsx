@@ -12,7 +12,8 @@
 // backfilled), which the rest of the app already tolerates.
 //
 // Required now: first name, last name, USC email, title.
-// Optional now: Gmail, design team, LinkedIn, Instagram.
+// Optional now: Gmail, design team, LinkedIn, Instagram, personal
+// website, and a profile picture (added 2026-08-23).
 //
 // Requires an admin session — the backend's POST /auth/admin/create-user
 // checks req.session server-side and returns 401/403 if you're not
@@ -23,9 +24,10 @@
 // Styled to match Login.jsx (same design tokens/pill button), since
 // this replaces Signup.jsx in the same visual slot.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createUser, getCurrentUser } from '../lib/api';
+import { fileToSquareDataUrl } from '../lib/imageUpload';
 
 // The design teams a member can be assigned to at creation — kept in
 // sync with routes/auth.js's VALID_TEAMS and Members.jsx's TEAMS.
@@ -45,15 +47,17 @@ const TEAMS = ['CWC', 'MECC', 'HCC', 'STiT', 'STEP', 'TREX'];
 // AdminUsers.jsx's matching lists if a title is ever added/renamed.
 const TITLES = [
   'Founder & Advisor',
+  'Advisor',
   'President',
   'Vice President',
-  'Executive Project Manager',
+  'Executive Coordinator',
+  'Executive Project Director',
   'Director of Outreach',
   'Director of Membership',
   'Director of Finance',
   'Policy Consortium Director',
+  'Assistant Policy Consortium Director',
   'Director of Brand',
-  'Executive Coordinator',
   'HCC PM',
   'CWC PM',
   'MECC PM',
@@ -79,6 +83,14 @@ export default function CreateUser() {
   // isValidInstagramUrl in routes/auth.js) as the self-edit flow.
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [instagramUrl, setInstagramUrl] = useState('');
+  // Personal website + profile picture — added 2026-08-23, both optional.
+  // The photo is center-cropped and compressed in the browser before it
+  // is ever sent (see lib/imageUpload.js) — a raw phone photo would blow
+  // past the backend's size cap otherwise.
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [photoDataUrl, setPhotoDataUrl] = useState('');
+  const [photoError, setPhotoError] = useState('');
+  const photoInputRef = useRef(null);
   const [status, setStatus] = useState('idle'); // idle | submitting | success | error
   const [errorMessage, setErrorMessage] = useState('');
   const [result, setResult] = useState(null); // { username, generatedPassword }
@@ -101,7 +113,10 @@ export default function CreateUser() {
     setErrorMessage('');
 
     try {
-      const data = await createUser(firstName, lastName, email, uscEmail, title, team, linkedinUrl, instagramUrl);
+      const data = await createUser(
+        firstName, lastName, email, uscEmail, title, team,
+        linkedinUrl, instagramUrl, websiteUrl, photoDataUrl
+      );
       setStatus('success');
       setResult({ username: data.username, generatedPassword: data.generatedPassword });
       setFirstName('');
@@ -112,9 +127,22 @@ export default function CreateUser() {
       setTeam('');
       setLinkedinUrl('');
       setInstagramUrl('');
+      setWebsiteUrl('');
+      setPhotoDataUrl('');
+      setPhotoError('');
     } catch (err) {
       setStatus('error');
       setErrorMessage(err.message);
+    }
+  }
+
+  async function handlePhotoPick(file) {
+    setPhotoError('');
+    if (!file) return;
+    try {
+      setPhotoDataUrl(await fileToSquareDataUrl(file));
+    } catch (err) {
+      setPhotoError(err.message || 'Could not use that image.');
     }
   }
 
@@ -179,6 +207,39 @@ export default function CreateUser() {
             </p>
 
             <form onSubmit={handleSubmit} style={styles.form}>
+              {/* Profile picture — optional, added 2026-08-23 ("input
+                  field for uploading a pfp for user when creating an
+                  account for admins on dashboard"). Shows a live preview
+                  so the admin can see the square crop before saving. */}
+              <div style={styles.photoRow}>
+                <div style={styles.photoPreview}>
+                  {photoDataUrl
+                    ? <img src={photoDataUrl} alt="Profile preview" style={styles.photoImg} />
+                    : <span style={styles.photoEmpty}>No photo</span>}
+                </div>
+                <div style={styles.photoActions}>
+                  <span style={styles.photoLabel}>Profile picture (optional)</span>
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={(e) => { handlePhotoPick(e.target.files?.[0]); e.target.value = ''; }}
+                  />
+                  <div style={styles.photoBtnRow}>
+                    <button type="button" style={styles.smallBtn} onClick={() => photoInputRef.current?.click()}>
+                      {photoDataUrl ? 'Change' : 'Choose image'}
+                    </button>
+                    {photoDataUrl && (
+                      <button type="button" style={styles.smallBtn} onClick={() => setPhotoDataUrl('')}>
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  {photoError && <p style={styles.error}>{photoError}</p>}
+                </div>
+              </div>
+
               <label style={styles.label}>
                 First name
                 <input
@@ -288,6 +349,17 @@ export default function CreateUser() {
                   onChange={(e) => setInstagramUrl(e.target.value)}
                   style={styles.input}
                   placeholder="https://instagram.com/theirhandle"
+                />
+              </label>
+
+              <label style={styles.label}>
+                Personal website (optional)
+                <input
+                  type="url"
+                  value={websiteUrl}
+                  onChange={(e) => setWebsiteUrl(e.target.value)}
+                  style={styles.input}
+                  placeholder="https://theirsite.com"
                 />
               </label>
 
@@ -407,6 +479,47 @@ const styles = {
   pillButton: {
     marginTop: '8px',
     width: '100%',
+  },
+  photoRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
+  },
+  photoPreview: {
+    width: '72px',
+    height: '72px',
+    borderRadius: '14px',
+    border: `1px solid ${colors.line}`,
+    background: 'rgba(255,255,255,.05)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    flexShrink: 0,
+  },
+  photoImg: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' },
+  photoEmpty: {
+    fontSize: '11px',
+    color: colors.slate,
+    fontFamily: "'Inter', -apple-system, sans-serif",
+  },
+  photoActions: { display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 },
+  photoLabel: {
+    fontFamily: "'Inter', -apple-system, sans-serif",
+    color: colors.slate,
+    fontSize: '14px',
+  },
+  photoBtnRow: { display: 'flex', gap: '8px', flexWrap: 'wrap' },
+  smallBtn: {
+    background: 'transparent',
+    border: `1px solid ${colors.line}`,
+    borderRadius: '9px',
+    padding: '7px 14px',
+    color: colors.white,
+    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontSize: '13px',
+    fontWeight: 600,
+    cursor: 'pointer',
   },
   error: {
     color: '#F87171',

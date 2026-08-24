@@ -6,9 +6,12 @@
 // (see routes/auth.js's requireAdmin on every /auth/admin/users* route
 // this page calls) — lists every account (active AND deactivated,
 // unlike the public Members directory which only shows active ones) and
-// lets an admin, per row: edit name/title/team inline, reset a locked-
-// out member's password, deactivate/reactivate the account, and
-// promote/demote admin status.
+// lets an admin, per row: edit EVERY account field inline (as of
+// 2026-08-23 — name, title, team, both emails, LinkedIn, Instagram,
+// personal website, and profile picture, i.e. everything the create form
+// collects), reset a locked-out member's password, deactivate/reactivate
+// the account, toggle org-chart visibility, promote/demote admin status,
+// and permanently delete.
 //
 // Reachable from the portal's Dashboard subpage (see Dashboard.jsx's
 // "Manage accounts" link) rather than its own portal tile — this is an
@@ -21,7 +24,7 @@
 // edits, is_active, is_admin), and this page is a low-traffic admin
 // tool, not something needing that kind of snappy optimistic UI.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   getCurrentUser,
@@ -33,7 +36,9 @@ import {
   promoteUser,
   demoteUser,
   deleteUser,
+  adminSetUserPhoto,
 } from '../lib/api';
+import { fileToSquareDataUrl } from '../lib/imageUpload';
 import { useConfirm } from '../components/ConfirmDialog';
 import './AdminUsers.css';
 
@@ -42,15 +47,17 @@ import './AdminUsers.css';
 // 2026-08-11, replacing the earlier 5-item placeholder.
 const TITLES = [
   'Founder & Advisor',
+  'Advisor',
   'President',
   'Vice President',
-  'Executive Project Manager',
+  'Executive Coordinator',
+  'Executive Project Director',
   'Director of Outreach',
   'Director of Membership',
   'Director of Finance',
   'Policy Consortium Director',
+  'Assistant Policy Consortium Director',
   'Director of Brand',
-  'Executive Coordinator',
   'HCC PM',
   'CWC PM',
   'MECC PM',
@@ -81,6 +88,17 @@ export default function AdminUsers() {
   const [editLastName, setEditLastName] = useState('');
   const [editTitle, setEditTitle] = useState('');
   const [editTeam, setEditTeam] = useState('');
+  // Every remaining create-form field is editable here as of 2026-08-23
+  // ("make what we have from dashboard for making accounts to be able to
+  // be edited on dashboard for existing accounts for admins").
+  const [editEmail, setEditEmail] = useState('');
+  const [editUscEmail, setEditUscEmail] = useState('');
+  const [editLinkedin, setEditLinkedin] = useState('');
+  const [editInstagram, setEditInstagram] = useState('');
+  const [editWebsite, setEditWebsite] = useState('');
+  const [editPhoto, setEditPhoto] = useState(null); // null = unchanged
+  const [editPhotoPreview, setEditPhotoPreview] = useState('');
+  const editPhotoInputRef = useRef(null);
   const [rowStatus, setRowStatus] = useState({}); // { [userId]: 'saving' | 'error' }
   const [rowError, setRowError] = useState({}); // { [userId]: message }
   const [resetResult, setResetResult] = useState(null); // { username, generatedPassword }
@@ -121,6 +139,16 @@ export default function AdminUsers() {
     setEditLastName(u.last_name || '');
     setEditTitle(u.title || '');
     setEditTeam(u.team || '');
+    setEditEmail(u.email || '');
+    setEditUscEmail(u.usc_email || '');
+    setEditLinkedin(u.linkedin_url || '');
+    setEditInstagram(u.instagram_url || '');
+    setEditWebsite(u.website_url || '');
+    // null means "photo not touched in this edit" — distinct from '' /
+    // an explicit clear, which the save handler turns into a null on the
+    // wire so the backend removes it.
+    setEditPhoto(null);
+    setEditPhotoPreview(u.photo_url || '');
     setResetResult(null);
   }
 
@@ -132,17 +160,45 @@ export default function AdminUsers() {
     setRowStatus((s) => ({ ...s, [id]: 'saving' }));
     setRowError((s) => ({ ...s, [id]: '' }));
     try {
+      // Empty strings are sent deliberately for the optional fields —
+      // the backend reads '' as "clear this", which is what makes it
+      // possible to remove a stale link rather than only overwrite it.
       await updateUser(id, {
         firstName: editFirstName,
         lastName: editLastName,
         title: editTitle,
         team: editTeam,
+        email: editEmail,
+        uscEmail: editUscEmail,
+        linkedinUrl: editLinkedin,
+        instagramUrl: editInstagram,
+        websiteUrl: editWebsite,
       });
+      // Photo is a separate request because it's a separate endpoint —
+      // only sent when this edit actually touched it, so a routine name
+      // change doesn't re-upload an image every time.
+      if (editPhoto !== null) {
+        await adminSetUserPhoto(id, editPhoto === '' ? null : editPhoto);
+      }
+      setRowStatus((s) => ({ ...s, [id]: undefined }));
       setEditingId(null);
       loadUsers();
     } catch (err) {
       setRowStatus((s) => ({ ...s, [id]: 'error' }));
       setRowError((s) => ({ ...s, [id]: err.message || 'Could not save changes.' }));
+    }
+  }
+
+  async function handleEditPhotoPick(file) {
+    if (!file) return;
+    setRowError((s) => ({ ...s, [editingId]: '' }));
+    try {
+      const dataUrl = await fileToSquareDataUrl(file);
+      setEditPhoto(dataUrl);
+      setEditPhotoPreview(dataUrl);
+    } catch (err) {
+      setRowStatus((s) => ({ ...s, [editingId]: 'error' }));
+      setRowError((s) => ({ ...s, [editingId]: err.message || 'Could not use that image.' }));
     }
   }
 
@@ -200,6 +256,23 @@ export default function AdminUsers() {
     } catch (err) {
       setRowStatus((s) => ({ ...s, [u.id]: 'error' }));
       setRowError((s) => ({ ...s, [u.id]: err.message || 'Could not update admin status.' }));
+    }
+  }
+
+  // Org-chart visibility toggle — added 2026-08-23 ("Remove me from
+  // displaying on org chart"). Separate from deactivate: the account
+  // stays fully active and still appears in the Members directory, it
+  // just isn't drawn into the leadership hierarchy.
+  async function handleToggleOrgChart(u) {
+    setRowStatus((s) => ({ ...s, [u.id]: 'saving' }));
+    setRowError((s) => ({ ...s, [u.id]: '' }));
+    try {
+      await updateUser(u.id, { hideFromOrgChart: !u.hide_from_org_chart });
+      setRowStatus((s) => ({ ...s, [u.id]: undefined }));
+      loadUsers();
+    } catch (err) {
+      setRowStatus((s) => ({ ...s, [u.id]: 'error' }));
+      setRowError((s) => ({ ...s, [u.id]: err.message || 'Could not update org chart visibility.' }));
     }
   }
 
@@ -265,8 +338,9 @@ export default function AdminUsers() {
       <div className="admin-users-body">
         <h1 className="admin-users-title">Manage Accounts</h1>
         <p className="admin-users-sub">
-          Edit a member's name, title, or team; reset a locked-out password; deactivate or
-          reactivate an account; or change admin access.
+          Edit any of a member's details — name, title, team, emails, social links, personal
+          website, or profile picture; reset a locked-out password; deactivate or reactivate
+          an account; show or hide them on the org chart; or change admin access.
         </p>
 
         {resetResult && (
@@ -298,6 +372,41 @@ export default function AdminUsers() {
                 >
                   {isEditing ? (
                     <div className="admin-users-edit-form">
+                      {/* Profile picture — added 2026-08-23. Preview
+                          plus change/remove, mirroring the create form. */}
+                      <div className="admin-users-photo-row">
+                        <div className="admin-users-photo-preview">
+                          {editPhotoPreview
+                            ? <img src={editPhotoPreview} alt="" />
+                            : <span>No photo</span>}
+                        </div>
+                        <div className="admin-users-photo-actions">
+                          <input
+                            ref={editPhotoInputRef}
+                            type="file"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            onChange={(e) => { handleEditPhotoPick(e.target.files?.[0]); e.target.value = ''; }}
+                          />
+                          <button
+                            type="button"
+                            className="admin-users-action"
+                            onClick={() => editPhotoInputRef.current?.click()}
+                          >
+                            {editPhotoPreview ? 'Change photo' : 'Add photo'}
+                          </button>
+                          {editPhotoPreview && (
+                            <button
+                              type="button"
+                              className="admin-users-action"
+                              onClick={() => { setEditPhoto(''); setEditPhotoPreview(''); }}
+                            >
+                              Remove photo
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
                       <div className="admin-users-edit-grid">
                         <input
                           type="text"
@@ -328,11 +437,46 @@ export default function AdminUsers() {
                           onChange={(e) => setEditTeam(e.target.value)}
                           className="admin-users-input"
                         >
-                          <option value="" disabled>Team…</option>
+                          <option value="">No team</option>
                           {TEAMS.map((t) => (
                             <option key={t} value={t}>{t}</option>
                           ))}
                         </select>
+                        <input
+                          type="email"
+                          value={editUscEmail}
+                          onChange={(e) => setEditUscEmail(e.target.value)}
+                          className="admin-users-input"
+                          placeholder="USC email (required)"
+                        />
+                        <input
+                          type="email"
+                          value={editEmail}
+                          onChange={(e) => setEditEmail(e.target.value)}
+                          className="admin-users-input"
+                          placeholder="Gmail (optional)"
+                        />
+                        <input
+                          type="url"
+                          value={editLinkedin}
+                          onChange={(e) => setEditLinkedin(e.target.value)}
+                          className="admin-users-input"
+                          placeholder="LinkedIn (optional)"
+                        />
+                        <input
+                          type="url"
+                          value={editInstagram}
+                          onChange={(e) => setEditInstagram(e.target.value)}
+                          className="admin-users-input"
+                          placeholder="Instagram (optional)"
+                        />
+                        <input
+                          type="url"
+                          value={editWebsite}
+                          onChange={(e) => setEditWebsite(e.target.value)}
+                          className="admin-users-input"
+                          placeholder="Personal website (optional)"
+                        />
                       </div>
                       {rowStatus[u.id] === 'error' && <p className="admin-users-row-error">{rowError[u.id]}</p>}
                       <div className="admin-users-edit-actions">
@@ -388,6 +532,17 @@ export default function AdminUsers() {
                           title={isSelf && u.is_admin ? "You can't remove your own admin access" : undefined}
                         >
                           {u.is_admin ? 'Remove admin' : 'Make admin'}
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-users-action"
+                          onClick={() => handleToggleOrgChart(u)}
+                          disabled={saving}
+                          title={u.hide_from_org_chart
+                            ? 'Currently hidden from the org chart'
+                            : 'Currently shown on the org chart'}
+                        >
+                          {u.hide_from_org_chart ? 'Show on chart' : 'Hide from chart'}
                         </button>
                         <button
                           type="button"

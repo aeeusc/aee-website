@@ -38,15 +38,39 @@ import './OrgChart.css';
 // row — kept here as a local display-grouping concern rather than
 // imported from the backend, since it's presentation logic, not a
 // validation rule the server needs to enforce.
+// Restructured 2026-08-23 per explicit feedback. Changes from the
+// previous ordering:
+//
+//   - Executive Coordinator MOVED UP, from below the Directors to
+//     between VP and Directors ("exec coordinator needs to move up
+//     underneath VP and above director, between").
+//   - Executive Project Manager RENAMED to Executive Project Director
+//     and folded into the Directors tier ("needs to be on the same line
+//     on the org chart as the other directors"). It no longer has a tier
+//     of its own. db/database.js migrates existing rows to the new title.
+//   - Project Managers now sit under the Directors ("under executive
+//     director/directors, put underneath other project managers").
+//   - Assistant Policy Consortium Director added as its own row beneath
+//     the Directors. Kev chose this over a true nested sub-branch
+//     hanging off the Policy Consortium Director specifically — the
+//     connector renderer below draws flat tier-to-tier bus lines, and a
+//     real sub-branch would mean rebuilding it.
+//   - The Member tier is GONE entirely ("do NOT want members on org
+//     chart, org chart just for leadership"). Members still appear in
+//     the Members directory; they're simply not part of the hierarchy.
+//
+// The Advisor is deliberately NOT in this list — see ADVISOR_TITLES
+// below. It renders detached from the tree.
 const TIERS = [
   { key: 'president', label: 'President', titles: ['President'] },
   { key: 'vp', label: 'Vice President', titles: ['Vice President'] },
-  { key: 'epm', label: 'Executive Project Manager', titles: ['Executive Project Manager'] },
+  { key: 'coordinator', label: 'Executive Coordinator', titles: ['Executive Coordinator'] },
   {
     key: 'directors',
     label: 'Directors',
-    sub: '5 director roles, same tier',
+    sub: 'same tier',
     titles: [
+      'Executive Project Director',
       'Director of Outreach',
       'Director of Membership',
       'Director of Finance',
@@ -54,15 +78,30 @@ const TIERS = [
       'Director of Brand',
     ],
   },
-  { key: 'coordinator', label: 'Executive Coordinator', titles: ['Executive Coordinator'] },
+  {
+    key: 'asst-policy',
+    label: 'Assistant Policy Consortium Director',
+    titles: ['Assistant Policy Consortium Director'],
+  },
   {
     key: 'pms',
     label: 'Project Managers',
     sub: 'one per team',
     titles: ['HCC PM', 'CWC PM', 'MECC PM', 'STEP PM', 'TREX PM'],
   },
-  { key: 'member', label: 'Member', titles: ['Member'] },
 ];
+
+// Advisors render OUTSIDE the hierarchy — a card off to the side joined
+// by a short horizontal line, deliberately not connected to any tier
+// ("shouldn't be attached, horizontal line to attach to advisor, not
+// attached to tree so line and then advisor").
+//
+// That's an accurate picture of the relationship: a faculty advisor
+// advises the organization, they don't sit above or below anyone in it.
+// Kelly Twomey Sanders holds this role. 'Founder & Advisor' rides along
+// here too — same "adjacent to the org, not in its chain of command"
+// status, and it was already excluded from the tree before this change.
+const ADVISOR_TITLES = ['Advisor', 'Founder & Advisor'];
 
 function fullName(m) {
   return [m.first_name, m.last_name].filter(Boolean).join(' ') || 'Member';
@@ -96,6 +135,17 @@ export default function OrgChart() {
       });
   }, [authCheck]);
 
+  // Anyone flagged hide_from_org_chart is dropped before any grouping —
+  // added 2026-08-23 ("Remove me from displaying on org chart"). It's a
+  // per-account flag an admin toggles in AdminUsers, not a hardcoded id,
+  // so an account that exists to run the site rather than to hold a
+  // board position can stay a normal active member while staying out of
+  // the leadership hierarchy.
+  const chartMembers = useMemo(
+    () => members.filter((m) => !m.hide_from_org_chart),
+    [members]
+  );
+
   // Non-empty tiers only, each carrying its matching members sorted by
   // name (stable, predictable left-to-right order within a tier — the
   // same alphabetical convention Members.jsx's default sort uses).
@@ -103,12 +153,20 @@ export default function OrgChart() {
     return TIERS
       .map((tier) => ({
         ...tier,
-        members: members
+        members: chartMembers
           .filter((m) => tier.titles.includes(m.title))
           .sort((a, b) => fullName(a).localeCompare(fullName(b))),
       }))
       .filter((tier) => tier.members.length > 0);
-  }, [members]);
+  }, [chartMembers]);
+
+  // Advisors — rendered detached, above and beside the tree.
+  const advisors = useMemo(
+    () => chartMembers
+      .filter((m) => ADVISOR_TITLES.includes(m.title))
+      .sort((a, b) => fullName(a).localeCompare(fullName(b))),
+    [chartMembers]
+  );
 
   useOrgChartConnectors(populatedTiers);
 
@@ -145,12 +203,38 @@ export default function OrgChart() {
         {status === 'loading' && <p className="orgchart-muted">Loading…</p>}
         {status === 'error' && <p className="orgchart-error">{error}</p>}
 
-        {status === 'ok' && populatedTiers.length === 0 && (
+        {status === 'ok' && populatedTiers.length === 0 && advisors.length === 0 && (
           <p className="orgchart-muted">No members have a title set yet.</p>
         )}
 
-        {status === 'ok' && populatedTiers.length > 0 && (
+        {status === 'ok' && (populatedTiers.length > 0 || advisors.length > 0) && (
           <div className="orgchart-scroll">
+            {/* Advisors sit ABOVE and to the side of the tree, joined by
+                a short horizontal line rather than a vertical connector.
+                Rendered outside .orgchart-chart entirely, and without
+                the data-orgchart-tier attribute, so the connector
+                renderer never treats them as a tier and never draws a
+                line into the hierarchy — which is the whole point: an
+                advisor advises the org, they aren't above or below
+                anyone in it. */}
+            {advisors.length > 0 && (
+              <div className="orgchart-advisors">
+                {advisors.map((m) => (
+                  <div className="orgchart-advisor" key={m.id}>
+                    <span className="orgchart-advisor-line" aria-hidden="true" />
+                    <div className="orgchart-advisor-card">
+                      <div className="orgchart-advisor-label">
+                        {m.title === 'Founder & Advisor' ? 'Founder & Advisor' : 'Advisor'}
+                      </div>
+                      <div className="orgchart-card-wrap">
+                        <MemberCard member={m} team={m.team} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="orgchart-chart" id="orgchart-chart">
               <div className="orgchart-connectors" id="orgchart-connectors" />
               {populatedTiers.map((tier) => (

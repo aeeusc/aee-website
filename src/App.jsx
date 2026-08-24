@@ -15,6 +15,7 @@ import TasksPage from './pages/Tasks'
 import NewsletterPage from './pages/Newsletter'
 import NewsletterDetailPage from './pages/NewsletterDetail'
 import AdminUsers from './pages/AdminUsers'
+import NewsletterBuilder from './pages/NewsletterBuilder'
 import Unsubscribe from './pages/Unsubscribe'
 import NotFound from './pages/NotFound'
 import { ConfirmProvider } from './components/ConfirmDialog'
@@ -45,6 +46,10 @@ function App() {
         <Route path="/create-user" element={<CreateUser />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/newsletter-admin" element={<NewsletterAdmin />} />
+        {/* Newsletter template builder (admin) — added 2026-08-23.
+            The block editor + template library; /newsletter-admin
+            above stays as the quick plain-text blast. */}
+        <Route path="/newsletter-builder" element={<NewsletterBuilder />} />
         <Route path="/privacy" element={<Legal kind="privacy" />} />
         <Route path="/terms" element={<Legal kind="terms" />} />
         <Route path="/portal" element={<Portal />} />

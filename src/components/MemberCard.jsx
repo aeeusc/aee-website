@@ -47,7 +47,23 @@ export default function MemberCard({ member, team }) {
   const [flipped, setFlipped] = useState(false);
 
   const fullName = [member?.first_name, member?.last_name].filter(Boolean).join(' ') || member?.username || 'Member';
-  const joinDate = formatJoinDate(member?.created_at);
+
+  // TWO different dates, deliberately, in two different places — changed
+  // 2026-08-23 per explicit feedback ("have usc email on back w copy
+  // paste icon, bc title on front on back want member since... 2
+  // different dates. Relegate member/join date to back, role displays w
+  // small since on front").
+  //
+  //   FRONT: when they got their CURRENT TITLE (role_started_at, the
+  //          open role_history row — see GET /auth/members). Shown under
+  //          a small "SINCE" label, because the front of the card is
+  //          about the role.
+  //   BACK:  when they JOINED (created_at), as "Member since ...".
+  //
+  // Falls back to created_at on the front only when role_started_at is
+  // missing, which happens for accounts predating role_history.
+  const roleDate = formatJoinDate(member?.role_started_at || member?.created_at);
+  const memberSince = formatJoinDate(member?.created_at);
 
   const backFields = [
     { label: 'Hobbies', value: member?.hobbies },
@@ -75,9 +91,13 @@ export default function MemberCard({ member, team }) {
   const socialLinks = [
     { label: 'LinkedIn', value: member?.linkedin_url },
     { label: 'Instagram', value: member?.instagram_url },
+    // Personal website — added 2026-08-23 alongside the new account
+    // field. Same icon-button treatment as the two above.
+    { label: 'Website', value: member?.website_url },
   ].filter((f) => f.value);
 
-  const hasBackContent = backFields.length > 0 || pastRoles.length > 0 || socialLinks.length > 0;
+  const hasBackContent =
+    backFields.length > 0 || pastRoles.length > 0 || socialLinks.length > 0 || Boolean(member?.usc_email);
 
   return (
     <div
@@ -109,7 +129,12 @@ export default function MemberCard({ member, team }) {
               {member?.title && <div className="member-card-role">{member.title}</div>}
             </div>
             <div className="member-card-info-right">
-              {joinDate && <div className="member-card-join">{joinDate}</div>}
+              {roleDate && (
+                <div className="member-card-since">
+                  <span className="member-card-since-label">Since</span>
+                  <span className="member-card-join">{roleDate}</span>
+                </div>
+              )}
               {team && <div className="member-card-team">{team}</div>}
             </div>
           </div>
@@ -163,6 +188,25 @@ export default function MemberCard({ member, team }) {
                 </div>
               )}
 
+              {/* USC email with a copy button — added 2026-08-23 ("have
+                  usc email on back w copy paste icon... to copy like
+                  Gmail does"). The address is shown truncated with the
+                  full value in a title tooltip; clicking Copy puts the
+                  whole thing on the clipboard rather than making people
+                  select tiny text. */}
+              {member?.usc_email && (
+                <div className="member-card-back-section">
+                  <div className="member-card-back-section-title">Email</div>
+                  <CopyRow value={member.usc_email} />
+                </div>
+              )}
+
+              {/* Join date lives on the BACK now (the front shows role
+                  start instead) — see the two-dates comment up top. */}
+              {memberSince && (
+                <div className="member-card-back-meta">Member since {memberSince}</div>
+              )}
+
               {socialLinks.length > 0 && (
                 <div className="member-card-back-links">
                   {socialLinks.map((f) => (
@@ -173,8 +217,12 @@ export default function MemberCard({ member, team }) {
                       rel="noopener noreferrer"
                       className="member-card-back-link"
                       onClick={(e) => e.stopPropagation()}
+                      aria-label={f.label}
+                      title={f.label}
                     >
-                      {f.label}
+                      {f.label === 'LinkedIn' && <LinkedInIcon />}
+                      {f.label === 'Instagram' && <InstagramIcon />}
+                      {f.label === 'Website' && <GlobeIcon />}
                     </a>
                   ))}
                 </div>
@@ -186,5 +234,107 @@ export default function MemberCard({ member, team }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// ─── Copy-to-clipboard row ───────────────────────────────────────────────
+//
+// Added 2026-08-23 for the USC email on the card back. stopPropagation on
+// the click matters: the whole card is a flip toggle, so without it
+// copying an address would also spin the card back over.
+//
+// navigator.clipboard requires a secure context (https or localhost),
+// which the real site is — but the fallback path keeps this from silently
+// doing nothing if it's ever unavailable.
+function CopyRow({ value }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy(e) {
+    e.stopPropagation();
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(value);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = value;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      // Clipboard blocked — leave the label alone rather than claiming
+      // a copy that didn't happen.
+    }
+  }
+
+  return (
+    <div className="member-card-copy-row">
+      <span className="member-card-copy-value" title={value}>{value}</span>
+      <button
+        type="button"
+        className="member-card-copy-btn"
+        onClick={handleCopy}
+        aria-label={copied ? 'Copied' : `Copy ${value}`}
+        title={copied ? 'Copied' : 'Copy'}
+      >
+        {copied ? <CheckIcon /> : <CopyIcon />}
+      </button>
+    </div>
+  );
+}
+
+// ─── Icons ───────────────────────────────────────────────────────────────
+// Social links render as icons rather than the words "LinkedIn" and
+// "Instagram" as of 2026-08-23 ("change it to make icons show for ig and
+// LinkedIn"). Same glyphs used on the homepage E-board (Home.jsx), kept
+// as local copies per this codebase's convention of not sharing tiny
+// per-file components.
+
+function LinkedInIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.76-1.95 4.02 0 4.76 2.5 4.76 5.76V21h-4v-5.6c0-1.34-.03-3.07-1.9-3.07-1.9 0-2.19 1.46-2.19 2.97V21h-4z" />
+    </svg>
+  );
+}
+
+function InstagramIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="2.5" y="2.5" width="19" height="19" rx="5" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="4.6" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="17.4" cy="6.6" r="1.15" fill="currentColor" />
+    </svg>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="9" y="9" width="11" height="11" rx="2.5" stroke="currentColor" strokeWidth="1.9" />
+      <path d="M6 15H5.5A1.5 1.5 0 0 1 4 13.5v-8A1.5 1.5 0 0 1 5.5 4h8A1.5 1.5 0 0 1 15 5.5V6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function GlobeIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
   );
 }

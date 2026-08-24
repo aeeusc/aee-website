@@ -85,6 +85,13 @@ const PRESET_FIELDS = [
 // check is trivially bypassable via a direct API call.
 const LINKEDIN_URL_REGEX = /^https:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9\-_%]+\/?$/;
 const INSTAGRAM_URL_REGEX = /^https:\/\/(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/;
+// Personal website — added 2026-08-23 ("add section for personal
+// website"). Deliberately much looser than the two above: those are
+// narrow because the point is "this must be a LinkedIn/Instagram
+// profile", whereas a personal site can be any domain. All that's
+// enforced is a real http(s) URL, which is what keeps javascript: and
+// data: out of an href. Mirrors isValidWebsiteUrl in routes/auth.js.
+const WEBSITE_URL_REGEX = /^https?:\/\/[^\s/$.?#][^\s]*$/i;
 
 const SOCIAL_FIELDS = [
   {
@@ -101,6 +108,13 @@ const SOCIAL_FIELDS = [
     regex: INSTAGRAM_URL_REGEX,
     errorHint: 'Must be an instagram.com/… profile link, e.g. https://instagram.com/yourhandle',
   },
+  {
+    key: 'websiteUrl',
+    label: 'Personal website',
+    placeholder: 'https://yoursite.com',
+    regex: WEBSITE_URL_REGEX,
+    errorHint: 'Must be a full link starting with http:// or https://',
+  },
 ];
 
 // users.<column> -> the camelCase keys this page/api.js use. Centralized
@@ -116,6 +130,7 @@ function fieldsFromUser(user) {
     hobbies: user?.hobbies || '',
     linkedinUrl: user?.linkedin_url || '',
     instagramUrl: user?.instagram_url || '',
+    websiteUrl: user?.website_url || '',
   };
 }
 

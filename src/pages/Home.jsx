@@ -125,28 +125,37 @@ const TEAMS = [
 const PLACEHOLDER_AVATAR = asset("/eboard/placeholder-avatar.svg");
 
 // ig: Instagram URL — added 2026-08-16 to replace the second icon button
-// under each E-board profile, which used to just be a shared mailto:
-// placeholder for everyone. Real per-person handles aren't collected yet
-// (Kev is generating real portal accounts for these people and will get
-// their actual Instagram from them directly), so every entry points at
-// the generic instagram.com landing page for now — swap each one in
-// individually as real handles come in, same as how `li` (LinkedIn) is
-// already handled per-person.
+// under each E-board profile, which used to be a shared mailto:
+// placeholder identical for everyone.
+//
+// Real per-person handles supplied by Kev 2026-08-23 and filled in below.
+// Matched BY NAME rather than by list position on purpose: his list had
+// Helena Heckmann and Chloe Flannigan in the opposite order from this
+// array, and the handles themselves (helenaheckmann / chloe.flannigann)
+// are unambiguous about who they belong to. Two were assigned by
+// position/elimination rather than an obvious name match —
+// downtowndave004 (David Moseley) and monkeezlol (Daniela Lopez
+// Escalante) — so those are the two worth double-checking.
+//
+// ELLIS FERTIG has no `ig` field at all, deliberately: her handle hasn't
+// been found yet. The render guards on `current.ig` (see the Board
+// section below), so her card simply shows the LinkedIn icon alone
+// rather than a dead link — same optional treatment `li` already gets.
 const BOARD = [
-  { n: "Mitch Kirby", r: "Founder & Advisor", img: asset("/eboard/mitchkirby.jpg"), li: "https://www.linkedin.com/in/mitchell-kirby/", ig: "https://www.instagram.com" },
-  { n: "Alex Bartolomei", r: "President", img: asset("/eboard/alexbartolomei.jpg"), li: "https://www.linkedin.com/in/alexbartolomei/", ig: "https://www.instagram.com" },
-  { n: "Alexandra Somodi", r: "Vice President & Brand Director", img: asset("/eboard/alexandrasomodi.png"), li: "https://www.linkedin.com/in/alexandra-somodi/", ig: "https://www.instagram.com" },
-  { n: "David Moseley", r: "Design Team Coordinator", img: asset("/eboard/davidmoseley.jpg"), li: "https://www.linkedin.com/in/davidmmoseley/", ig: "https://www.instagram.com" },
-  { n: "Jordyn Wetherbee", r: "Executive Coordinator & CWC PM", img: asset("/eboard/jordynwetherbee.jpg"), li: "https://www.linkedin.com/in/jordyn-wetherbee/", ig: "https://www.instagram.com" },
-  { n: "James Hiemstra", r: "Director of Finance", img: asset("/eboard/jameshiemstra.jpg"), li: "https://www.linkedin.com/in/james-hiemstra-78b9872a1/", ig: "https://www.instagram.com" },
-  { n: "Reeth Kawad", r: "Senior Advisor", img: asset("/eboard/reethkawad.jpg"), li: "https://www.linkedin.com/in/reethkawad/", ig: "https://www.instagram.com" },
-  { n: "Chloe Flannigan", r: "Director of Membership", img: asset("/eboard/chloeflannigan.jpg"), li: "https://www.linkedin.com/in/chloe-flannigan-0950a2237/", ig: "https://www.instagram.com" },
-  { n: "Helena Heckmann", r: "Director of Events", img: asset("/eboard/helenaheckmann.jpg"), li: "https://www.linkedin.com/in/helena-heckmann/", ig: "https://www.instagram.com" },
-  { n: "Jainam Jain", r: "Director of Outreach & CWC PM", img: asset("/eboard/jainamjain.png"), li: "https://www.linkedin.com/in/jainam-jain-937a13214/", ig: "https://www.instagram.com" },
-  { n: "Ellis Fertig", r: "ShadeLA PM & Director of Policy", img: asset("/eboard/ellisfertig.jpg"), li: "https://www.linkedin.com/in/ellis-fertig-4512b232b/", ig: "https://www.instagram.com" },
-  { n: "Sam Gold", r: "ShadeLA PM & Asst. Director of Policy", img: asset("/eboard/samgold.jpg"), li: "https://www.linkedin.com/in/sam-j-gold/", ig: "https://www.instagram.com" },
-  { n: "Alex Geschwill", r: "HCC PM", img: asset("/eboard/alexgeschwill.jpg"), li: "https://www.linkedin.com/in/alexandra-geschwill/", ig: "https://www.instagram.com" },
-  { n: "Daniela Lopez Escalante", r: "Asst. Director of Brand", img: asset("/eboard/daniela.jpg"), li: "https://www.linkedin.com/in/daniela-lopez-escalante-839a4038a/", ig: "https://www.instagram.com" },
+  { n: "Mitch Kirby", r: "Founder & Advisor", img: asset("/eboard/mitchkirby.jpg"), li: "https://www.linkedin.com/in/mitchell-kirby/", ig: "https://www.instagram.com/mitchkirb/" },
+  { n: "Alex Bartolomei", r: "President", img: asset("/eboard/alexbartolomei.jpg"), li: "https://www.linkedin.com/in/alexbartolomei/", ig: "https://www.instagram.com/alexbartolomei/" },
+  { n: "Alexandra Somodi", r: "Vice President & Brand Director", img: asset("/eboard/alexandrasomodi.png"), li: "https://www.linkedin.com/in/alexandra-somodi/", ig: "https://www.instagram.com/alexandrasomodii/" },
+  { n: "David Moseley", r: "Design Team Coordinator", img: asset("/eboard/davidmoseley.jpg"), li: "https://www.linkedin.com/in/davidmmoseley/", ig: "https://www.instagram.com/downtowndave004/" },
+  { n: "Jordyn Wetherbee", r: "Executive Coordinator & CWC PM", img: asset("/eboard/jordynwetherbee.jpg"), li: "https://www.linkedin.com/in/jordyn-wetherbee/", ig: "https://www.instagram.com/wetherbee.09/" },
+  { n: "James Hiemstra", r: "Director of Finance", img: asset("/eboard/jameshiemstra.jpg"), li: "https://www.linkedin.com/in/james-hiemstra-78b9872a1/", ig: "https://www.instagram.com/j.hiemstra/" },
+  { n: "Reeth Kawad", r: "Senior Advisor", img: asset("/eboard/reethkawad.jpg"), li: "https://www.linkedin.com/in/reethkawad/", ig: "https://www.instagram.com/reethkawad/" },
+  { n: "Chloe Flannigan", r: "Director of Membership", img: asset("/eboard/chloeflannigan.jpg"), li: "https://www.linkedin.com/in/chloe-flannigan-0950a2237/", ig: "https://www.instagram.com/chloe.flannigann/" },
+  { n: "Helena Heckmann", r: "Director of Events", img: asset("/eboard/helenaheckmann.jpg"), li: "https://www.linkedin.com/in/helena-heckmann/", ig: "https://www.instagram.com/helenaheckmann/" },
+  { n: "Jainam Jain", r: "Director of Outreach & CWC PM", img: asset("/eboard/jainamjain.png"), li: "https://www.linkedin.com/in/jainam-jain-937a13214/", ig: "https://www.instagram.com/jainamtjain/" },
+  { n: "Ellis Fertig", r: "ShadeLA PM & Director of Policy", img: asset("/eboard/ellisfertig.jpg"), li: "https://www.linkedin.com/in/ellis-fertig-4512b232b/" },
+  { n: "Sam Gold", r: "ShadeLA PM & Asst. Director of Policy", img: asset("/eboard/samgold.jpg"), li: "https://www.linkedin.com/in/sam-j-gold/", ig: "https://www.instagram.com/s.am.gold/" },
+  { n: "Alex Geschwill", r: "HCC PM", img: asset("/eboard/alexgeschwill.jpg"), li: "https://www.linkedin.com/in/alexandra-geschwill/", ig: "https://www.instagram.com/alex_geschwill/" },
+  { n: "Daniela Lopez Escalante", r: "Asst. Director of Brand", img: asset("/eboard/daniela.jpg"), li: "https://www.linkedin.com/in/daniela-lopez-escalante-839a4038a/", ig: "https://www.instagram.com/monkeezlol/" },
 ];
 
 // ─── Nav + mobile menu ──────────────────────────────────────────────────────

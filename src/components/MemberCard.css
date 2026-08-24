@@ -86,25 +86,62 @@
   gap: 10px;
   padding: 10px 14px 14px;
 }
-.member-card-info-left { text-align: left; min-width: 0; }
-.member-card-info-right { text-align: right; min-width: 0; }
+/* The left column takes whatever space the right column doesn't need,
+   so long names get the most room available before wrapping. */
+.member-card-info-left { text-align: left; min-width: 0; flex: 1 1 auto; }
+.member-card-info-right { text-align: right; min-width: 0; flex: 0 0 auto; }
 
+/* Names WRAP instead of truncating — fixed 2026-08-23 per explicit
+   feedback ("need to fix fonts or wrap text bc names don't show full —
+   ex Daniela Lopez escalante").
+   These used to be `white-space: nowrap` + `text-overflow: ellipsis`,
+   which turned any long name into "Daniela Lopez…" — actively worse than
+   a smaller font, since the whole point of the card is identifying the
+   person. Now they wrap to at most two lines and only ellipsize if they
+   somehow exceed that.
+   The card's photo area is `flex: 1`, so it absorbs the extra height a
+   second line takes rather than the card overflowing. */
 .member-card-name {
   font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13.5px;
+  line-height: 1.25;
   color: var(--white, #fff);
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 .member-card-role {
-  font-size: 11px;
+  font-size: 10.5px;
+  line-height: 1.3;
   color: var(--slate, #94A3B8);
-  margin-top: 2px;
-  white-space: nowrap;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+/* "SINCE" label above the role start date — added 2026-08-23 ("small
+   text saying since and then month year below"). */
+.member-card-since {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+.member-card-since-label {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(148,163,184,.75);
+  line-height: 1;
 }
 .member-card-join {
   font-size: 11px;
@@ -225,17 +262,69 @@
   margin-top: auto;
 }
 
+/* Icon buttons, not text labels — changed 2026-08-23 ("change it to make
+   icons show for ig and LinkedIn"). Square-ish tap targets sized so both
+   fit comfortably even on the narrow org-chart cards, where the old
+   "LinkedIn"/"Instagram" word pills wrapped onto two rows. */
 .member-card-back-link {
-  font-size: 12px;
-  font-weight: 600;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--white, #fff);
   border: 1px solid rgba(255,255,255,.22);
-  border-radius: 999px;
-  padding: 5px 12px;
+  border-radius: 9px;
   text-decoration: none;
   transition: background .15s ease, border-color .15s ease;
+  flex-shrink: 0;
 }
 .member-card-back-link:hover {
   background: rgba(255,255,255,.08);
   border-color: rgba(255,255,255,.4);
+}
+
+/* ---------- USC EMAIL + COPY (card back) ---------- */
+/* Added 2026-08-23 ("have usc email on back w copy paste icon"). */
+.member-card-copy-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.member-card-copy-value {
+  font-size: 11px;
+  color: var(--slate-light, #C9D4E4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.member-card-copy-btn {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 7px;
+  color: var(--white, #fff);
+  cursor: pointer;
+  padding: 0;
+  transition: background .15s ease, border-color .15s ease;
+}
+.member-card-copy-btn:hover {
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.4);
+}
+
+/* "Member since ..." — the JOIN date, which lives on the back now that
+   the front shows role start instead. */
+.member-card-back-meta {
+  font-size: 10.5px;
+  color: rgba(148,163,184,.8);
+  margin: 10px 4px 0;
 }

@@ -82,7 +82,14 @@ const SECTIONS = [
   { key: 'settings', label: 'Settings', Icon: SettingsIcon, adminOnly: false, to: '/profile?tab=settings' },
   { key: 'newsletter', label: 'Newsletter', Icon: NewsletterIcon, adminOnly: false, to: '/newsletter' },
   { key: 'tasks', label: 'Tasks', Icon: TasksIcon, adminOnly: false, to: '/tasks' },
-  { key: 'newsletter-send', label: 'Send Newsletter', Icon: SendIcon, adminOnly: true, to: '/newsletter-admin' },
+  // Renamed from "Send Newsletter" 2026-08-23 — this tile is now the
+  // QUICK path (type a subject and some plain text, hit send), sitting
+  // alongside the full template builder below it. Kev's framing: "turn
+  // into quick news blast the current".
+  { key: 'newsletter-send', label: 'Quick News Blast', Icon: SendIcon, adminOnly: true, to: '/newsletter-admin' },
+  // The template builder — block editor, saved templates, Canva image
+  // uploads, AI drafting. Added 2026-08-23.
+  { key: 'newsletter-build', label: 'Newsletter Builder', Icon: SendIcon, adminOnly: true, to: '/newsletter-builder' },
 ];
 
 export default function Portal() {

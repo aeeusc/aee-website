@@ -78,13 +78,23 @@ export function getCurrentUser() {
 // VALID_TITLES/VALID_TEAMS/isValidUscEmail/isValidLinkedInUrl/
 // isValidInstagramUrl) since anything enforced only client-side is
 // bypassable via a direct API call.
-export function createUser(firstName, lastName, email, uscEmail, title, team, linkedinUrl, instagramUrl) {
+// websiteUrl and photoDataUrl added 2026-08-23, both optional. The photo
+// travels in the create payload rather than as a follow-up request so an
+// account is never left half-made (created, but the picture silently
+// failed) — if the image is bad the whole create is rejected and the
+// admin fixes it before anything is written.
+export function createUser(
+  firstName, lastName, email, uscEmail, title, team,
+  linkedinUrl, instagramUrl, websiteUrl, photoDataUrl
+) {
   return apiRequest('/auth/admin/create-user', {
     method: 'POST',
     body: JSON.stringify({
       firstName, lastName, email, uscEmail, title, team,
       linkedinUrl: linkedinUrl || undefined,
       instagramUrl: instagramUrl || undefined,
+      websiteUrl: websiteUrl || undefined,
+      photoDataUrl: photoDataUrl || undefined,
     }),
   });
 }
@@ -104,10 +114,39 @@ export function getAllUsers() {
   return apiRequest('/auth/admin/users', { method: 'GET' });
 }
 
-export function updateUser(id, { firstName, lastName, title, team } = {}) {
+// hideFromOrgChart added 2026-08-23 — drops an account off the org chart
+// without deactivating it or changing its title (see the column comment
+// in db/database.js). Optional like every other field; omit it to leave
+// the current value alone.
+// Expanded 2026-08-23 to cover every field the create form collects
+// ("make what we have from dashboard for making accounts to be able to be
+// edited on dashboard for existing accounts for admins").
+//
+// IMPORTANT for callers: an omitted key means "leave this field alone",
+// while an explicit EMPTY STRING means "clear it". That distinction is
+// what lets an admin remove a stale LinkedIn link rather than only ever
+// overwrite it. uscEmail and title are required and cannot be cleared.
+export function updateUser(id, {
+  firstName, lastName, title, team, hideFromOrgChart,
+  email, uscEmail, linkedinUrl, instagramUrl, websiteUrl,
+} = {}) {
   return apiRequest(`/auth/admin/users/${id}`, {
     method: 'PUT',
-    body: JSON.stringify({ firstName, lastName, title, team }),
+    body: JSON.stringify({
+      firstName, lastName, title, team, hideFromOrgChart,
+      email, uscEmail, linkedinUrl, instagramUrl, websiteUrl,
+    }),
+  });
+}
+
+// Sets (or clears, with null) another account's profile photo. Distinct
+// from updateProfilePhoto below, which is strictly self-serve and writes
+// to the logged-in user — see routes/auth.js for why the two are separate
+// endpoints rather than one with a user id.
+export function adminSetUserPhoto(id, photoDataUrl) {
+  return apiRequest(`/auth/admin/users/${id}/photo`, {
+    method: 'PUT',
+    body: JSON.stringify({ photoDataUrl }),
   });
 }
 
@@ -168,10 +207,10 @@ export function getMembers() {
 // links (see routes/auth.js's LINKEDIN_URL_REGEX/INSTAGRAM_URL_REGEX)
 // since Profile.jsx's matching client-side check is bypassable via a
 // direct API call.
-export function updateProfile({ description, hometown, favoriteFood, favoriteDrink, hobbies, linkedinUrl, instagramUrl } = {}) {
+export function updateProfile({ description, hometown, favoriteFood, favoriteDrink, hobbies, linkedinUrl, instagramUrl, websiteUrl } = {}) {
   return apiRequest('/auth/profile', {
     method: 'PUT',
-    body: JSON.stringify({ description, hometown, favoriteFood, favoriteDrink, hobbies, linkedinUrl, instagramUrl }),
+    body: JSON.stringify({ description, hometown, favoriteFood, favoriteDrink, hobbies, linkedinUrl, instagramUrl, websiteUrl }),
   });
 }
 
@@ -266,6 +305,67 @@ export function deleteNewsletterSends(ids) {
   return apiRequest('/newsletter/sends', {
     method: 'DELETE',
     body: JSON.stringify({ ids }),
+  });
+}
+
+// --- Newsletter template builder (admin) ---
+//
+// Added 2026-08-23. Templates are saved as structured BLOCKS, not HTML —
+// see newsletter-blocks.js on the backend for the renderer and why.
+// All admin-only.
+//
+// Note that previewNewsletter goes to the SERVER to render. The editor
+// deliberately does not build its own preview markup: the preview has to
+// be the same HTML that gets emailed, and two renderers (one here, one
+// on the server) would drift apart and start lying about what
+// subscribers actually receive.
+export function getNewsletterTemplates() {
+  return apiRequest('/newsletter/templates', { method: 'GET' });
+}
+
+export function getNewsletterTemplate(id) {
+  return apiRequest(`/newsletter/templates/${id}`, { method: 'GET' });
+}
+
+export function createNewsletterTemplate(name, blocks) {
+  return apiRequest('/newsletter/templates', {
+    method: 'POST',
+    body: JSON.stringify({ name, blocks }),
+  });
+}
+
+export function updateNewsletterTemplate(id, name, blocks) {
+  return apiRequest(`/newsletter/templates/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ name, blocks }),
+  });
+}
+
+export function deleteNewsletterTemplate(id) {
+  return apiRequest(`/newsletter/templates/${id}`, { method: 'DELETE' });
+}
+
+export function previewNewsletter(blocks, subject) {
+  return apiRequest('/newsletter/preview', {
+    method: 'POST',
+    body: JSON.stringify({ blocks, subject }),
+  });
+}
+
+export function sendNewsletterTemplate(subject, blocks) {
+  return apiRequest('/newsletter/send-template', {
+    method: 'POST',
+    body: JSON.stringify({ subject, blocks }),
+  });
+}
+
+// Returns { subject, blocks }. Throws with a clear message if the
+// backend has no ANTHROPIC_API_KEY configured — the rest of the builder
+// works fine without it.
+export function draftNewsletterWithAI(prompt) {
+  return apiRequest('/newsletter/draft-ai', {
+    method: 'POST',
+    body: JSON.stringify({ prompt }),
   });
 }
 
