@@ -193,3 +193,24 @@
 }
 .pf-fallback a { color: var(--slate-light); }
 .pf-fallback a:hover { color: var(--white); }
+
+
+/* A message about one field, shown under that field. Added 2026-08-25
+   with the USC-only rule on the interest form: telling someone at the
+   bottom of a six-field form that "something" is wrong makes them hunt
+   for it. */
+.pf-field-error {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #F87171;
+}
+
+/* Borders the offending field so the eye lands on it before the text is
+   read. Doubled class so it beats .pf-input's own border rule, which is
+   defined earlier and would otherwise win on source order at equal
+   specificity. */
+.pf-input.pf-input-bad.pf-input-bad {
+  border-color: #F87171;
+}

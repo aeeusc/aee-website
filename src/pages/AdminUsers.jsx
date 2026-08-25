@@ -288,7 +288,7 @@ export default function AdminUsers() {
       title: 'Permanently delete this account?',
       message:
         `This removes ${fullName}'s account, every task assigned to them, and any calendar ` +
-        `events they created. Tasks they assigned to other people stay put. This cannot be undone — ` +
+        `events they created. Tasks they assigned to other people stay put. This cannot be undone. ` +
         `use Deactivate instead if you might want them back.`,
       confirmLabel: 'Delete forever',
       danger: true,
@@ -338,7 +338,7 @@ export default function AdminUsers() {
       <div className="admin-users-body">
         <h1 className="admin-users-title">Manage Accounts</h1>
         <p className="admin-users-sub">
-          Edit any of a member's details — name, title, team, emails, social links, personal
+          Edit any of a member's details: name, title, team, emails, social links, personal
           website, or profile picture; reset a locked-out password; deactivate or reactivate
           an account; show or hide them on the org chart; or change admin access.
         </p>
@@ -346,7 +346,7 @@ export default function AdminUsers() {
         {resetResult && (
           <div className="admin-users-reset-banner">
             <div>
-              Password reset for <strong>{resetResult.username}</strong> — give this to them now,
+              Password reset for <strong>{resetResult.username}</strong>. Give this to them now,
               it won't be shown again:
               <div className="admin-users-reset-password">{resetResult.generatedPassword}</div>
             </div>

@@ -132,7 +132,7 @@ export default function NewsletterAdmin() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               style={styles.textarea}
-              placeholder="Write your update here. Plain text — line breaks become paragraphs."
+              placeholder="Write your update here. Plain text. Line breaks become paragraphs."
               rows={10}
             />
           </label>

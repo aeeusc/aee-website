@@ -290,7 +290,7 @@ export default function NewsletterBuilder() {
         templateId, templateName, subject, blocks, savedAt: Date.now(),
       });
       if (outcome === 'text-only') {
-        setDraftWarning('This draft is too big to keep the images in local backup — your text is saved, the pictures are not.');
+        setDraftWarning('This draft is too big to keep the images in local backup. Your text is saved, the pictures are not.');
       } else if (outcome === 'failed') {
         setDraftWarning("This browser won't let us save a backup draft, so don't refresh without saving as a template first.");
       } else {
@@ -500,7 +500,7 @@ export default function NewsletterBuilder() {
       title: subscriberCount === 0 ? 'No email subscribers yet' : 'Send this newsletter?',
       message:
         subscriberCount === 0
-          ? `Nobody is on the email list, so "${subject}" will only be posted to the members portal — no email will go out. Members can join the list from Settings in the portal.`
+          ? `Nobody is on the email list, so "${subject}" will only be posted to the members portal, and no email will go out. Members can join the list from Settings in the portal.`
           : `"${subject}" goes out to ${audience} and is posted to the members portal. This cannot be unsent.`,
       confirmLabel: subscriberCount === 0 ? 'Post to the portal' : 'Send it',
       danger: subscriberCount !== 0,
@@ -607,7 +607,7 @@ export default function NewsletterBuilder() {
               {blockCount} block{blockCount === 1 ? '' : 's'}
               {approxSize !== null && <> · about {approxSize} KB</>}
               {approxSize !== null && approxSize > 100 && (
-                <span className="nb-warn"> · large emails get clipped by Gmail — consider smaller images</span>
+                <span className="nb-warn"> · large emails get clipped by Gmail, so consider smaller images</span>
               )}
             </p>
           </div>
@@ -636,7 +636,7 @@ export default function NewsletterBuilder() {
             the editor isn't empty. */}
         {restored && (
           <p className="nb-notice nb-restored">
-            Picked up where you left off — draft saved {describeAge(restored.savedAt)}.
+            Picked up where you left off. Draft saved {describeAge(restored.savedAt)}.
             {restored.imagesDropped && ' Images weren\u2019t part of the backup, so any you had added need re-uploading.'}
             {' '}
             <button
@@ -679,7 +679,7 @@ export default function NewsletterBuilder() {
         {/* An empty list is worth saying before the click, not after. */}
         {subscriberCount === 0 && (
           <p className="nb-notice">
-            No email subscribers yet — sending will only post this to the members portal.
+            No email subscribers yet, so sending will only post this to the members portal.
             Members can join the list under Settings in the portal.
           </p>
         )}
@@ -749,7 +749,7 @@ export default function NewsletterBuilder() {
                 {aiStatus === 'working' ? 'Drafting…' : 'Draft with AI'}
               </button>
               {aiStatus === 'error' && <p className="nb-error nb-error-sm">{aiError}</p>}
-              <p className="nb-muted nb-hint">Adds blocks to the end — your existing layout is kept.</p>
+              <p className="nb-muted nb-hint">Adds blocks to the end. Your existing layout is kept.</p>
             </div>
           </aside>
 
@@ -824,7 +824,7 @@ export default function NewsletterBuilder() {
                 {previewStatus === 'ok' && (
                   <>
                     <p className="nb-muted nb-hint">
-                      This is the real email HTML, rendered by the server — the unsubscribe footer is added per
+                      This is the real email HTML, rendered by the server. The unsubscribe footer is added per
                       recipient at send time.
                     </p>
                     {/* Sandboxed iframe: the preview is a full HTML

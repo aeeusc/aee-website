@@ -32,6 +32,21 @@ import { submitInterestForm } from '../lib/api';
 import './Home.css';
 import './PublicForm.css';
 
+// Mirrors USC_EMAIL_RE in the backend's routes/forms.js. Deliberately a
+// copy rather than a shared import: the frontend and backend are separate
+// deployments, and the browser check exists to give a fast, clear answer
+// while the server check is the one that actually enforces the rule. If
+// these two ever drift, the server wins and the worst case is a form that
+// rejects something the browser accepted, which is a message, not a hole.
+//
+// Subdomains are allowed (alumni.usc.edu and friends) because USC issues
+// them. The anchored suffix is what matters: "usc.edu.example.com" fails.
+const USC_EMAIL_RE = /^[^@\s]+@([a-z0-9-]+\.)*usc\.edu$/i;
+
+function isUscEmail(value) {
+  return USC_EMAIL_RE.test(String(value || '').trim());
+}
+
 const YEARS = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Graduate student', 'Other'];
 
 const SOURCES = [
@@ -50,15 +65,31 @@ export default function Interest() {
   });
   const [status, setStatus] = useState('idle'); // idle | sending | error | sent
   const [error, setError] = useState('');
+  // Shown under the email field rather than with the submit button. An
+  // error about one field belongs next to that field; at the bottom of a
+  // six-field form it reads as "something went wrong somewhere".
+  const [emailError, setEmailError] = useState('');
 
   function set(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
+    if (field === 'uscEmail') setEmailError('');
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+
+    // Checked here as well as on the server. This one is for the person
+    // filling the form in: a specific message under the field beats a
+    // round trip that comes back with a generic failure.
+    if (!isUscEmail(form.uscEmail)) {
+      setEmailError('Please use your USC email address. It has to end in @usc.edu.');
+      setStatus('idle');
+      return;
+    }
+
     setStatus('sending');
     setError('');
+    setEmailError('');
     try {
       await submitInterestForm(form);
       setStatus('sent');
@@ -77,7 +108,7 @@ export default function Interest() {
         <h1 className="pf-title">Get involved with AEE</h1>
 
         <p className="pf-intro">
-          We welcome new members throughout the year — you don't have to wait for a
+          We welcome new members throughout the year. You don't have to wait for a
           recruitment cycle, and you don't need an energy background to start. Tell us a
           little about yourself and someone from the board will follow up.
         </p>
@@ -91,7 +122,7 @@ export default function Interest() {
 
         {status === 'sent' ? (
           <div className="pf-sent">
-            <h2 className="pf-sent-title">Thanks — we've got it.</h2>
+            <h2 className="pf-sent-title">Thanks, we've got it.</h2>
             <p>
               Someone from the board will be in touch at the address you gave us. In the
               meantime, have a look at what the design teams are working on.
@@ -128,14 +159,40 @@ export default function Interest() {
             <label className="pf-label">
               USC email
               <input
-                className="pf-input"
+                className={`pf-input${emailError ? ' pf-input-bad' : ''}`}
                 type="email"
                 required
                 autoComplete="email"
                 placeholder="you@usc.edu"
+                /* Native validation, the outermost of three checks.
+                   Two traps in this one attribute, both of which make
+                   the browser IGNORE the pattern entirely rather than
+                   report an error, so the field silently accepts
+                   everything:
+                     - browsers compile `pattern` with the regex `v`
+                       flag, and under `v` a negated class holding \s
+                       ("[^@\s]") is a syntax error;
+                     - so is an unescaped trailing "-" in a class
+                       ("[a-zA-Z0-9-]"), which has to be "\-".
+                   Both were live here and verified in Chromium: with
+                   either present, a Gmail address reported valid.
+                   Anything changed here should be checked with
+                   new RegExp("^(?:" + pattern + ")$", "v") first. */
+                pattern="[^@]+@([a-zA-Z0-9\-]+\.)*[uU][sS][cC]\.[eE][dD][uU]"
+                title="Use your USC address, ending in @usc.edu"
+                aria-invalid={emailError ? 'true' : undefined}
+                aria-describedby={emailError ? 'usc-email-error' : undefined}
                 value={form.uscEmail}
                 onChange={(e) => set('uscEmail', e.target.value)}
+                onBlur={() => {
+                  if (form.uscEmail && !isUscEmail(form.uscEmail)) {
+                    setEmailError('Please use your USC email address. It has to end in @usc.edu.');
+                  }
+                }}
               />
+              {emailError && (
+                <span className="pf-field-error" id="usc-email-error">{emailError}</span>
+              )}
             </label>
 
             <div className="pf-row">

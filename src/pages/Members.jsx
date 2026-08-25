@@ -53,8 +53,8 @@ const TEAMS = [
 ];
 
 const SORT_OPTIONS = [
-  { key: 'name-asc', label: 'Name (A–Z)' },
-  { key: 'name-desc', label: 'Name (Z–A)' },
+  { key: 'name-asc', label: 'Name (A-Z)' },
+  { key: 'name-desc', label: 'Name (Z-A)' },
   { key: 'joined-newest', label: 'Join date (newest)' },
   { key: 'joined-oldest', label: 'Join date (oldest)' },
 ];

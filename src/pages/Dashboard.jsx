@@ -182,7 +182,7 @@ function NewsletterCleanup() {
     <div style={styles.section}>
       <h2 style={styles.subheading}>Clear out newsletters</h2>
       <p style={styles.body}>
-        Remove past sends from the archive (e.g. test sends) — members won't see deleted entries in the portal's Newsletter tab.
+        Remove past sends from the archive (e.g. test sends). Members won't see deleted entries in the portal's Newsletter tab.
       </p>
 
       {status === 'loading' && <p style={styles.muted}>Loading…</p>}

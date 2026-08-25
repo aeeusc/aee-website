@@ -134,7 +134,7 @@ function Privacy() {
       </p>
       <p style={styles.p}>
         AEE at USC is an independent student organization. We are not a department of the
-        University of Southern California, and this policy covers only this website — not USC's
+        University of Southern California, and this policy covers only this website, not USC's
         own systems or any other service you reach from here.
       </p>
 
@@ -157,13 +157,13 @@ function Privacy() {
         subscribe with, plus a random token that makes your unsubscribe link work.</p>
       <p style={styles.p}><strong>The interest form.</strong> Your first and last name, USC
         email, major, year in school, and optionally how you heard about us. This is emailed to
-        the board — it is not stored in our database.</p>
+        the board. It is not stored in our database.</p>
       <p style={styles.p}><strong>The contact form.</strong> Your name, email address, a
         subject and your message. Also emailed rather than stored.</p>
 
       <h2 style={styles.h2}>Information the site creates</h2>
       <p style={styles.p}><strong>Signing in.</strong> Logging in requires a six-digit code emailed
-        to you — to both addresses on your account, if you have added a personal one.
+        to you. If you have added a personal address, the code goes to both.
         We store a keyed hash of that code, never the code itself, and it is
         deleted the moment it is used or expires. If you tick "remember this device", we store a
         hash of a random token identifying that browser.</p>
@@ -178,8 +178,8 @@ function Privacy() {
       <p style={styles.p}>We set two, and both are necessary for the site to work. Neither is
         used for tracking or advertising.</p>
       <ul style={styles.ul}>
-        <li><strong>connect.sid</strong> — keeps you logged in. Expires after 7 days.</li>
-        <li><strong>aee_td</strong> — set only if you tick "remember this device" when entering
+        <li><strong>connect.sid:</strong> keeps you logged in. Expires after 7 days.</li>
+        <li><strong>aee_td:</strong> set only if you tick "remember this device" when entering
           your login code, so that browser can skip the code next time. Expires after 30 days,
           and you can clear it at any time under Settings on your Profile page.</li>
       </ul>
@@ -187,7 +187,7 @@ function Privacy() {
       <h2 style={styles.h2}>How we use it</h2>
       <ul style={styles.ul}>
         <li>To run member accounts, including login, two-factor codes and password changes.</li>
-        <li>To show members to one another in the portal — the directory, org chart and member cards.</li>
+        <li>To show members to one another in the portal: the directory, org chart and member cards.</li>
         <li>To run the calendar and task board.</li>
         <li>To send newsletters to people who subscribed.</li>
         <li>To reply to interest and contact form submissions.</li>
@@ -202,21 +202,21 @@ function Privacy() {
       <p style={styles.p}>We use a small number of outside services to run the site. They
         process data on our behalf and are not permitted to use it for their own purposes.</p>
       <ul style={styles.ul}>
-        <li><strong>Render</strong> — hosts our server and database, so everything described above is stored there.</li>
-        <li><strong>GitHub Pages</strong> — serves the website itself.</li>
-        <li><strong>Resend</strong> — delivers our email: newsletters, login codes, and form submissions.</li>
-        <li><strong>Google Fonts</strong> — serves the two typefaces this site uses, which means your browser contacts Google when a page loads.</li>
-        <li><strong>Anthropic</strong> — if a board member uses the "draft with AI" tool in our newsletter builder, the description they type is sent to Anthropic's API to generate a draft. It is used only to produce that draft.</li>
+        <li><strong>Render:</strong> hosts our server and database, so everything described above is stored there.</li>
+        <li><strong>GitHub Pages:</strong> serves the website itself.</li>
+        <li><strong>Resend:</strong> delivers our email: newsletters, login codes, and form submissions.</li>
+        <li><strong>Google Fonts:</strong> serves the two typefaces this site uses, which means your browser contacts Google when a page loads.</li>
+        <li><strong>Anthropic:</strong> if a board member uses the "draft with AI" tool in our newsletter builder, the description they type is sent to Anthropic's API to generate a draft. It is used only to produce that draft.</li>
       </ul>
 
       <h2 style={styles.h2}>How long we keep it</h2>
       <ul style={styles.ul}>
-        <li><strong>Login codes</strong> — 10 minutes, or until used.</li>
-        <li><strong>Remembered devices</strong> — 30 days, and cleared immediately if you change your password or clear them yourself.</li>
-        <li><strong>Sessions</strong> — 7 days, and ended when you log out or change your password.</li>
-        <li><strong>Accounts and profiles</strong> — for as long as the account exists.</li>
-        <li><strong>Newsletter subscriptions</strong> — until you unsubscribe, at which point the record is deleted rather than flagged.</li>
-        <li><strong>Form submissions</strong> — these live in the board's email, not in our database, and are kept as long as that inbox keeps them.</li>
+        <li><strong>Login codes:</strong> 10 minutes, or until used.</li>
+        <li><strong>Remembered devices:</strong> 30 days, and cleared immediately if you change your password or clear them yourself.</li>
+        <li><strong>Sessions:</strong> 7 days, and ended when you log out or change your password.</li>
+        <li><strong>Accounts and profiles:</strong> for as long as the account exists.</li>
+        <li><strong>Newsletter subscriptions:</strong> until you unsubscribe, at which point the record is deleted rather than flagged.</li>
+        <li><strong>Form submissions:</strong> these live in the board's email, not in our database, and are kept as long as that inbox keeps them.</li>
       </ul>
 
       <h2 style={styles.h2}>Your choices</h2>
@@ -230,7 +230,7 @@ function Privacy() {
 
       <h2 style={styles.h2}>Security</h2>
       <p style={styles.p}>
-        Passwords are stored using bcrypt, a one-way hash — we cannot see or recover your
+        Passwords are stored using bcrypt, a one-way hash. We cannot see or recover your
         password, only check it at login. Every account requires a second factor: a code emailed
         to you. Login codes and remembered-device tokens are stored hashed, never in the clear.
         The site is served over HTTPS and session cookies are marked so browser JavaScript
@@ -295,8 +295,8 @@ function Terms() {
         your password ends every other session and clears every remembered device.
       </p>
       <p style={styles.p}>
-        Board members can deactivate an account — for instance when someone leaves the
-        organization — which immediately ends that person's access to the portal.
+        Board members can deactivate an account, for instance when someone leaves the
+        organization. That immediately ends their access to the portal.
       </p>
 
       <h2 style={styles.h2}>What you post</h2>
@@ -323,7 +323,7 @@ function Terms() {
       <p style={styles.p}>
         The text, design and images on this site belong to AEE at USC or are used with
         permission. Partner and sponsor names and logos belong to those organizations, and
-        appear here to show who we work with — not to claim any endorsement by them of this
+        appear here to show who we work with, not to claim any endorsement by them of this
         site.
       </p>
       <p style={styles.p}>
@@ -334,7 +334,7 @@ function Terms() {
       <h2 style={styles.h2}>No warranty</h2>
       <p style={styles.p}>
         The site is provided "as is", without warranties of any kind, express or implied. We do
-        not guarantee it will be uninterrupted, error-free, or available at all times — it is
+        not guarantee it will be uninterrupted, error-free, or available at all times. It is
         run by students alongside their degrees.
       </p>
 

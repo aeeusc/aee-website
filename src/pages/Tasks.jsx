@@ -628,7 +628,7 @@ export default function TasksPage() {
                         <span className="tasks-item-time">
                           {new Date(task.start_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
                           {task.end_at && (
-                            <> – {new Date(task.end_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</>
+                            <> - {new Date(task.end_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</>
                           )}
                         </span>
                       )}
@@ -693,14 +693,14 @@ export default function TasksPage() {
                         <span className="tasks-item-main">
                           <span className="tasks-item-title">
                             {task.title}
-                            <span className="tasks-item-assignee"> — {assigneeName(task)}</span>
+                            <span className="tasks-item-assignee">, {assigneeName(task)}</span>
                           </span>
                           {task.description && <span className="tasks-item-description">{task.description}</span>}
                           {task.start_at && (
                             <span className="tasks-item-time">
                               {new Date(task.start_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
                               {task.end_at && (
-                                <> – {new Date(task.end_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</>
+                                <> - {new Date(task.end_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</>
                               )}
                             </span>
                           )}

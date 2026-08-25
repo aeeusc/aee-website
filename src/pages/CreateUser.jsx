@@ -174,7 +174,7 @@ export default function CreateUser() {
           <>
             <h1 style={styles.heading}>Account created</h1>
             <p style={styles.body}>
-              Give these to the new member — this password is shown only
+              Give these to the new member. This password is shown only
               once and isn't stored anywhere in readable form, so save it
               now if you need to relay it later.
             </p>

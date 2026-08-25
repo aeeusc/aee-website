@@ -53,7 +53,7 @@ export default function Contact() {
 
         <p className="pf-intro">
           Questions about joining, a partnership, sponsoring a design team, or having us
-          speak somewhere — this reaches the board directly. We usually reply within a few
+          speak somewhere: this reaches the board directly. We usually reply within a few
           days during term.
         </p>
 

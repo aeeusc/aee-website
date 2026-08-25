@@ -117,7 +117,7 @@ export default function MemberCard({ member, team }) {
           setFlipped((v) => !v);
         }
       }}
-      aria-label={`${fullName} — click to ${flipped ? 'see front' : 'see more'}`}
+      aria-label={`${fullName}, click to ${flipped ? 'see front' : 'see more'}`}
     >
       <div className="member-card-inner">
         <div className="member-card-face member-card-front">
@@ -199,7 +199,7 @@ export default function MemberCard({ member, team }) {
                       return (
                         <li key={`${r.title}-${i}`} className="member-card-back-field">
                           <span className="member-card-back-label">{r.title}</span>
-                          {range && <> — {range}</>}
+                          {range && <>, {range}</>}
                         </li>
                       );
                     })}

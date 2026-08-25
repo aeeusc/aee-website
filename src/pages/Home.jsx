@@ -76,11 +76,11 @@ const PARTNERS = [
   // up to full colour on hover like everything else.
   { name: "EPRI", logo: asset("/logos/epri.png"), href: "https://www.epri.com" },
   { name: "PG&E", logo: asset("/logos/pge.png"), href: "https://www.pge.com", solid: true },
-  { name: "Graymatter Robotics", logo: asset("/logos/graymatterrobotics.png"), href: "https://factory.graymatter-robotics.com/" },
+  { name: "Graymatter Robotics", logo: asset("/logos/graymatterrobotics.png"), href: "https://www.graymatter-robotics.com" },
   { name: "KPFF", logo: asset("/logos/kpff.png"), href: "https://www.kpff.com" },
-  { name: "NREL", logo: asset("/logos/nrel.png"), href: "https://www.nlr.gov" },
+  { name: "NREL", logo: asset("/logos/nrel.png"), href: "https://www.nrel.gov" },
   { name: "SGH", logo: asset("/logos/sgh.png"), href: "https://www.sgh.com" },
-  { name: "Vatn Systems", logo: asset("/logos/vatn.png"), href: "https://www.vatn.com" },
+  { name: "Vatn Systems", logo: asset("/logos/vatn.png"), href: "https://www.vatnsystems.com" },
 ];
 
 const TEAMS = [
@@ -283,7 +283,7 @@ export function Nav() {
               className="nav-account"
               aria-label={
                 currentUser.first_name || currentUser.username
-                  ? `Member Portal — signed in as ${currentUser.first_name || currentUser.username}`
+                  ? `Member Portal, signed in as ${currentUser.first_name || currentUser.username}`
                   : "Member Portal"
               }
             >
@@ -393,7 +393,7 @@ export function PlaceholderAvatar({ size = 32 }) {
 // The one thing the club wants a first-time visitor to know today. Set
 // to null when there's nothing on. Added 2026-08-24 for the USC
 // involvement fair.
-export const NEXT_EVENT = "Come find us at the USC involvement fair — Wednesday 26 August, 11am to 2pm.";
+export const NEXT_EVENT = "Come find us at the USC involvement fair on Wednesday 26 August, 11am to 2pm.";
 
 // ─── Hero ───────────────────────────────────────────────────────────────────
 
@@ -407,7 +407,7 @@ function Hero() {
       <div className="hero-content">
         <h1>The Hub For<br />Energy At USC.</h1>
         <p className="hero-sub">
-          USC's hub for energy and sustainability — nationally competing design teams,
+          USC's hub for energy and sustainability: nationally competing design teams,
           real policy work, and a launchpad for clean-energy careers.
         </p>
       </div>

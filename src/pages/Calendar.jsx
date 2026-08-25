@@ -147,10 +147,10 @@ function formatEventRange(ev) {
   if (!ev.end_at) return formatTime(start);
 
   const end = eventEnd(ev);
-  if (sameDay(start, end)) return `${formatTime(start)} – ${formatTime(end)}`;
+  if (sameDay(start, end)) return `${formatTime(start)} - ${formatTime(end)}`;
 
   const dayOpts = { month: 'short', day: 'numeric' };
-  return `${start.toLocaleDateString(undefined, dayOpts)}, ${formatTime(start)} – ${end.toLocaleDateString(undefined, dayOpts)}, ${formatTime(end)}`;
+  return `${start.toLocaleDateString(undefined, dayOpts)}, ${formatTime(start)} - ${end.toLocaleDateString(undefined, dayOpts)}, ${formatTime(end)}`;
 }
 
 const MAX_CHIPS_PER_DAY = 3;
@@ -302,11 +302,11 @@ export default function CalendarPage() {
     const last = weekDays[6];
     const sameMonth = first.getMonth() === last.getMonth() && first.getFullYear() === last.getFullYear();
     if (sameMonth) {
-      return `${MONTH_LABELS[first.getMonth()].slice(0, 3)} ${first.getDate()} – ${last.getDate()}, ${first.getFullYear()}`;
+      return `${MONTH_LABELS[first.getMonth()].slice(0, 3)} ${first.getDate()} - ${last.getDate()}, ${first.getFullYear()}`;
     }
     const f = first.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     const l = last.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-    return `${f} – ${l}`;
+    return `${f} - ${l}`;
   }
 
   function selectDay(day) {
@@ -569,7 +569,7 @@ export default function CalendarPage() {
                   min is the start day, so the date picker itself can't
                   produce a backwards range. */}
               <label className="calendar-time-field">
-                End date (optional — for multi-day events)
+                End date (optional, for multi-day events)
                 <input
                   type="date"
                   min={dateKey(selectedDay)}
@@ -731,7 +731,7 @@ function TimeGrid({ days, eventsByDay, today, selectedDay, onSelectDay, showDayH
                       key={ev.id}
                       className="calendar-timegrid-block"
                       style={{ top: `${top}px`, height: `${height}px` }}
-                      title={`${ev.title} — ${formatEventRange(ev)}`}
+                      title={`${ev.title}, ${formatEventRange(ev)}`}
                     >
                       <span className="calendar-timegrid-block-time">{formatTime(start)}</span>
                       <span className="calendar-timegrid-block-title">{ev.title}</span>

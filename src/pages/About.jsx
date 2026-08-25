@@ -62,7 +62,7 @@ const STATEMENT = "The Hub for Energy at USC.";
 const OFFERINGS = [
   {
     title: "Open to every major",
-    body: "Built for engineers and non-engineers alike — anyone with a stake in how energy gets made, moved, governed, and paid for.",
+    body: "Built for engineers and non-engineers alike: anyone with a stake in how energy gets made, moved, governed, and paid for.",
   },
   {
     title: "Nationally competing design teams",
@@ -74,7 +74,7 @@ const OFFERINGS = [
   },
   {
     title: "A launchpad, not a line item",
-    body: "Direct access to industry, founders, and competitions — the kind that turns a class project into a company.",
+    body: "Direct access to industry, founders, and competitions: the kind that turns a class project into a company.",
   },
 ];
 
@@ -91,7 +91,7 @@ const RESULTS = [
     team: 'MECC',
     what: 'Marine Energy Collegiate Competition',
     where: 'Portland, May 2026',
-    awards: ['Won the competition outright — national champions'],
+    awards: ['Won the competition outright, national champions'],
   },
   {
     team: 'ShadeLA',
@@ -368,7 +368,7 @@ export default function About() {
         <div className="label">ABOUT</div>
         <StatementReveal text={STATEMENT} />
         <p className="about-body">
-          We put student engineers at the center of the energy transition — entirely
+          We put student engineers at the center of the energy transition. Entirely
           student-led, open to every major, and building in public.
         </p>
 
@@ -401,7 +401,7 @@ export default function About() {
             <p>
               The Association of Energy Engineers at USC was founded in 2024. The original
               vision, from founder <strong>Mitchell Kirby&nbsp;'26</strong>, was to build the
-              Hub for Energy at USC — a home for engineers and non-engineers alike with an
+              Hub for Energy at USC, a home for engineers and non-engineers alike with an
               interest in the advancement of energy, its technologies and innovations, and
               the policy surrounding its development and outcomes.
             </p>
@@ -414,7 +414,7 @@ export default function About() {
           </div>
 
           <blockquote className="about-quote">
-            A sandbox on the frontier of emerging technologies — unconstrained by energy and
+            A sandbox on the frontier of emerging technologies, unconstrained by energy and
             engineering alone.
           </blockquote>
         </div>
@@ -451,7 +451,7 @@ export default function About() {
           <p className="about-lead">
             The upcoming 2028 Los Angeles Summer Olympics found a home in AEE. Our team hosted
             the LA28 organization and 25 corresponding speakers for the first-ever USC Olympic
-            Week — five days of panels and an innovation hackathon built around the real
+            Week: five days of panels and an innovation hackathon built around the real
             challenges of the 2028 Games.
           </p>
 
@@ -466,7 +466,7 @@ export default function About() {
             <h3 className="about-outcome-name">Matterflow</h3>
             <p className="about-outcome-body">
               Over 25 teams competed for the $1,000 grand prize. Matterflow took it with a
-              compact, low-cost, onsite recycling and sorting machine — then went on to win the
+              compact, low-cost, onsite recycling and sorting machine, then went on to win the
               annual 2026 Innovate Los Angeles Startup Incubator Competition.
             </p>
           </div>
@@ -486,7 +486,7 @@ export default function About() {
           <h2 className="about-h2">Where our teams placed last season.</h2>
           <p className="about-lead">
             Five design teams compete nationally. Between them they brought home six national
-            awards last season — here is where they went and what they won.
+            awards last season. Here is where they went and what they won.
           </p>
 
           <ul className="about-results-list">
