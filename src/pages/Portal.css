@@ -8,9 +8,15 @@
  *
  * Layout: header, then a body split into a slim left rail (fixed narrow
  * width, not a fraction of the page — kept deliberately minimal per
- * explicit feedback 2026-08-08) and a right main area that takes up
- * most of the width — top tiles row, content section, and a two-column
- * quadrant row (Calendar | Tasks) at the bottom. Kept as a fairly plain,
+ * explicit feedback 2026-08-08) and a right main area holding just the
+ * tiles grid — as of 2026-08-12 every tile/rail item links out to its
+ * own standalone page, so there's no more in-page content section or
+ * quadrant row here (see Portal.jsx's file comment for the full
+ * history of each piece moving out). This file's .portal-form/
+ * .portal-input/.portal-pill/etc "shared form elements" section and its
+ * .portal-content/.portal-section rules are still very much alive,
+ * though — Profile.jsx imports this stylesheet and reuses them for its
+ * Settings tab and its own field boxes. Kept as a fairly plain,
  * utilitarian admin-tool aesthetic (simple borders, muted backgrounds)
  * rather than the marketing-site homepage's more elaborate treatment —
  * this is a working tool page, not a landing page.
@@ -21,7 +27,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Libre Franklin', -apple-system, sans-serif;
   color: var(--white);
 }
 
@@ -39,7 +45,7 @@
   text-align: center;
 }
 .portal-denied-card h1 {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
   font-size: 26px;
   margin-bottom: 12px;
 }
@@ -63,7 +69,7 @@
   text-decoration: none;
   color: var(--white);
   font-weight: 700;
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
 }
 .portal-logo img { width: 28px; height: 28px; }
 .portal-title {
@@ -132,7 +138,7 @@
   font-size: 10px;
   font-weight: 700;
   letter-spacing: .12em;
-  color: rgba(148,163,184,.55);
+  color: rgba(198,228,255,.55);
   text-transform: uppercase;
   text-align: left;
 }
@@ -199,7 +205,7 @@
 }
 
 .portal-section h2 {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
   font-size: 22px;
   margin-bottom: 6px;
 }
@@ -210,63 +216,14 @@
   line-height: 1.6;
 }
 
-/* Bottom row — used to be a two-column "Calendar (left) | Tasks (right)"
-   quadrant split per the original wireframe; Calendar moved out to its
-   own full page (see src/pages/Calendar.jsx) as part of the 2026-08-11
-   Calendar/Tasks rework, so this is now a single full-width column
-   holding just the Tasks panel. Class names kept as-is (not renamed)
-   to minimize churn — "quadrants"/"quadrant" now just means "this
-   panel row," singular. */
-.portal-quadrants {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-}
-.portal-quadrant { min-width: 0; }
-.portal-panel {
-  background: rgba(255,255,255,.02);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 20px;
-  height: 100%;
-}
-.portal-panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-.portal-panel-header h3 {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  font-size: 16px;
-  margin: 0;
-}
-.portal-panel-add {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: none;
-  color: var(--white);
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.portal-panel-add:hover { border-color: rgba(255,255,255,.5); }
-
-.portal-inline-form {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--line);
-}
-
-/* ---------- SHARED FORM ELEMENTS ---------- */
+/* ---------- SHARED FORM ELEMENTS ----------
+   Still used by Profile.jsx's SettingsTab (change-password form) and
+   Profile.jsx's own description/preset/social field boxes (.portal-content
+   above, and .portal-section/.portal-section-sub — see the top of that
+   file). The Tasks/Newsletter-specific panel, inline-form, quadrant, and
+   archive rules that used to live below this point moved out along with
+   those features 2026-08-12 (see Tasks.css/Newsletter.css) and were
+   removed here since nothing in this file references them anymore. */
 .portal-form { display: flex; flex-direction: column; gap: 16px; }
 .portal-label {
   display: flex;
@@ -323,65 +280,8 @@ select.portal-input { cursor: pointer; }
 
 .portal-error { color: #F87171; font-size: 13px; margin: 0; }
 .portal-error-sm { font-size: 12px; }
-.portal-success { color: #4ADE80; font-size: 13px; margin: 0; }
+.portal-success { color: var(--aee-accent); font-size: 13px; margin: 0; }
 .portal-muted { color: var(--slate); font-size: 13px; }
-
-.portal-subscriber-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: -6px;
-}
-
-/* ---------- NEWSLETTER ARCHIVE ---------- */
-.portal-archive-list { display: flex; flex-direction: column; gap: 16px; }
-.portal-archive-item {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 14px 16px;
-}
-.portal-archive-subject { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
-.portal-archive-date { font-size: 12px; color: var(--slate); margin-bottom: 8px; }
-.portal-archive-body { font-size: 13px; color: var(--slate-light); white-space: pre-wrap; line-height: 1.6; }
-
-/* ---------- TASKS ----------
-   (the old ".portal-event-*" Calendar rules that used to live in this
-   section were removed 2026-08-11 — Calendar moved to its own page,
-   see src/pages/Calendar.css, which has its own equivalent classes.) */
-.portal-task-list { display: flex; flex-direction: column; gap: 2px; }
-.portal-task-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 6px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 13px;
-}
-.portal-task-item:hover { background: rgba(255,255,255,.05); }
-.portal-task-item input[type="checkbox"] { accent-color: var(--white); cursor: pointer; }
-.portal-task-item.done .portal-task-title { text-decoration: line-through; color: var(--slate); }
-.portal-task-title { flex: 1; }
-/* Due-date label, added for the Calendar/Tasks rework — plain muted text
-   normally, red when the task is overdue (see Portal.jsx's isOverdue
-   check: has a due date, it's passed, and the task isn't done yet). */
-.portal-task-due {
-  flex-shrink: 0;
-  font-size: 11px;
-  color: var(--slate);
-}
-.portal-task-due.overdue { color: #F87171; font-weight: 600; }
-/* The inline add-task form's due-date field — a labeled input rather
-   than a bare placeholder-only one (unlike title/description above),
-   since "optional date" needs a bit more context than a placeholder
-   alone gives. */
-.portal-task-due-label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--slate);
-}
 
 /* ---------- RESPONSIVE ---------- */
 @media (max-width: 860px) {
@@ -398,5 +298,4 @@ select.portal-input { cursor: pointer; }
   .portal-rail-item { width: auto; }
   .portal-main { padding: 24px 20px; }
   .portal-tiles { grid-template-columns: repeat(2, 1fr); max-width: none; }
-  .portal-quadrants { grid-template-columns: 1fr; }
 }

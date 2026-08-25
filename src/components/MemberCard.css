@@ -47,7 +47,7 @@
   backface-visibility: hidden;
   border-radius: 16px;
   border: 1px solid rgba(255,255,255,.14);
-  background: #0C1224;
+  background: #1F3160;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -102,7 +102,7 @@
    The card's photo area is `flex: 1`, so it absorbs the extra height a
    second line takes rather than the card overflowing. */
 .member-card-name {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
   font-weight: 600;
   font-size: 13.5px;
   line-height: 1.25;
@@ -117,7 +117,7 @@
 .member-card-role {
   font-size: 10.5px;
   line-height: 1.3;
-  color: var(--slate, #94A3B8);
+  color: var(--slate, rgba(198,228,255,.70));
   margin-top: 3px;
   overflow-wrap: anywhere;
   display: -webkit-box;
@@ -140,17 +140,17 @@
   font-weight: 700;
   letter-spacing: .1em;
   text-transform: uppercase;
-  color: rgba(148,163,184,.75);
+  color: rgba(198,228,255,.75);
   line-height: 1;
 }
 .member-card-join {
   font-size: 11px;
-  color: var(--slate, #94A3B8);
+  color: var(--slate, rgba(198,228,255,.70));
   white-space: nowrap;
 }
 .member-card-team {
   font-size: 11px;
-  color: var(--slate-light, #C9D4E4);
+  color: var(--slate-light, rgba(198,228,255,.92));
   font-weight: 600;
   margin-top: 2px;
   white-space: nowrap;
@@ -182,7 +182,7 @@
   position: relative;
   padding-left: 16px;
   font-size: 13px;
-  color: var(--slate-light, #C9D4E4);
+  color: var(--slate-light, rgba(198,228,255,.92));
   line-height: 1.5;
 }
 .member-card-back-field::before {
@@ -193,7 +193,7 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--slate, #94A3B8);
+  background: var(--slate, rgba(198,228,255,.70));
 }
 .member-card-back-label {
   font-weight: 700;
@@ -201,7 +201,7 @@
 }
 .member-card-back-empty {
   font-size: 12px;
-  color: var(--slate, #94A3B8);
+  color: var(--slate, rgba(198,228,255,.70));
   margin: 0;
 }
 
@@ -236,7 +236,7 @@
   font-weight: 700;
   letter-spacing: .05em;
   text-transform: uppercase;
-  color: var(--slate, #94A3B8);
+  color: var(--slate, rgba(198,228,255,.70));
   margin-bottom: 8px;
 }
 
@@ -294,7 +294,7 @@
 }
 .member-card-copy-value {
   font-size: 11px;
-  color: var(--slate-light, #C9D4E4);
+  color: var(--slate-light, rgba(198,228,255,.92));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -325,6 +325,6 @@
    the front shows role start instead. */
 .member-card-back-meta {
   font-size: 10.5px;
-  color: rgba(148,163,184,.8);
+  color: rgba(198,228,255,.8);
   margin: 10px 4px 0;
 }

@@ -353,12 +353,12 @@ export default function Login() {
 // block — kept identical to Signup.jsx so the two pages feel like one
 // consistent flow.
 const colors = {
-  navy950: '#0A0E1A',
-  navy900: '#101830',
-  navy800: '#16213E',
-  slate: '#94A3B8',
-  slateLight: '#C9D4E4',
-  ink: '#0B0F1A',
+  navy950: '#182032',
+  navy900: '#1F3160',
+  navy800: '#1C3F94',
+  slate: 'rgba(198,228,255,.70)',
+  slateLight: 'rgba(198,228,255,.92)',
+  ink: '#182032',
   white: '#FFFFFF',
   line: 'rgba(255,255,255,.16)',
 };
@@ -382,7 +382,7 @@ const styles = {
     textDecoration: 'none',
     fontSize: '15px',
     fontWeight: 500,
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
   },
   card: {
     width: '100%',
@@ -393,7 +393,7 @@ const styles = {
     padding: '40px 32px',
   },
   heading: {
-    fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif",
+    fontFamily: "'League Spartan', 'Libre Franklin', system-ui, sans-serif",
     fontWeight: 700,
     color: colors.white,
     fontSize: '28px',
@@ -401,7 +401,7 @@ const styles = {
     marginBottom: '24px',
   },
   subheading: {
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
     color: colors.slate,
     fontSize: '14px',
     lineHeight: 1.6,
@@ -420,7 +420,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '8px',
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
     color: colors.slate,
     fontSize: '14px',
   },
@@ -430,7 +430,7 @@ const styles = {
     borderRadius: '10px',
     padding: '12px 16px',
     color: colors.white,
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
     fontSize: '15px',
     outline: 'none',
   },
@@ -440,7 +440,7 @@ const styles = {
   // so the text stays optically centered (letter-spacing adds a trailing
   // gap after the last character, which otherwise pulls it left).
   codeInput: {
-    fontFamily: "'Space Grotesk', 'Courier New', monospace",
+    fontFamily: "ui-monospace, 'SFMono-Regular', 'Courier New', monospace",
     fontSize: '26px',
     letterSpacing: '12px',
     textAlign: 'center',
@@ -451,7 +451,7 @@ const styles = {
     display: 'flex',
     alignItems: 'flex-start',
     gap: '10px',
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
     color: colors.slateLight,
     fontSize: '14px',
     lineHeight: 1.5,
@@ -503,7 +503,7 @@ const styles = {
     padding: '13px 22px',
     fontSize: '15px',
     fontWeight: 600,
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
     textDecoration: 'none',
     display: 'inline-block',
     textAlign: 'center',
@@ -531,7 +531,7 @@ const styles = {
     border: 'none',
     padding: 0,
     color: colors.slateLight,
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
     fontSize: '13.5px',
     textDecoration: 'underline',
     cursor: 'pointer',
@@ -547,19 +547,19 @@ const styles = {
   },
   error: {
     color: '#F87171',
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
     fontSize: '14px',
     margin: 0,
   },
   notice: {
-    color: '#4ADE80',
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    color: '#5E8DFF',
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
     fontSize: '14px',
     margin: 0,
   },
   footerText: {
     marginTop: '24px',
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
     color: colors.slate,
     fontSize: '14px',
     textAlign: 'center',

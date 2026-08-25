@@ -21,7 +21,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Libre Franklin', -apple-system, sans-serif;
   color: var(--white);
 }
 
@@ -40,7 +40,7 @@
   margin: 0 auto;
 }
 .newsletter-denied-card h1 {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
   font-size: 26px;
   margin-bottom: 12px;
 }
@@ -74,7 +74,7 @@
   text-decoration: none;
   color: var(--white);
   font-weight: 700;
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
 }
 .newsletter-logo img { width: 28px; height: 28px; }
 .newsletter-back-link {
@@ -107,7 +107,7 @@
   margin-bottom: 6px;
 }
 .newsletter-title {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
   font-size: 26px;
   margin: 0;
 }
@@ -313,7 +313,7 @@
 .nl-book-title {
   flex: 1;
   min-width: 0;
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
   font-size: 14.5px;
   font-weight: 600;
   letter-spacing: .005em;
@@ -436,7 +436,7 @@
   margin-bottom: 8px;
 }
 .nl-card-title {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
   font-size: 16px;
   font-weight: 700;
   line-height: 1.35;
@@ -536,7 +536,7 @@
   margin-bottom: 10px;
 }
 .newsletter-detail-subject {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
   font-size: 30px;
   line-height: 1.25;
   margin: 0 0 28px;

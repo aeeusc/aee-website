@@ -78,16 +78,16 @@ import './Newsletter.css';
 //           Varied a little per book so the stack does not look like one
 //           extruded object.
 const SPINES = [
-  { spine: '#0B0F1A', edge: '#04070F', top: '#171D2C', ink: '#E8EDF7', band: 'rgba(255,255,255,.18)', paper: '#E7E0CE' },
-  { spine: '#101830', edge: '#080D1E', top: '#1C2848', ink: '#E8EDF7', band: 'rgba(255,255,255,.18)', paper: '#EFE9DA' },
-  { spine: '#F1F5F9', edge: '#C3CEDC', top: '#FFFFFF', ink: '#0B0F1A', band: 'rgba(11,15,26,.20)', paper: '#F2EDE1' },
-  { spine: '#16213E', edge: '#0D1528', top: '#24325A', ink: '#E8EDF7', band: 'rgba(255,255,255,.18)', paper: '#E3DCC8' },
-  { spine: '#1A1F2B', edge: '#10141C', top: '#282F3F', ink: '#E8EDF7', band: 'rgba(255,255,255,.16)', paper: '#EDE7D7' },
-  { spine: '#1D2B52', edge: '#131E3C', top: '#2C3E6E', ink: '#E8EDF7', band: 'rgba(255,255,255,.20)', paper: '#E9E2D0' },
-  { spine: '#E2E8F0', edge: '#AFBCCC', top: '#F6F9FC', ink: '#0B0F1A', band: 'rgba(11,15,26,.18)', paper: '#F0EBDE' },
-  { spine: '#080D1C', edge: '#03060E', top: '#141A2E', ink: '#E8EDF7', band: 'rgba(255,255,255,.15)', paper: '#E5DECB' },
-  { spine: '#2A3A63', edge: '#1D294A', top: '#3B4E7E', ink: '#E8EDF7', band: 'rgba(255,255,255,.20)', paper: '#EEE8D8' },
-  { spine: '#C9D4E4', edge: '#9BAABF', top: '#DFE7F1', ink: '#0B0F1A', band: 'rgba(11,15,26,.16)', paper: '#F1ECE0' },
+  { spine: '#182032', edge: '#04070F', top: '#171D2C', ink: '#F4F6FA', band: 'rgba(255,255,255,.18)', paper: '#E7E0CE' },
+  { spine: '#1F3160', edge: '#080D1E', top: '#1C2848', ink: '#F4F6FA', band: 'rgba(255,255,255,.18)', paper: '#EFE9DA' },
+  { spine: '#F4F6FA', edge: '#C3CEDC', top: '#FFFFFF', ink: '#182032', band: 'rgba(24,32,50,.20)', paper: '#F2EDE1' },
+  { spine: '#1C3F94', edge: '#0D1528', top: '#24325A', ink: '#F4F6FA', band: 'rgba(255,255,255,.18)', paper: '#E3DCC8' },
+  { spine: '#1A1F2B', edge: '#10141C', top: '#282F3F', ink: '#F4F6FA', band: 'rgba(255,255,255,.16)', paper: '#EDE7D7' },
+  { spine: '#1D2B52', edge: '#131E3C', top: '#2C3E6E', ink: '#F4F6FA', band: 'rgba(255,255,255,.20)', paper: '#E9E2D0' },
+  { spine: '#F4F6FA', edge: '#AFBCCC', top: '#F4F6FA', ink: '#182032', band: 'rgba(24,32,50,.18)', paper: '#F0EBDE' },
+  { spine: '#080D1C', edge: '#03060E', top: '#141A2E', ink: '#F4F6FA', band: 'rgba(255,255,255,.15)', paper: '#E5DECB' },
+  { spine: '#2A3A63', edge: '#1D294A', top: '#3B4E7E', ink: '#F4F6FA', band: 'rgba(255,255,255,.20)', paper: '#EEE8D8' },
+  { spine: 'rgba(198,228,255,.92)', edge: '#9BAABF', top: '#DFE7F1', ink: '#182032', band: 'rgba(24,32,50,.16)', paper: '#F1ECE0' },
 ];
 
 // Books are as thick as they have something to say — a long newsletter

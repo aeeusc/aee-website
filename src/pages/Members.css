@@ -16,7 +16,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Libre Franklin', -apple-system, sans-serif;
   color: var(--white);
 }
 
@@ -35,7 +35,7 @@
   margin: 0 auto;
 }
 .members-denied-card h1 {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
   font-size: 26px;
   margin-bottom: 12px;
 }
@@ -59,7 +59,7 @@
   text-decoration: none;
   color: var(--white);
   font-weight: 700;
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
 }
 .members-logo img { width: 28px; height: 28px; }
 .members-back-link {
@@ -92,7 +92,7 @@
   margin-bottom: 28px;
 }
 .members-title {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
   font-size: 26px;
   margin: 0;
 }
@@ -139,7 +139,7 @@
   top: calc(100% + 8px);
   right: 0;
   z-index: 20;
-  background: #0C1224;
+  background: #1F3160;
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 14px;
@@ -214,7 +214,7 @@
   flex-direction: column;
 }
 .members-section-heading {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
   font-size: 18px;
   margin: 0 0 16px;
   cursor: default;

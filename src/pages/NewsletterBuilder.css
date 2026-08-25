@@ -13,9 +13,9 @@
 
 .nb-page {
   min-height: 100vh;
-  background: var(--navy-950, #0A0E1A);
+  background: var(--navy-950, #182032);
   color: var(--white, #fff);
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Libre Franklin', -apple-system, sans-serif;
 }
 
 /* ---------- HEADER ---------- */
@@ -32,13 +32,13 @@
   gap: 10px;
   text-decoration: none;
   color: var(--white, #fff);
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
   font-weight: 700;
   font-size: 17px;
 }
 .nb-logo img { width: 26px; height: 26px; }
 .nb-back-link {
-  color: var(--slate, #94A3B8);
+  color: var(--slate, rgba(198,228,255,.70));
   text-decoration: none;
   font-size: 14px;
 }
@@ -61,11 +61,11 @@
   margin-bottom: 18px;
 }
 .nb-title {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
   font-size: 26px;
   margin: 0;
 }
-.nb-sub { margin: 6px 0 0; font-size: 13px; color: var(--slate, #94A3B8); }
+.nb-sub { margin: 6px 0 0; font-size: 13px; color: var(--slate, rgba(198,228,255,.70)); }
 .nb-warn { color: #FBBF24; }
 .nb-toolbar-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
@@ -83,13 +83,13 @@
 }
 .nb-btn:hover:not(:disabled) { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.05); }
 .nb-btn:disabled { opacity: .4; cursor: not-allowed; }
-.nb-btn-primary { background: var(--white, #fff); color: var(--navy-950, #0A0E1A); border-color: var(--white, #fff); }
+.nb-btn-primary { background: var(--white, #fff); color: var(--navy-950, #182032); border-color: var(--white, #fff); }
 .nb-btn-primary:hover:not(:disabled) { opacity: .9; background: var(--white, #fff); }
 .nb-btn-full { width: 100%; }
 
 .nb-error { color: #F87171; font-size: 14px; margin: 0 0 14px; }
 .nb-error-sm { font-size: 12.5px; margin-top: 8px; }
-.nb-success { color: #4ADE80; font-size: 14px; margin: 0 0 14px; }
+.nb-success { color: var(--aee-accent); font-size: 14px; margin: 0 0 14px; }
 /* Block-level warning line - an empty subscriber list before the click,
    or a send that reached nobody after it. Its own class rather than
    reusing .nb-warn, which is a colour-only modifier on an inline span
@@ -108,7 +108,7 @@
 }
 .nb-testrow-label {
   font-size: 13px;
-  color: var(--slate, #94A3B8);
+  color: var(--slate, rgba(198,228,255,.70));
   white-space: nowrap;
 }
 /* .nb-input sets width: 100%, which inside a flex row makes this field
@@ -127,7 +127,7 @@
    the whole reason someone is willing to press the button. */
 .nb-testrow-hint {
   font-size: 12.5px;
-  color: rgba(148,163,184,.75);
+  color: rgba(198,228,255,.75);
   line-height: 1.5;
   flex: 1 1 260px;
 }
@@ -147,7 +147,7 @@
    also sets a colour, so at equal specificity it wins on source order
    and the restore line came out amber - reading as a warning about work
    that had in fact just been rescued. */
-.nb-notice.nb-restored { color: #4ADE80; }
+.nb-notice.nb-restored { color: var(--aee-accent); }
 
 .nb-notice {
   color: #FBBF24;
@@ -155,7 +155,7 @@
   line-height: 1.55;
   margin: 0 0 14px;
 }
-.nb-muted { color: var(--slate, #94A3B8); font-size: 13.5px; }
+.nb-muted { color: var(--slate, rgba(198,228,255,.70)); font-size: 13.5px; }
 .nb-hint { margin-top: 8px; line-height: 1.5; }
 
 /* ---------- LAYOUT ---------- */
@@ -179,7 +179,7 @@
   font-weight: 700;
   letter-spacing: .12em;
   text-transform: uppercase;
-  color: var(--slate, #94A3B8);
+  color: var(--slate, rgba(198,228,255,.70));
   margin: 0 0 12px;
 }
 
@@ -215,11 +215,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.nb-template-meta { font-size: 11.5px; color: var(--slate, #94A3B8); }
+.nb-template-meta { font-size: 11.5px; color: var(--slate, rgba(198,228,255,.70)); }
 .nb-template-delete {
   background: none;
   border: none;
-  color: var(--slate, #94A3B8);
+  color: var(--slate, rgba(198,228,255,.70));
   font-size: 17px;
   line-height: 1;
   padding: 0 9px;
@@ -245,7 +245,7 @@
 }
 .nb-palette-btn:hover { border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.07); }
 .nb-palette-label { font-size: 13.5px; font-weight: 600; }
-.nb-palette-hint { font-size: 11.5px; color: var(--slate, #94A3B8); }
+.nb-palette-hint { font-size: 11.5px; color: var(--slate, rgba(198,228,255,.70)); }
 
 /* ---------- MAIN CANVAS ---------- */
 .nb-main {
@@ -266,7 +266,7 @@
   flex-direction: column;
   gap: 7px;
   font-size: 12.5px;
-  color: var(--slate, #94A3B8);
+  color: var(--slate, rgba(198,228,255,.70));
 }
 .nb-field-inline { gap: 10px; }
 
@@ -292,7 +292,7 @@
   border: 1px solid var(--line, rgba(255,255,255,.16));
   border-radius: 999px;
   padding: 7px 18px;
-  color: var(--slate, #94A3B8);
+  color: var(--slate, rgba(198,228,255,.70));
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -300,11 +300,11 @@
   transition: background .15s, color .15s;
 }
 .nb-tab:hover { color: var(--white, #fff); }
-.nb-tab.active { background: var(--white, #fff); color: var(--navy-950, #0A0E1A); border-color: var(--white, #fff); }
+.nb-tab.active { background: var(--white, #fff); color: var(--navy-950, #182032); border-color: var(--white, #fff); }
 
 .nb-canvas { display: flex; flex-direction: column; gap: 10px; }
 .nb-empty {
-  color: var(--slate, #94A3B8);
+  color: var(--slate, rgba(198,228,255,.70));
   font-size: 14px;
   line-height: 1.6;
   padding: 34px 20px;
@@ -334,7 +334,7 @@
   font-weight: 700;
   letter-spacing: .12em;
   text-transform: uppercase;
-  color: var(--slate, #94A3B8);
+  color: var(--slate, rgba(198,228,255,.70));
 }
 .nb-block-actions { display: flex; gap: 4px; }
 .nb-block-actions button {
@@ -364,7 +364,7 @@
   background: none;
   border: 1px solid var(--line, rgba(255,255,255,.16));
   border-radius: 7px;
-  color: var(--slate, #94A3B8);
+  color: var(--slate, rgba(198,228,255,.70));
   padding: 6px 12px;
   font-family: inherit;
   font-size: 11.5px;
@@ -373,7 +373,7 @@
   transition: background .15s, color .15s;
 }
 .nb-align-btn:hover { color: var(--white, #fff); }
-.nb-align-btn.active { background: var(--white, #fff); color: var(--navy-950, #0A0E1A); border-color: var(--white, #fff); }
+.nb-align-btn.active { background: var(--white, #fff); color: var(--navy-950, #182032); border-color: var(--white, #fff); }
 
 .nb-image-preview {
   width: 100%;
@@ -388,7 +388,7 @@
   border-radius: 9px;
   padding: 28px;
   text-align: center;
-  color: var(--slate, #94A3B8);
+  color: var(--slate, rgba(198,228,255,.70));
   font-size: 13px;
 }
 
@@ -399,7 +399,7 @@
   height: 640px;
   border: 1px solid var(--line, rgba(255,255,255,.16));
   border-radius: 12px;
-  background: #F1F5F9;
+  background: #F4F6FA;
 }
 
 /* ---------- DENIED ---------- */
@@ -412,14 +412,14 @@
   text-align: center;
 }
 .nb-denied-card h1 {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
   font-size: 26px;
   margin: 0 0 14px;
 }
-.nb-denied-card p { color: var(--slate-light, #C9D4E4); margin: 0 0 22px; line-height: 1.6; }
+.nb-denied-card p { color: var(--slate-light, rgba(198,228,255,.92)); margin: 0 0 22px; line-height: 1.6; }
 .nb-pill {
   background: var(--white, #fff);
-  color: var(--navy-950, #0A0E1A);
+  color: var(--navy-950, #182032);
   border-radius: 999px;
   padding: 13px 22px;
   font-size: 15px;

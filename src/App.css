@@ -13,11 +13,11 @@ html, body, #root {
      sets background: var(--navy-950)) paints over it, or if a page's
      wrapper background rule ever fails to apply for any reason (this is
      exactly what happened on the Tasks page — see Tasks.css's comment
-     for the real bug that caused that). Matching --navy-950 (#0A0E1A)
+     for the real bug that caused that). Matching --navy-950 (#182032)
      here means that fallback is now the correct color instead of a
      visibly-wrong one, so this exact bug class can't produce a mismatched
      color again even if some other page runs into the same kind of
      background-rule failure in the future. */
-  background: #0A0E1A;
+  background: #182032;
   overflow-x: hidden;
 }

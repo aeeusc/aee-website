@@ -39,9 +39,9 @@
 import { Link } from 'react-router-dom';
 
 const colors = {
-  navy950: '#0A0E1A',
-  slate: '#94A3B8',
-  slateLight: '#C9D4E4',
+  navy950: '#182032',
+  slate: 'rgba(198,228,255,.70)',
+  slateLight: 'rgba(198,228,255,.92)',
   white: '#FFFFFF',
   line: 'rgba(255,255,255,.16)',
 };
@@ -62,14 +62,14 @@ const styles = {
     textDecoration: 'none',
     fontSize: '15px',
     fontWeight: 500,
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
   },
   wrap: {
     width: '100%',
     maxWidth: '720px',
   },
   eyebrow: {
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
     fontSize: '12px',
     fontWeight: 600,
     letterSpacing: '.12em',
@@ -77,7 +77,7 @@ const styles = {
     marginBottom: '12px',
   },
   heading: {
-    fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif",
+    fontFamily: "'League Spartan', 'Libre Franklin', system-ui, sans-serif",
     fontWeight: 700,
     color: colors.white,
     fontSize: '34px',
@@ -85,13 +85,13 @@ const styles = {
     marginBottom: '8px',
   },
   updated: {
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
     fontSize: '13px',
     color: colors.slate,
     marginBottom: '40px',
   },
   h2: {
-    fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif",
+    fontFamily: "'League Spartan', 'Libre Franklin', system-ui, sans-serif",
     fontWeight: 700,
     color: colors.white,
     fontSize: '18px',
@@ -99,14 +99,14 @@ const styles = {
     marginBottom: '10px',
   },
   p: {
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
     color: colors.slateLight,
     fontSize: '15px',
     lineHeight: 1.7,
     marginBottom: '14px',
   },
   ul: {
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
     color: colors.slateLight,
     fontSize: '15px',
     lineHeight: 1.7,

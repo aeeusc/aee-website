@@ -2,6 +2,48 @@
    Replaces the default Vite starter styles (which had purple links,
    centered flex body, etc. — all wrong for this design). */
 
+/* ---------------------------------------------------------------------
+   AEE USC Brand Guide 2026 — the blue scale, page 04.
+
+   Declared here rather than in Home.css because these tokens are used by
+   pages that never import Home.css (the portal, the builder, the forms).
+   A token defined only on the homepage resolves to nothing everywhere
+   else, which shows up as an unstyled colour rather than an error.
+
+   The guide's rules, in short: text sits at the dark or light end of the
+   scale and never in the middle; white or black is never wrong; and
+   GREEN IS RETIRED as of 2026 — do not reintroduce it.
+   --------------------------------------------------------------------- */
+:root {
+  --aee-tint:      #C6E4FF;  /* backgrounds, captions on dark */
+  --aee-accent:    #5E8DFF;  /* rules, bullets, highlights */
+  --aee-primary:   #1C3F94;  /* headings, the mark's own field */
+  --aee-deep:      #1F3160;  /* full-bleed covers and panels */
+  --aee-nearblack: #182032;  /* body text, dark pages */
+  --aee-paper:     #F4F6FA;
+  --aee-grey:      #5A6478;
+  --white:         #FFFFFF;
+
+  /* Legacy names kept deliberately rather than renamed: roughly three
+     hundred rules across a dozen stylesheets reference them, and
+     repointing the definitions moves the whole site onto brand colour in
+     one place, with none of the risk a find-and-replace across that many
+     usages would carry. */
+  --navy-950: var(--aee-nearblack);
+  --navy-900: var(--aee-deep);
+  --navy-800: var(--aee-primary);
+  --ink:      var(--aee-nearblack);
+
+  /* Secondary and tertiary text on dark. The guide assigns the tint to
+     "captions on dark", so these are the tint at two strengths rather
+     than a grey — a mid-grey would sit in exactly the middle of the
+     scale the guide rules out. */
+  --slate:       rgba(198, 228, 255, .70);
+  --slate-light: rgba(198, 228, 255, .92);
+
+  --line: rgba(198, 228, 255, .18);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -26,9 +68,13 @@ body::-webkit-scrollbar {
 body {
   min-width: 320px;
   min-height: 100vh;
-  background: #0A0E1A;
+  background: var(--aee-nearblack);
   color: #FFFFFF;
-  font-family: 'Inter', -apple-system, sans-serif;
+  /* Libre Franklin is the brand body face (the digital stand-in for ITC
+     Franklin Gothic, which remains the licensed print face). League
+     Spartan is titles only — the guide is explicit that body copy is
+     never set in it. */
+  font-family: 'Libre Franklin', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   line-height: 1.5;
 }
@@ -62,6 +108,6 @@ select {
   color-scheme: dark;
 }
 select option {
-  background-color: #101830;
+  background-color: #1F3160;
   color: #FFFFFF;
 }

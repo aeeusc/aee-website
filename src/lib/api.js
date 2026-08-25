@@ -412,6 +412,21 @@ export function previewNewsletter(blocks, subject) {
   });
 }
 
+// Uploads one image and returns { url } pointing at the backend's public
+// image route.
+//
+// Added 2026-08-25. Images used to be embedded in the template as data:
+// URLs, which render perfectly in the builder's preview and are then
+// dropped entirely by Gmail, which does not support them. Uploading at
+// the moment the file is chosen means the editor is showing the same URL
+// the email will carry, so the preview stops lying.
+export function uploadNewsletterImage(dataUrl) {
+  return apiRequest('/newsletter/images', {
+    method: 'POST',
+    body: JSON.stringify({ dataUrl }),
+  });
+}
+
 // Sends the template to one address so it can be checked in a real
 // inbox first. Does NOT post to the members' portal archive — see
 // /newsletter/send-test in the backend.

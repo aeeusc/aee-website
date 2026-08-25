@@ -29,7 +29,7 @@
 .confirm-card {
   width: 100%;
   max-width: 380px;
-  background: var(--navy-950, #0A0E1A);
+  background: var(--navy-950, #182032);
   border: 1px solid var(--line, rgba(255,255,255,.16));
   border-radius: 16px;
   padding: 24px 24px 20px;
@@ -51,7 +51,7 @@
 }
 
 .confirm-title {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
   font-size: 18px;
   font-weight: 700;
   color: var(--white, #fff);
@@ -59,9 +59,9 @@
 }
 
 .confirm-message {
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Libre Franklin', -apple-system, sans-serif;
   font-size: 14px;
-  color: var(--slate-light, #C9D4E4);
+  color: var(--slate-light, rgba(198,228,255,.92));
   line-height: 1.5;
   margin: 0 0 20px;
 }
@@ -74,9 +74,9 @@
   flex-direction: column;
   gap: 8px;
   margin: 0 0 20px;
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Libre Franklin', -apple-system, sans-serif;
   font-size: 13px;
-  color: var(--slate, #94A3B8);
+  color: var(--slate, rgba(198,228,255,.70));
 }
 .confirm-phrase-field strong { color: var(--white, #fff); font-weight: 600; }
 .confirm-phrase-input {
@@ -122,7 +122,7 @@
 
 .confirm-btn-primary {
   background: var(--white, #fff);
-  color: var(--navy-950, #0A0E1A);
+  color: var(--navy-950, #182032);
 }
 .confirm-btn-primary:hover { opacity: .9; }
 

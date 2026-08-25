@@ -29,9 +29,9 @@ export default function NotFound() {
 }
 
 const colors = {
-  navy950: '#0A0E1A',
-  slate: '#94A3B8',
-  slateLight: '#C9D4E4',
+  navy950: '#182032',
+  slate: 'rgba(198,228,255,.70)',
+  slateLight: 'rgba(198,228,255,.92)',
   white: '#FFFFFF',
   line: 'rgba(255,255,255,.16)',
 };
@@ -55,7 +55,7 @@ const styles = {
     textDecoration: 'none',
     fontSize: '15px',
     fontWeight: 500,
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
   },
   card: {
     width: '100%',
@@ -67,7 +67,7 @@ const styles = {
     textAlign: 'center',
   },
   heading: {
-    fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif",
+    fontFamily: "'League Spartan', 'Libre Franklin', system-ui, sans-serif",
     fontWeight: 700,
     color: colors.white,
     fontSize: '28px',
@@ -75,7 +75,7 @@ const styles = {
     marginBottom: '16px',
   },
   body: {
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
     color: colors.slateLight,
     fontSize: '15px',
     lineHeight: 1.6,
@@ -88,7 +88,7 @@ const styles = {
     padding: '13px 22px',
     fontSize: '15px',
     fontWeight: 600,
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
     textDecoration: 'none',
     display: 'inline-block',
     textAlign: 'center',

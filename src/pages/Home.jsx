@@ -66,12 +66,16 @@ const PARTNERS = [
   // calwave.org -> calwave.energy, 2026-08-24. The old domain no longer
   // belongs to them.
   { name: "CalWave", logo: asset("/logos/calwave.png"), href: "https://calwave.energy" },
-  // EPRI and PG&E added 2026-08-24. Neither has a logo file in
-  // public/logos yet, so both currently render as their name in text —
-  // see PartnerLogo below, which falls back rather than showing a broken
-  // image. Drop epri.png and pge.png in and they'll pick them up.
+  // EPRI and PG&E added 2026-08-24; artwork landed 2026-08-25.
+  //
+  // `solid` marks a logo that is a filled shape rather than a wordmark on
+  // transparency. The marquee's default treatment knocks every logo to a
+  // white silhouette, which is right for a wordmark and wrong for PG&E:
+  // its mark IS a filled blue rectangle, so silhouetting it produces a
+  // plain white box. Those get greyscale-and-dim instead, and still come
+  // up to full colour on hover like everything else.
   { name: "EPRI", logo: asset("/logos/epri.png"), href: "https://www.epri.com" },
-  { name: "PG&E", logo: asset("/logos/pge.png"), href: "https://www.pge.com" },
+  { name: "PG&E", logo: asset("/logos/pge.png"), href: "https://www.pge.com", solid: true },
   { name: "Graymatter Robotics", logo: asset("/logos/graymatterrobotics.png"), href: "https://www.graymatter-robotics.com" },
   { name: "KPFF", logo: asset("/logos/kpff.png"), href: "https://www.kpff.com" },
   { name: "NREL", logo: asset("/logos/nrel.png"), href: "https://www.nrel.gov" },
@@ -103,10 +107,10 @@ const TEAMS = [
   },
   {
     key: "solar",
-    title: "Solar Table Initiative Team",
+    title: "CHARGED",
     meta: "CAMPUS INITIATIVE · INDUSTRY-MENTORED",
     img: asset("/images/solar.jpg"),
-    desc: "The Solar Tables Initiative is working hard to bring 100% student designed outdoor tables with solar-powered charging capabilities to the USC community. We are designing our tables from the ground up with industry and manufacturer mentorship.",
+    desc: "CHARGED is working hard to bring 100% student designed outdoor tables with solar-powered charging capabilities to the USC community. We are designing our tables from the ground up with industry and manufacturer mentorship.",
   },
 ];
 
@@ -446,9 +450,9 @@ function Connections() {
       <div className="label">OUR CONNECTIONS</div>
       <div className="marquee">
         <div className="track">
-          {items.map(({ name, logo, href }, i) => (
+          {items.map(({ name, logo, href, solid }, i) => (
             <a key={`${name}-${i}`} className="logo-box" href={href} target="_blank" rel="noopener noreferrer">
-              <PartnerLogo name={name} logo={logo} />
+              <PartnerLogo name={name} logo={logo} solid={solid} />
             </a>
           ))}
         </div>
@@ -465,10 +469,17 @@ function Connections() {
 // than the name in plain text and, unlike missing artwork, looks like
 // the site itself is broken. Now the list can be kept accurate and the
 // artwork can catch up.
-function PartnerLogo({ name, logo }) {
+function PartnerLogo({ name, logo, solid }) {
   const [failed, setFailed] = useState(false);
   if (failed) return <span className="logo-fallback">{name}</span>;
-  return <img src={logo} alt={name} onError={() => setFailed(true)} />;
+  return (
+    <img
+      className={solid ? 'is-solid' : undefined}
+      src={logo}
+      alt={name}
+      onError={() => setFailed(true)}
+    />
+  );
 }
 
 // ─── Design Teams (accordion) ───────────────────────────────────────────────

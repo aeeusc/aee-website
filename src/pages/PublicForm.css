@@ -15,7 +15,7 @@
   background: var(--navy-950);
   color: var(--white);
   min-height: 100vh;
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Libre Franklin', -apple-system, sans-serif;
 }
 
 /* Clears the fixed site nav. */
@@ -34,7 +34,7 @@
   margin: 0 0 14px;
 }
 .pf-title {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
   font-size: clamp(34px, 5vw, 46px);
   font-weight: 700;
   letter-spacing: -.02em;
@@ -64,10 +64,10 @@
 .pf-event-dot {
   width: 7px; height: 7px;
   border-radius: 50%;
-  background: #4ADE80;
+  background: var(--aee-accent);
   flex-shrink: 0;
   margin-top: 7px;
-  box-shadow: 0 0 0 3px rgba(74,222,128,.18);
+  box-shadow: 0 0 0 3px rgba(94,141,255,.18);
 }
 
 /* ---------- the form ---------- */
@@ -98,7 +98,7 @@
   color: var(--slate);
 }
 .pf-optional {
-  color: rgba(148,163,184,.65);
+  color: rgba(198,228,255,.65);
   font-weight: 400;
 }
 
@@ -123,7 +123,7 @@
   background: rgba(255,255,255,.07);
 }
 .pf-input::placeholder,
-.pf-textarea::placeholder { color: rgba(148,163,184,.7); }
+.pf-textarea::placeholder { color: rgba(198,228,255,.7); }
 
 .pf-select { cursor: pointer; appearance: none; padding-right: 40px;
   background-image: linear-gradient(45deg, transparent 50%, rgba(255,255,255,.55) 50%),
@@ -167,13 +167,13 @@
    not create. */
 .pf-sent {
   margin-top: 40px;
-  border: 1px solid rgba(74,222,128,.35);
-  background: rgba(74,222,128,.07);
+  border: 1px solid rgba(94,141,255,.35);
+  background: rgba(94,141,255,.07);
   border-radius: 14px;
   padding: 30px 32px;
 }
 .pf-sent-title {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
   font-size: 21px;
   font-weight: 700;
   margin: 0 0 10px;

@@ -41,6 +41,7 @@ import {
   previewNewsletter,
   sendNewsletterTemplate,
   draftNewsletterWithAI,
+  uploadNewsletterImage,
   getSubscribers,
   sendTestNewsletter,
 } from '../lib/api';
@@ -333,9 +334,29 @@ export default function NewsletterBuilder() {
     }
     try {
       const dataUrl = await compressImageFile(file);
+      // Show it immediately, then swap in the hosted URL once it lands.
+      // Waiting for the round-trip before anything appears would make
+      // picking an image feel broken on a slow connection.
       updateBlock(index, { src: dataUrl });
       setStatus('idle');
       setFeedback('');
+
+      // Gmail does not support data: URLs in images, so the picture has
+      // to be served from somewhere before it can survive a send. The
+      // editor holds the hosted URL from here on, which means what you
+      // see in Preview is what actually ships.
+      try {
+        const { url } = await uploadNewsletterImage(dataUrl);
+        updateBlock(index, { src: url });
+      } catch (uploadErr) {
+        // The block keeps its data: URL. It will still look right in the
+        // builder and in the portal archive, and the send path uploads
+        // it again as a fallback — so this is a warning, not a failure.
+        setStatus('error');
+        setFeedback(
+          `${uploadErr.message || 'Could not upload that image.'} It will be uploaded when you send.`
+        );
+      }
     } catch (err) {
       setStatus('error');
       setFeedback(err.message || 'Could not process that image.');

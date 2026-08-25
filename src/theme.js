@@ -7,17 +7,17 @@
 // built out section by section.
 
 export const colors = {
-  navy950: '#0A0E1A',
-  navy900: '#101830',
-  navy800: '#16213E',
-  slate: '#94A3B8',
-  slateLight: '#C9D4E4',
-  ink: '#0B0F1A',
+  navy950: '#182032',
+  navy900: '#1F3160',
+  navy800: '#1C3F94',
+  slate: 'rgba(198,228,255,.70)',
+  slateLight: 'rgba(198,228,255,.92)',
+  ink: '#182032',
   white: '#FFFFFF',
   line: 'rgba(255,255,255,.16)',
 };
 
 export const fonts = {
-  display: "'Space Grotesk', 'Inter', system-ui, sans-serif",
-  body: "'Inter', -apple-system, sans-serif",
+  display: "'League Spartan', 'Libre Franklin', system-ui, sans-serif",
+  body: "'Libre Franklin', -apple-system, sans-serif",
 };
