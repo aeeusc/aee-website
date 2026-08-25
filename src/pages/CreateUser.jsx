@@ -37,7 +37,7 @@ import { fileToSquareDataUrl } from '../lib/imageUpload';
 // 2026-08-12 ("STEP and TREX PM should be real roles and also make them
 // real design teams") — those titles already existed, they just had no
 // matching team until now.
-const TEAMS = ['CWC', 'MECC', 'HCC', 'STiT', 'STEP', 'TREX'];
+const TEAMS = ['CWC', 'MECC', 'HCC', 'CHARGED', 'STEP', 'TREX'];
 
 // Preset org titles/roles — added 2026-08-11 per explicit feedback
 // ("let's make it so that's mandatory... have a preset title... a

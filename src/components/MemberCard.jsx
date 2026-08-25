@@ -63,7 +63,13 @@ export default function MemberCard({ member, team }) {
   // Falls back to created_at on the front only when role_started_at is
   // missing, which happens for accounts predating role_history.
   const roleDate = formatJoinDate(member?.role_started_at || member?.created_at);
-  const memberSince = formatJoinDate(member?.created_at);
+  // member_since first, created_at only as a fallback — added 2026-08-24.
+  // created_at is when the ACCOUNT was typed into the dashboard, which
+  // for this board was August 2026; member_since is when the person
+  // actually joined the club. The card was confidently telling everyone
+  // that officers who have been here a year joined last week. See the
+  // member_since column in the backend's db/database.js.
+  const memberSince = formatJoinDate(member?.member_since || member?.created_at);
 
   const backFields = [
     { label: 'Hobbies', value: member?.hobbies },
@@ -177,10 +183,23 @@ export default function MemberCard({ member, team }) {
                     {pastRoles.map((r, i) => {
                       const from = formatMonthYear(r.started_at);
                       const to = formatMonthYear(r.ended_at);
+                      // A role opened and closed in the same month
+                      // renders as "Aug 2026 to Aug 2026", which reads as
+                      // a bug rather than as a short tenure — and usually
+                      // IS one: it happens when a title is corrected on
+                      // the day the account is created, so both ends land
+                      // on today. Collapse those to the single month.
+                      const range = !from
+                        ? null
+                        : !to
+                          ? `since ${from}`
+                          : from === to
+                            ? from
+                            : `${from} to ${to}`;
                       return (
                         <li key={`${r.title}-${i}`} className="member-card-back-field">
                           <span className="member-card-back-label">{r.title}</span>
-                          {from && <> — {to ? `${from} to ${to}` : `since ${from}`}</>}
+                          {range && <> — {range}</>}
                         </li>
                       );
                     })}

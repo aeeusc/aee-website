@@ -5,7 +5,7 @@
 // rail-item. Built from Kev's Paint wireframe (2026-08-10):
 //   - a 5-across grid of MemberCard flip-cards
 //   - a "Filter" button, top-right, opening a design-team sub-dropdown
-//     (multi-select checkboxes: CWC, MECC, HCC, STiT, each with a hover
+//     (multi-select checkboxes: CWC, MECC, HCC, CHARGED, each with a hover
 //     tooltip spelling out the full team name)
 //   - a sort control: A-Z, Z-A, oldest join date, newest join date
 //
@@ -47,7 +47,7 @@ const TEAMS = [
   { key: 'CWC', full: 'CWC' },
   { key: 'MECC', full: 'MECC' },
   { key: 'HCC', full: 'HCC' },
-  { key: 'STiT', full: 'Solar Table Initiative Team' },
+  { key: 'CHARGED', full: 'CHARGED' },
   { key: 'STEP', full: 'STEP' },
   { key: 'TREX', full: 'TREX' },
 ];

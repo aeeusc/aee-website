@@ -31,10 +31,16 @@ const asset = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;
 // (independently of this file, since About.jsx isn't in that history) —
 // synced here during the main/origin merge on 2026-08-07 so both stay
 // consistent.
+// Both numbers updated 2026-08-24. Three design teams became five — the
+// three that competed last year plus two new ones this year. And the
+// "9 Policy Consortium Organizations" tile was swapped for national
+// awards, which is a straightforwardly stronger claim: a count of
+// affiliated organisations describes a network, a count of national
+// awards describes what the club actually did with it.
 const STATS = [
   { count: 90, suffix: "+", label: "Active Members" },
-  { count: 3, suffix: "", label: <>Nationally Competing Design&nbsp;Teams</> },
-  { count: 9, suffix: "", label: "Policy Consortium Organizations" },
+  { count: 5, suffix: "", label: <>Nationally Competing Design&nbsp;Teams</> },
+  { count: 6, suffix: "", label: "National Awards Won" },
 ];
 
 // Headline changed 2026-08-23. The founding vision — "build the Hub for
@@ -77,6 +83,42 @@ const OFFERINGS = [
 // between series, and no part-to-whole relationship here; each number is
 // its own standalone fact. Rendering them as bars or a pie would invent
 // a relationship that doesn't exist in the data.
+// Last season's competition results. Kept as data rather than prose so
+// the list stays easy to update each year — this is the section most
+// likely to go stale, and the one it matters most to keep current.
+const RESULTS = [
+  {
+    team: 'MECC',
+    what: 'Marine Energy Collegiate Competition',
+    where: 'Portland, May 2026',
+    awards: ['Won the competition outright — national champions'],
+  },
+  {
+    team: 'ShadeLA',
+    what: 'Shade structure design and build',
+    where: 'Los Angeles, autumn 2025',
+    awards: ['2nd place out of 50 teams'],
+  },
+  {
+    team: 'CWC',
+    what: 'Collegiate Wind Competition',
+    where: 'Boulder, Colorado',
+    awards: ['2nd in site design', 'Best poster award'],
+  },
+  {
+    team: 'HCC',
+    what: 'Hydropower Collegiate Competition',
+    where: 'Green Bay, Wisconsin',
+    awards: ['Best quick pitch award', 'Best poster award'],
+  },
+  {
+    team: 'CHARGED',
+    what: 'Battery and storage design team',
+    where: 'New for this season',
+    awards: ['Competing for the first time this year'],
+  },
+];
+
 const OLYMPIC_STATS = [
   { count: 350, suffix: "+", label: "Students across five days" },
   { count: 25, suffix: "+", label: "LA28 and industry speakers" },
@@ -428,6 +470,39 @@ export default function About() {
               annual 2026 Innovate Los Angeles Startup Incubator Competition.
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* Last season's competition results, added 2026-08-24.
+          Deliberately a list of specific placings rather than a
+          paragraph about "a strong showing": a prospective member
+          scanning this page is trying to work out whether the club
+          actually competes, and "2nd of 50 teams" answers that in a way
+          no amount of adjectives can. Each entry names the competition,
+          where it was, and what the team came away with. */}
+      <section className="about-results">
+        <div className="about-inner">
+          <div className="label">ON THE ROAD</div>
+          <h2 className="about-h2">Where our teams placed last season.</h2>
+          <p className="about-lead">
+            Five design teams compete nationally. Between them they brought home six national
+            awards last season — here is where they went and what they won.
+          </p>
+
+          <ul className="about-results-list">
+            {RESULTS.map((r) => (
+              <li key={r.team} className="about-result">
+                <div className="about-result-team">{r.team}</div>
+                <div className="about-result-body">
+                  <div className="about-result-what">{r.what}</div>
+                  <div className="about-result-where">{r.where}</div>
+                  <ul className="about-result-awards">
+                    {r.awards.map((a) => <li key={a}>{a}</li>)}
+                  </ul>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 

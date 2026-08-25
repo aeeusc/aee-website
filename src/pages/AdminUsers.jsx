@@ -67,7 +67,7 @@ const TITLES = [
 ];
 // STEP and TREX added 2026-08-12 — see CreateUser.jsx's matching TEAMS
 // comment.
-const TEAMS = ['CWC', 'MECC', 'HCC', 'STiT', 'STEP', 'TREX'];
+const TEAMS = ['CWC', 'MECC', 'HCC', 'CHARGED', 'STEP', 'TREX'];
 
 function fullName(u) {
   return [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username;

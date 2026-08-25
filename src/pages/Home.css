@@ -283,7 +283,75 @@
   background: var(--navy-950);
   padding: 88px 24px;
 }
-.about-success { padding-bottom: 120px; }
+.about-success { padding-bottom: 96px; }
+
+/* ---------- COMPETITION RESULTS (About) ---------- */
+/* Added 2026-08-24. A definition-list shape rather than cards: each row
+   is one team and what it won, and the team name is the thing you scan
+   for, so it gets its own column and stays put while the detail beside
+   it varies in length. Cards would have forced every entry to the same
+   height for no reason. */
+.about-results { padding: 0 40px 120px; }
+.about-results-list {
+  list-style: none;
+  margin: 44px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.about-result {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 28px;
+  padding: 26px 0;
+  border-top: 1px solid rgba(255,255,255,.12);
+}
+.about-result:last-child { border-bottom: 1px solid rgba(255,255,255,.12); }
+.about-result-team {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  color: var(--white);
+}
+.about-result-what { font-size: 16px; font-weight: 600; color: var(--white); }
+.about-result-where {
+  font-size: 13.5px;
+  color: var(--slate);
+  margin-top: 3px;
+}
+.about-result-awards {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.about-result-awards li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 15px;
+  color: var(--slate-light);
+  line-height: 1.5;
+}
+/* A small filled marker rather than a bullet - these are awards, and a
+   list of wins deserves to look like a list of wins. */
+.about-result-awards li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: rgba(74,222,128,.85);
+}
+
+@media (max-width: 700px) {
+  .about-results { padding: 0 20px 88px; }
+  .about-result { grid-template-columns: 1fr; gap: 10px; }
+}
 
 /* Shared centered column. Left-aligned text inside a centered container
    (rather than centered text) because these sections carry real
@@ -527,6 +595,46 @@
 .cf-info .links a { width: 38px; height: 38px; border: 1px solid rgba(255,255,255,.18); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.85); text-decoration: none; font-size: 13px; font-weight: 600; transition: border-color .2s; }
 .cf-info .links a:hover { border-color: rgba(255,255,255,.55); }
 .board-note { margin-top: 26px; font-size: 12px; color: rgba(148,163,184,.5); }
+
+/* Partner name shown when we have no logo file for them yet - see
+   PartnerLogo in Home.jsx. Sized to sit at roughly the optical weight of
+   the logos beside it rather than shouting. */
+.logo-fallback {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: .01em;
+  color: rgba(255,255,255,.62);
+  white-space: nowrap;
+}
+
+/* The current-event line in the hero. Deliberately NOT styled as a
+   banner or an alert: no box, no accent fill, no "announcement" chrome.
+   A small dot and a line of text reads as something the club is telling
+   you, which is what it is - and means it can be swapped or removed
+   without leaving a hole where a banner used to be. */
+.hero-event {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 20px;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: rgba(255,255,255,.86);
+  text-wrap: balance;
+}
+.hero-event-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ADE80;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(74,222,128,.18);
+}
+@media (max-width: 700px) {
+  .hero-event { font-size: 13.5px; align-items: flex-start; }
+  .hero-event-dot { margin-top: 6px; }
+}
 
 /* ---------- FOOTER ---------- */
 .home-page footer { background: #05070D; border-top: 1px solid rgba(255,255,255,.06); padding: 0 40px; }

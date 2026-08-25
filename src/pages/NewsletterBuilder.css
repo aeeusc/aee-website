@@ -94,6 +94,61 @@
    or a send that reached nobody after it. Its own class rather than
    reusing .nb-warn, which is a colour-only modifier on an inline span
    inside .nb-sub and would inherit these box rules if they went there. */
+/* ---------- TEST SEND + AUTOSAVE (2026-08-24) ---------- */
+.nb-testrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line, rgba(255,255,255,.16));
+  border-radius: 10px;
+  background: rgba(255,255,255,.02);
+}
+.nb-testrow-label {
+  font-size: 13px;
+  color: var(--slate, #94A3B8);
+  white-space: nowrap;
+}
+/* .nb-input sets width: 100%, which inside a flex row makes this field
+   claim the whole line and push the label and button onto rows of their
+   own. flex-basis with no grow pins it to a sensible size instead. */
+.nb-testrow-input {
+  width: auto;
+  flex: 0 0 250px;
+  min-width: 0;
+}
+@media (max-width: 700px) {
+  .nb-testrow-input { flex: 1 1 100%; }
+}
+/* Pushed to its own line on narrow screens by flex-basis: 100% rather
+   than being hidden - the "this does NOT go to everyone" reassurance is
+   the whole reason someone is willing to press the button. */
+.nb-testrow-hint {
+  font-size: 12.5px;
+  color: rgba(148,163,184,.75);
+  line-height: 1.5;
+  flex: 1 1 260px;
+}
+
+.nb-inline-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+/* The restore notice is information, not a problem - green rather than
+   the amber .nb-notice uses for "nobody will receive this".
+   TWO classes, not one: .nb-notice is defined further down this file and
+   also sets a colour, so at equal specificity it wins on source order
+   and the restore line came out amber - reading as a warning about work
+   that had in fact just been rescued. */
+.nb-notice.nb-restored { color: #4ADE80; }
+
 .nb-notice {
   color: #FBBF24;
   font-size: 14px;

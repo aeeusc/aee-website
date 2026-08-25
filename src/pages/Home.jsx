@@ -63,7 +63,15 @@ const PARTNERS = [
   { name: "Langan", logo: asset("/logos/langan.png"), href: "https://www.langan.com" },
   { name: "Arup", logo: asset("/logos/arup.png"), href: "https://www.arup.com" },
   { name: "Bloom Energy", logo: asset("/logos/bloomenergy.png"), href: "https://www.bloomenergy.com" },
-  { name: "CalWave", logo: asset("/logos/calwave.png"), href: "https://calwave.org" },
+  // calwave.org -> calwave.energy, 2026-08-24. The old domain no longer
+  // belongs to them.
+  { name: "CalWave", logo: asset("/logos/calwave.png"), href: "https://calwave.energy" },
+  // EPRI and PG&E added 2026-08-24. Neither has a logo file in
+  // public/logos yet, so both currently render as their name in text —
+  // see PartnerLogo below, which falls back rather than showing a broken
+  // image. Drop epri.png and pge.png in and they'll pick them up.
+  { name: "EPRI", logo: asset("/logos/epri.png"), href: "https://www.epri.com" },
+  { name: "PG&E", logo: asset("/logos/pge.png"), href: "https://www.pge.com" },
   { name: "Graymatter Robotics", logo: asset("/logos/graymatterrobotics.png"), href: "https://www.graymatter-robotics.com" },
   { name: "KPFF", logo: asset("/logos/kpff.png"), href: "https://www.kpff.com" },
   { name: "NREL", logo: asset("/logos/nrel.png"), href: "https://www.nrel.gov" },
@@ -141,21 +149,33 @@ const PLACEHOLDER_AVATAR = asset("/eboard/placeholder-avatar.svg");
 // been found yet. The render guards on `current.ig` (see the Board
 // section below), so her card simply shows the LinkedIn icon alone
 // rather than a dead link — same optional treatment `li` already gets.
+// The public e-board. Rewritten 2026-08-24 from the roster Kev sent —
+// nine people, five removed (Alexandra Somodi, Reeth Kawad, James
+// Hiemstra, Chloe Flannigan, Helena Heckmann), and most of the remaining
+// roles changed. Listed leadership-first, with the advisor last.
+//
+// This stays a hand-maintained list rather than reading from the portal
+// accounts, which was the alternative on the table. The trade is real:
+// it WILL drift again the next time roles change, and the fix is a code
+// push rather than a dashboard edit. What buys that back for now is
+// these headshots — they're hand-cropped files in public/eboard, and
+// driving the list from accounts would mean re-uploading every one.
+// Worth revisiting once profile photos are the norm.
+//
+// Photos live in public/eboard/. Every name below has a file there
+// already; if you add someone, add their photo too or the card renders
+// with a broken image.
 const BOARD = [
-  { n: "Mitch Kirby", r: "Founder & Advisor", img: asset("/eboard/mitchkirby.jpg"), li: "https://www.linkedin.com/in/mitchell-kirby/", ig: "https://www.instagram.com/mitchkirb/" },
   { n: "Alex Bartolomei", r: "President", img: asset("/eboard/alexbartolomei.jpg"), li: "https://www.linkedin.com/in/alexbartolomei/", ig: "https://www.instagram.com/alexbartolomei/" },
-  { n: "Alexandra Somodi", r: "Vice President & Brand Director", img: asset("/eboard/alexandrasomodi.png"), li: "https://www.linkedin.com/in/alexandra-somodi/", ig: "https://www.instagram.com/alexandrasomodii/" },
-  { n: "David Moseley", r: "Design Team Coordinator", img: asset("/eboard/davidmoseley.jpg"), li: "https://www.linkedin.com/in/davidmmoseley/", ig: "https://www.instagram.com/downtowndave004/" },
-  { n: "Jordyn Wetherbee", r: "Executive Coordinator & CWC PM", img: asset("/eboard/jordynwetherbee.jpg"), li: "https://www.linkedin.com/in/jordyn-wetherbee/", ig: "https://www.instagram.com/wetherbee.09/" },
-  { n: "James Hiemstra", r: "Director of Finance", img: asset("/eboard/jameshiemstra.jpg"), li: "https://www.linkedin.com/in/james-hiemstra-78b9872a1/", ig: "https://www.instagram.com/j.hiemstra/" },
-  { n: "Reeth Kawad", r: "Senior Advisor", img: asset("/eboard/reethkawad.jpg"), li: "https://www.linkedin.com/in/reethkawad/", ig: "https://www.instagram.com/reethkawad/" },
-  { n: "Chloe Flannigan", r: "Director of Membership", img: asset("/eboard/chloeflannigan.jpg"), li: "https://www.linkedin.com/in/chloe-flannigan-0950a2237/", ig: "https://www.instagram.com/chloe.flannigann/" },
-  { n: "Helena Heckmann", r: "Director of Events", img: asset("/eboard/helenaheckmann.jpg"), li: "https://www.linkedin.com/in/helena-heckmann/", ig: "https://www.instagram.com/helenaheckmann/" },
-  { n: "Jainam Jain", r: "Director of Outreach & CWC PM", img: asset("/eboard/jainamjain.png"), li: "https://www.linkedin.com/in/jainam-jain-937a13214/", ig: "https://www.instagram.com/jainamtjain/" },
-  { n: "Ellis Fertig", r: "ShadeLA PM & Director of Policy", img: asset("/eboard/ellisfertig.jpg"), li: "https://www.linkedin.com/in/ellis-fertig-4512b232b/" },
-  { n: "Sam Gold", r: "ShadeLA PM & Asst. Director of Policy", img: asset("/eboard/samgold.jpg"), li: "https://www.linkedin.com/in/sam-j-gold/", ig: "https://www.instagram.com/s.am.gold/" },
-  { n: "Alex Geschwill", r: "HCC PM", img: asset("/eboard/alexgeschwill.jpg"), li: "https://www.linkedin.com/in/alexandra-geschwill/", ig: "https://www.instagram.com/alex_geschwill/" },
-  { n: "Daniela Lopez Escalante", r: "Asst. Director of Brand", img: asset("/eboard/daniela.jpg"), li: "https://www.linkedin.com/in/daniela-lopez-escalante-839a4038a/", ig: "https://www.instagram.com/monkeezlol/" },
+  { n: "David Moseley", r: "Vice President", img: asset("/eboard/davidmoseley.jpg"), li: "https://www.linkedin.com/in/davidmmoseley/", ig: "https://www.instagram.com/downtowndave004/" },
+  { n: "Alex Geschwill", r: "Executive Coordinator", img: asset("/eboard/alexgeschwill.jpg"), li: "https://www.linkedin.com/in/alexandra-geschwill/", ig: "https://www.instagram.com/alex_geschwill/" },
+  { n: "Jordyn Wetherbee", r: "Executive Project Director", img: asset("/eboard/jordynwetherbee.jpg"), li: "https://www.linkedin.com/in/jordyn-wetherbee/", ig: "https://www.instagram.com/wetherbee.09/" },
+  { n: "Jainam Jain", r: "Director of Outreach", img: asset("/eboard/jainamjain.png"), li: "https://www.linkedin.com/in/jainam-jain-937a13214/", ig: "https://www.instagram.com/jainamtjain/" },
+  { n: "Sam Gold", r: "Director of Membership", img: asset("/eboard/samgold.jpg"), li: "https://www.linkedin.com/in/sam-j-gold/", ig: "https://www.instagram.com/s.am.gold/" },
+  // Ellis's handle was the one gap in the whole list — filled 2026-08-24.
+  { n: "Ellis Fertig", r: "Policy Consortium Director", img: asset("/eboard/ellisfertig.jpg"), li: "https://www.linkedin.com/in/ellis-fertig-4512b232b/", ig: "https://www.instagram.com/elllisperl/" },
+  { n: "Daniela Lopez Escalante", r: "Director of Brand", img: asset("/eboard/daniela.jpg"), li: "https://www.linkedin.com/in/daniela-lopez-escalante-839a4038a/", ig: "https://www.instagram.com/monkeezlol/" },
+  { n: "Mitchell Kirby", r: "Founder & Advisor", img: asset("/eboard/mitchkirby.jpg"), li: "https://www.linkedin.com/in/mitchell-kirby/", ig: "https://www.instagram.com/mitchkirb/" },
 ];
 
 // ─── Nav + mobile menu ──────────────────────────────────────────────────────
@@ -234,7 +254,7 @@ export function Nav() {
         </div>
 
         <div className="nav-ctas">
-          <a className="contact" href="mailto:aeeusc@gmail.com">Contact</a>
+          <Link className="contact" to="/contact">Contact</Link>
           {currentUser ? (
             // Logged in: the "Log In" pill is replaced by ONE control —
             // the profile photo and the name sit inside a single pill
@@ -289,9 +309,9 @@ export function Nav() {
           ) : (
             <Link className="pill pill-ghost" to="/login">Log In</Link>
           )}
-          <a className="pill" href="https://forms.gle/vSFAnuKfpKV3GFfJ6" target="_blank" rel="noopener noreferrer">
+          <Link className="pill" to="/interest">
             Get Involved
-          </a>
+          </Link>
         </div>
 
         <button
@@ -330,9 +350,9 @@ export function Nav() {
         ) : (
           <Link to="/login" onClick={() => setMenuOpen(false)}>Log In</Link>
         )}
-        <a href="https://forms.gle/vSFAnuKfpKV3GFfJ6" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>
+        <Link to="/interest" onClick={() => setMenuOpen(false)}>
           Get Involved
-        </a>
+        </Link>
       </div>
     </>
   );
@@ -366,6 +386,11 @@ export function PlaceholderAvatar({ size = 32 }) {
   );
 }
 
+// The one thing the club wants a first-time visitor to know today. Set
+// to null when there's nothing on. Added 2026-08-24 for the USC
+// involvement fair.
+export const NEXT_EVENT = "Come find us at the USC involvement fair — Wednesday 26 August, 11am to 2pm.";
+
 // ─── Hero ───────────────────────────────────────────────────────────────────
 
 function Hero() {
@@ -383,11 +408,24 @@ function Hero() {
         </p>
       </div>
       <div className="hero-bottom">
+        {/* Whatever the club most wants a first-time visitor to know
+            right now. Currently the involvement fair; it is written as a
+            plain statement of an event rather than as a banner or an
+            alert, so it reads as part of the page and can be swapped for
+            the next thing without ever having looked provisional.
+            Editing NEXT_EVENT below is the whole job; set it to null to
+            take the line down. */}
+        {NEXT_EVENT && (
+          <p className="hero-event">
+            <span className="hero-event-dot" aria-hidden="true" />
+            {NEXT_EVENT}
+          </p>
+        )}
         <div className="cta-row">
-          <a className="pill lg" href="https://forms.gle/vSFAnuKfpKV3GFfJ6" target="_blank" rel="noopener noreferrer">
+          <Link className="pill lg" to="/interest">
             Get Involved
-          </a>
-          <a className="ghost" href="mailto:aeeusc@gmail.com">Contact</a>
+          </Link>
+          <Link className="ghost" to="/contact">Contact</Link>
         </div>
       </div>
       <div className="scroll-hint">SCROLL</div>
@@ -410,13 +448,27 @@ function Connections() {
         <div className="track">
           {items.map(({ name, logo, href }, i) => (
             <a key={`${name}-${i}`} className="logo-box" href={href} target="_blank" rel="noopener noreferrer">
-              <img src={logo} alt={name} />
+              <PartnerLogo name={name} logo={logo} />
             </a>
           ))}
         </div>
       </div>
     </section>
   );
+}
+
+// A partner's logo, or their name if we don't have one. Added 2026-08-24
+// with EPRI and PG&E, neither of which has a logo file yet.
+//
+// Without this, adding a partner before someone tracks down a usable
+// logo means a broken-image icon on the homepage — which looks worse
+// than the name in plain text and, unlike missing artwork, looks like
+// the site itself is broken. Now the list can be kept accurate and the
+// artwork can catch up.
+function PartnerLogo({ name, logo }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <span className="logo-fallback">{name}</span>;
+  return <img src={logo} alt={name} onError={() => setFailed(true)} />;
 }
 
 // ─── Design Teams (accordion) ───────────────────────────────────────────────
@@ -454,15 +506,13 @@ function DesignTeams() {
                 <h3>{team.title}</h3>
                 <div className="meta">{team.meta}</div>
                 <p>{team.desc}</p>
-                <a
+                <Link
                   className="ghost sm"
-                  href="https://forms.gle/vSFAnuKfpKV3GFfJ6"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  to="/interest"
                   onClick={(e) => e.stopPropagation()}
                 >
                   Join this team
-                </a>
+                </Link>
               </div>
             </div>
           );
@@ -1041,16 +1091,24 @@ export function Footer({ showNewsletterSignup = true }) {
             </div>
             <div className="fcol">
               <div className="fc-t">CONNECT</div>
-              <a href="https://docs.google.com/forms/d/e/1FAIpQLSde2ldtrVXhxu5plBeN3wLRApQoZtVfj8l0FhG_rllde9MKyw/viewform" target="_blank" rel="noopener noreferrer">Slack</a>
+              {/* Was pointing at a Google Form, not at Slack — the label
+                  and the destination had drifted apart. Real invite as
+                  of 2026-08-24. Shared invite links do expire; if this
+                  stops working, generate a new one in Slack. */}
+              <a href="https://join.slack.com/t/associationof-rh49850/shared_invite/zt-47vae5ny9-DuwEqV7oZ46IqdruX5QbuA" target="_blank" rel="noopener noreferrer">Slack</a>
               {/* Same fix as the subscribe form above (see Footer's
                   handleSubscribe) — this used to point at the old
                   standalone Google Form. Now scrolls to the real
                   subscribe form in this same footer (#newsletter, added
                   to .news-row above) instead of opening a form that
                   doesn't feed the actual subscriber database. */}
-              <a href={`${import.meta.env.BASE_URL}#newsletter`}>Newsletter</a>
-              <a href="mailto:aeeusc@gmail.com">Contact</a>
-              <a href="https://forms.gle/vSFAnuKfpKV3GFfJ6" target="_blank" rel="noopener noreferrer">Get Involved</a>
+              {/* Points at the members' archive, not the subscribe form
+                  further up this same footer. A logged-out visitor gets
+                  bounced through login and lands back here — see the
+                  redirect in Newsletter.jsx. */}
+              <Link to="/newsletter">Newsletter</Link>
+              <Link to="/contact">Contact</Link>
+              <Link to="/interest">Get Involved</Link>
             </div>
           </div>
         </div>

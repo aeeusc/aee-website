@@ -91,6 +91,25 @@ export function forgetTrustedDevices() {
   return apiRequest('/auth/trusted-devices', { method: 'DELETE' });
 }
 
+// --- Public forms (no session required) ---
+// The interest form replaced a Google Form; the contact form replaced a
+// mailto: link. Both post to the backend, which emails the club — see
+// routes/forms.js. These are the only two calls in this file that work
+// for someone who is not logged in.
+export function submitInterestForm({ firstName, lastName, uscEmail, major, year, heardFrom }) {
+  return apiRequest('/forms/interest', {
+    method: 'POST',
+    body: JSON.stringify({ firstName, lastName, uscEmail, major, year, heardFrom }),
+  });
+}
+
+export function submitContactForm({ name, email, subject, message }) {
+  return apiRequest('/forms/contact', {
+    method: 'POST',
+    body: JSON.stringify({ name, email, subject, message }),
+  });
+}
+
 export function logout() {
   return apiRequest('/auth/logout', { method: 'POST' });
 }
@@ -390,6 +409,16 @@ export function previewNewsletter(blocks, subject) {
   return apiRequest('/newsletter/preview', {
     method: 'POST',
     body: JSON.stringify({ blocks, subject }),
+  });
+}
+
+// Sends the template to one address so it can be checked in a real
+// inbox first. Does NOT post to the members' portal archive — see
+// /newsletter/send-test in the backend.
+export function sendTestNewsletter(subject, blocks, to) {
+  return apiRequest('/newsletter/send-test', {
+    method: 'POST',
+    body: JSON.stringify({ subject, blocks, to }),
   });
 }
 

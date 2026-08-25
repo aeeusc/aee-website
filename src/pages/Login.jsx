@@ -21,7 +21,7 @@
 // see Signup.jsx for the shared design-token notes.
 
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { login, verifyLoginCode, resendLoginCode } from '../lib/api';
 
 const CODE_LENGTH = 6;
@@ -52,6 +52,27 @@ export default function Login() {
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
   const codeInputRef = useRef(null);
+  const [searchParams] = useSearchParams();
+
+  // Where to land after logging in. Added 2026-08-24 so the public site's
+  // "Newsletter" link can send a logged-out visitor here and still get
+  // them to the members' archive afterwards, rather than dumping them on
+  // the homepage to find it again.
+  //
+  // VALIDATED, not trusted. `next` arrives in the URL, which means anyone
+  // can put anything in it — including another site. A login page that
+  // forwards to an attacker-supplied URL after authenticating is an open
+  // redirect, and it is genuinely useful for phishing: the victim sees a
+  // real aeeusc.com login, types a real password, and lands somewhere
+  // else entirely. Only same-site paths are allowed through, and the
+  // leading "//" check matters because "//evil.com" is a protocol-
+  // relative URL that browsers treat as absolute despite starting with a
+  // slash.
+  const requestedNext = searchParams.get('next');
+  const nextPath =
+    requestedNext && requestedNext.startsWith('/') && !requestedNext.startsWith('//')
+      ? requestedNext
+      : '/';
 
   // Ticks the resend cooldown down to zero. Cleared on unmount and
   // whenever the count changes, so no stray interval survives leaving
@@ -89,7 +110,7 @@ export default function Login() {
 
       // No code needed — this browser is a remembered device, so the
       // backend already established the session.
-      navigate('/');
+      navigate(nextPath);
     } catch (err) {
       setStatus('error');
       setErrorMessage(err.message);
@@ -104,7 +125,7 @@ export default function Login() {
 
     try {
       await verifyLoginCode(code, rememberDevice);
-      navigate('/');
+      navigate(nextPath);
     } catch (err) {
       setStatus('error');
       setErrorMessage(err.message);

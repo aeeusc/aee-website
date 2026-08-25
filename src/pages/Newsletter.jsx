@@ -54,7 +54,7 @@
 // Requires an active session, same pattern as Calendar.jsx/Tasks.jsx.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getCurrentUser, getNewsletterArchive } from '../lib/api';
 import './Newsletter.css';
 
@@ -144,6 +144,7 @@ export default function NewsletterPage() {
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [openId, setOpenId] = useState(null);
+  const navigate = useNavigate();
 
   // How the most recent press on a book arrived — 'mouse', 'touch' or
   // 'pen'. This is what decides whether a click opens the card or goes
@@ -222,6 +223,17 @@ export default function NewsletterPage() {
       })
       .catch(() => setAuthCheck('denied'));
   }, []);
+
+  // Send a logged-out visitor straight to the login page with a return
+  // ticket, rather than showing them a wall they have to click past.
+  // The public site's footer links here directly ("when people click
+  // newsletter... they have to log in" and then land on the members'
+  // list), so this IS the entry point for most people who arrive here
+  // without a session. replace: true keeps the archive out of history,
+  // so Back from the login page goes where they actually came from.
+  useEffect(() => {
+    if (authCheck === 'denied') navigate('/login?next=/newsletter', { replace: true });
+  }, [authCheck, navigate]);
 
   useEffect(() => {
     if (authCheck !== 'ok') return;
@@ -439,7 +451,7 @@ export default function NewsletterPage() {
         <div className="newsletter-denied-card">
           <h1>Please log in</h1>
           <p>You need to be logged in to view the newsletter archive.</p>
-          <Link to="/login" className="newsletter-pill">Go to Log In</Link>
+          <Link to="/login?next=/newsletter" className="newsletter-pill">Go to Log In</Link>
         </div>
       </div>
     );

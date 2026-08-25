@@ -1,0 +1,195 @@
+/* src/pages/PublicForm.css
+ *
+ * Shared styling for the two public forms — the interest form
+ * (Interest.jsx) and the contact form (Contact.jsx), both added
+ * 2026-08-24 to replace a Google Form and a mailto: link respectively.
+ *
+ * Reuses Home.css's :root tokens and its Nav/Footer, so these read as
+ * pages of the marketing site rather than as portal pages that happen to
+ * be public. That's deliberate: the first time most visitors see this
+ * site is a QR code at a recruiting table, and the form is the page they
+ * land on.
+ */
+
+.pf-page {
+  background: var(--navy-950);
+  color: var(--white);
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+
+/* Clears the fixed site nav. */
+.pf-body {
+  max-width: 660px;
+  margin: 0 auto;
+  padding: 148px 24px 96px;
+}
+
+.pf-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin: 0 0 14px;
+}
+.pf-title {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: clamp(34px, 5vw, 46px);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1.05;
+  margin: 0 0 18px;
+  text-wrap: balance;
+}
+.pf-intro {
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--slate-light);
+  margin: 0 0 12px;
+  max-width: 56ch;
+}
+.pf-intro:last-of-type { margin-bottom: 0; }
+
+/* The current-event note, same treatment as the hero's. */
+.pf-event {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 26px 0 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: rgba(255,255,255,.9);
+}
+.pf-event-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #4ADE80;
+  flex-shrink: 0;
+  margin-top: 7px;
+  box-shadow: 0 0 0 3px rgba(74,222,128,.18);
+}
+
+/* ---------- the form ---------- */
+.pf-form {
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Two-up on wide screens for the short paired fields (first/last name,
+   major/year); everything else spans. */
+.pf-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 560px) {
+  .pf-row { grid-template-columns: 1fr; }
+  .pf-body { padding: 120px 20px 72px; }
+}
+
+.pf-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--slate);
+}
+.pf-optional {
+  color: rgba(148,163,184,.65);
+  font-weight: 400;
+}
+
+.pf-input,
+.pf-select,
+.pf-textarea {
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 13px 15px;
+  color: var(--white);
+  font-family: inherit;
+  font-size: 15.5px;
+  outline: none;
+  width: 100%;
+  transition: border-color .15s, background .15s;
+}
+.pf-input:focus,
+.pf-select:focus,
+.pf-textarea:focus {
+  border-color: rgba(255,255,255,.5);
+  background: rgba(255,255,255,.07);
+}
+.pf-input::placeholder,
+.pf-textarea::placeholder { color: rgba(148,163,184,.7); }
+
+.pf-select { cursor: pointer; appearance: none; padding-right: 40px;
+  background-image: linear-gradient(45deg, transparent 50%, rgba(255,255,255,.55) 50%),
+                    linear-gradient(135deg, rgba(255,255,255,.55) 50%, transparent 50%);
+  background-size: 6px 6px, 6px 6px;
+  background-position: calc(100% - 20px) center, calc(100% - 14px) center;
+  background-repeat: no-repeat;
+}
+/* The dropdown list itself renders in the OS's own colours, so options
+   need an explicit dark background or they come out white-on-white in
+   some browsers. */
+.pf-select option { background: var(--navy-900); color: var(--white); }
+
+.pf-textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
+
+.pf-submit {
+  align-self: flex-start;
+  background: var(--white);
+  color: var(--navy-950);
+  border: none;
+  border-radius: 999px;
+  padding: 14px 30px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s, opacity .2s;
+}
+.pf-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(255,255,255,.18);
+}
+.pf-submit:disabled { opacity: .55; cursor: default; }
+
+.pf-error { color: #F87171; font-size: 14.5px; margin: 0; }
+
+/* ---------- the sent state ---------- */
+/* Replaces the form outright rather than sitting above it. Leaving a
+   filled-in form on screen after a successful submit invites a second
+   submit, and "did that go through?" is the exact anxiety a form should
+   not create. */
+.pf-sent {
+  margin-top: 40px;
+  border: 1px solid rgba(74,222,128,.35);
+  background: rgba(74,222,128,.07);
+  border-radius: 14px;
+  padding: 30px 32px;
+}
+.pf-sent-title {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 21px;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+.pf-sent p { color: var(--slate-light); font-size: 15.5px; line-height: 1.65; margin: 0 0 20px; }
+.pf-sent p:last-child { margin-bottom: 0; }
+
+/* ---------- the "or just email us" footer ---------- */
+/* Every form should say what to do when the form itself fails. */
+.pf-fallback {
+  margin-top: 44px;
+  padding-top: 26px;
+  border-top: 1px solid var(--line);
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--slate);
+}
+.pf-fallback a { color: var(--slate-light); }
+.pf-fallback a:hover { color: var(--white); }

@@ -42,6 +42,7 @@ import {
   sendNewsletterTemplate,
   draftNewsletterWithAI,
   getSubscribers,
+  sendTestNewsletter,
 } from '../lib/api';
 import { useConfirm } from '../components/ConfirmDialog';
 import './NewsletterBuilder.css';
@@ -103,6 +104,81 @@ function compressImageFile(file) {
   });
 }
 
+// ── Draft autosave ───────────────────────────────────────────────────
+//
+// Kev: "say a refresh were to happen and the person was working in the
+// middle of something, make sure no progress gets lost."
+//
+// Saved to this browser rather than to the server, deliberately. A
+// server-side draft means deciding whose draft wins when two officers
+// edit the same template, and answering that badly loses work rather
+// than saving it. A browser-local draft is unambiguous: it is YOUR
+// unsaved work, on YOUR machine, and it never fights anyone.
+const DRAFT_KEY = 'aee.newsletter-builder.draft';
+// Older than this and it is probably not the thing you were doing —
+// restoring a week-old draft over a fresh start is its own kind of
+// losing work.
+const DRAFT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+function readDraft() {
+  try {
+    const raw = window.localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const draft = JSON.parse(raw);
+    if (!draft || typeof draft !== 'object') return null;
+    if (!Array.isArray(draft.blocks)) return null;
+    if (!draft.savedAt || Date.now() - draft.savedAt > DRAFT_MAX_AGE_MS) return null;
+    return draft;
+  } catch (_) {
+    // Private mode, disabled storage, or corrupt JSON. Not being able to
+    // restore a draft must never stop the builder loading.
+    return null;
+  }
+}
+
+function clearDraft() {
+  try { window.localStorage.removeItem(DRAFT_KEY); } catch (_) { /* nothing to do */ }
+}
+
+// Returns 'full', 'text-only', or 'failed'.
+//
+// The two-attempt shape exists because localStorage is capped at around
+// 5MB per origin and a template with a couple of Canva banners in it can
+// approach that on its own (images are stored inline as data URLs — see
+// the file header). If the whole draft will not fit, saving the same
+// draft with the image data stripped still preserves every heading,
+// paragraph and button — which is the part that takes an hour to write
+// and thirty seconds to re-upload.
+function writeDraft(draft) {
+  try {
+    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    return 'full';
+  } catch (_) {
+    try {
+      const lightened = {
+        ...draft,
+        imagesDropped: true,
+        blocks: draft.blocks.map((b) => (b.type === 'image' ? { ...b, src: '' } : b)),
+      };
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify(lightened));
+      return 'text-only';
+    } catch (_) {
+      return 'failed';
+    }
+  }
+}
+
+function describeAge(savedAt) {
+  const seconds = Math.max(0, Math.round((Date.now() - savedAt) / 1000));
+  if (seconds < 90) return 'a moment ago';
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  const days = Math.round(hours / 24);
+  return `${days} day${days === 1 ? '' : 's'} ago`;
+}
+
 export default function NewsletterBuilder() {
   const navigate = useNavigate();
   const confirm = useConfirm();
@@ -136,6 +212,19 @@ export default function NewsletterBuilder() {
   // built; the builder simply never got one.
   const [subscriberCount, setSubscriberCount] = useState(null);
 
+  // Test send — added 2026-08-24 alongside autosave.
+  const [testEmail, setTestEmail] = useState('');
+  const [testStatus, setTestStatus] = useState('idle'); // idle | sending
+
+  // Autosave bookkeeping. `restored` drives the one-line notice that
+  // says work was brought back, so a silent restore never leaves someone
+  // wondering why the editor is not empty.
+  const [restored, setRestored] = useState(null); // { savedAt, imagesDropped } | null
+  const [draftWarning, setDraftWarning] = useState('');
+  // Blocks the autosave effect until the initial restore has run, so an
+  // empty first render cannot overwrite a good saved draft.
+  const draftReady = useRef(false);
+
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiStatus, setAiStatus] = useState('idle'); // idle | working | error
   const [aiError, setAiError] = useState('');
@@ -164,6 +253,51 @@ export default function NewsletterBuilder() {
   useEffect(() => {
     if (authCheck === 'ok') loadLibrary();
   }, [authCheck]);
+
+  // Restore whatever was in progress, ONCE, as soon as we know the
+  // person is allowed to be here. Restoring silently and then saying so
+  // in one line beats prompting: someone who just lost a tab wants their
+  // work back, not a dialog between them and it. The line offers a way
+  // to start fresh for the case where they didn't.
+  useEffect(() => {
+    if (authCheck !== 'ok' || draftReady.current) return;
+    const draft = readDraft();
+    if (draft) {
+      setTemplateId(draft.templateId ?? null);
+      setTemplateName(draft.templateName || 'Untitled template');
+      setSubject(draft.subject || '');
+      setBlocks(draft.blocks || []);
+      setRestored({ savedAt: draft.savedAt, imagesDropped: Boolean(draft.imagesDropped) });
+    }
+    draftReady.current = true;
+  }, [authCheck]);
+
+  // Save on a short debounce after every change. Debounced rather than
+  // per-keystroke because serialising a template with images in it is
+  // not free, and a refresh a few hundred milliseconds after the last
+  // keypress is not a scenario worth optimising for.
+  useEffect(() => {
+    if (!draftReady.current) return undefined;
+    const id = setTimeout(() => {
+      // An empty editor is not worth remembering, and saving it would
+      // quietly overwrite a real draft with nothing.
+      if (!subject.trim() && blocks.length === 0) {
+        clearDraft();
+        return;
+      }
+      const outcome = writeDraft({
+        templateId, templateName, subject, blocks, savedAt: Date.now(),
+      });
+      if (outcome === 'text-only') {
+        setDraftWarning('This draft is too big to keep the images in local backup — your text is saved, the pictures are not.');
+      } else if (outcome === 'failed') {
+        setDraftWarning("This browser won't let us save a backup draft, so don't refresh without saving as a template first.");
+      } else {
+        setDraftWarning('');
+      }
+    }, 600);
+    return () => clearTimeout(id);
+  }, [templateId, templateName, subject, blocks]);
 
   // ── block operations ───────────────────────────────────────────────
   function addBlock(type) {
@@ -288,6 +422,41 @@ export default function NewsletterBuilder() {
     }
   }
 
+  // ── test send ──────────────────────────────────────────────────────
+  // Sends to one address so the edition can be checked in a real inbox.
+  // The Preview tab shows the markup; only a delivered message shows
+  // what Gmail and Outlook actually do to it.
+  async function handleTestSend() {
+    if (!subject.trim()) {
+      setStatus('error');
+      setFeedback('Add a subject line before sending a test.');
+      return;
+    }
+    if (blocks.length === 0) {
+      setStatus('error');
+      setFeedback('Add at least one block before sending a test.');
+      return;
+    }
+    if (!testEmail.trim()) {
+      setStatus('error');
+      setFeedback('Enter an address to send the test to.');
+      return;
+    }
+
+    setTestStatus('sending');
+    setFeedback('');
+    try {
+      const data = await sendTestNewsletter(subject, blocks, testEmail.trim());
+      setStatus('success');
+      setFeedback(data.message || 'Test sent.');
+    } catch (err) {
+      setStatus('error');
+      setFeedback(err.message || 'Could not send the test.');
+    } finally {
+      setTestStatus('idle');
+    }
+  }
+
   // ── send ───────────────────────────────────────────────────────────
   async function handleSend() {
     if (!subject.trim()) {
@@ -336,6 +505,14 @@ export default function NewsletterBuilder() {
           .filter(Boolean)
           .join(' ')
       );
+
+      // The edition has gone out; there is no in-progress work left to
+      // restore, and leaving the draft behind would resurrect a sent
+      // newsletter the next time the builder opens.
+      if (!reachedNobody) {
+        clearDraft();
+        setRestored(null);
+      }
 
       // Refresh the count — an unsubscribe between page load and send
       // would otherwise leave a stale number on the button.
@@ -431,6 +608,51 @@ export default function NewsletterBuilder() {
                   : `Send to ${subscriberCount}`}
             </button>
           </div>
+        </div>
+
+        {/* Autosave feedback. The restore line is the important one: a
+            silent restore that says nothing leaves someone wondering why
+            the editor isn't empty. */}
+        {restored && (
+          <p className="nb-notice nb-restored">
+            Picked up where you left off — draft saved {describeAge(restored.savedAt)}.
+            {restored.imagesDropped && ' Images weren\u2019t part of the backup, so any you had added need re-uploading.'}
+            {' '}
+            <button
+              type="button"
+              className="nb-inline-btn"
+              onClick={() => { clearDraft(); setRestored(null); startNew(); }}
+            >
+              Start fresh instead
+            </button>
+          </p>
+        )}
+        {draftWarning && <p className="nb-notice">{draftWarning}</p>}
+
+        {/* Test send. Sits above the subscriber warning because the
+            sensible order is "check it yourself, then send it to
+            everyone". */}
+        <div className="nb-testrow">
+          <label className="nb-testrow-label" htmlFor="nb-test-email">Send a test to</label>
+          <input
+            id="nb-test-email"
+            type="email"
+            className="nb-input nb-testrow-input"
+            placeholder="you@usc.edu"
+            value={testEmail}
+            onChange={(e) => setTestEmail(e.target.value)}
+          />
+          <button
+            type="button"
+            className="nb-btn"
+            onClick={handleTestSend}
+            disabled={testStatus === 'sending'}
+          >
+            {testStatus === 'sending' ? 'Sending…' : 'Send test'}
+          </button>
+          <span className="nb-testrow-hint">
+            Goes to that address only, subject-lined [TEST], and isn't posted to the portal.
+          </span>
         </div>
 
         {/* An empty list is worth saying before the click, not after. */}

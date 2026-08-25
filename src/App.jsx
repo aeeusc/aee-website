@@ -17,6 +17,8 @@ import NewsletterDetailPage from './pages/NewsletterDetail'
 import AdminUsers from './pages/AdminUsers'
 import NewsletterBuilder from './pages/NewsletterBuilder'
 import Unsubscribe from './pages/Unsubscribe'
+import Interest from './pages/Interest'
+import Contact from './pages/Contact'
 import NotFound from './pages/NotFound'
 import { ConfirmProvider } from './components/ConfirmDialog'
 import './App.css'
@@ -42,6 +44,11 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
+        {/* The two public forms, added 2026-08-24 — these replaced a
+            Google Form and a mailto: link, and unlike everything below
+            they work without a session. */}
+        <Route path="/interest" element={<Interest />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
         <Route path="/create-user" element={<CreateUser />} />
         <Route path="/dashboard" element={<Dashboard />} />
