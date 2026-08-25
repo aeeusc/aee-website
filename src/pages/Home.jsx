@@ -76,11 +76,11 @@ const PARTNERS = [
   // up to full colour on hover like everything else.
   { name: "EPRI", logo: asset("/logos/epri.png"), href: "https://www.epri.com" },
   { name: "PG&E", logo: asset("/logos/pge.png"), href: "https://www.pge.com", solid: true },
-  { name: "Graymatter Robotics", logo: asset("/logos/graymatterrobotics.png"), href: "https://www.graymatter-robotics.com" },
+  { name: "Graymatter Robotics", logo: asset("/logos/graymatterrobotics.png"), href: "https://factory.graymatter-robotics.com/" },
   { name: "KPFF", logo: asset("/logos/kpff.png"), href: "https://www.kpff.com" },
-  { name: "NREL", logo: asset("/logos/nrel.png"), href: "https://www.nrel.gov" },
+  { name: "NREL", logo: asset("/logos/nrel.png"), href: "https://www.nlr.gov" },
   { name: "SGH", logo: asset("/logos/sgh.png"), href: "https://www.sgh.com" },
-  { name: "Vatn Systems", logo: asset("/logos/vatn.png"), href: "https://www.vatnsystems.com" },
+  { name: "Vatn Systems", logo: asset("/logos/vatn.png"), href: "https://www.vatn.com" },
 ];
 
 const TEAMS = [
