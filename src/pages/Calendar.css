@@ -598,3 +598,128 @@
   .calendar-view-btn { padding: 7px 12px; font-size: 12px; }
   .calendar-toolbar-right { gap: 8px; }
 }
+
+
+/* ─── Location, repeats and the custom repeat panel ────────────────────
+   Added 2026-08-25 with Google-Calendar-shaped event options. */
+
+.calendar-checkbox,
+.calendar-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--slate-light);
+  cursor: pointer;
+}
+
+.calendar-checkbox input,
+.calendar-radio input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--aee-accent);
+  cursor: pointer;
+  flex: none;
+}
+
+.calendar-event-location,
+.calendar-event-repeat {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--slate);
+}
+
+/* The repeat line is the quieter of the two: where something happens is
+   more useful at a glance than how often it recurs. */
+.calendar-event-repeat {
+  font-size: 11.5px;
+  opacity: .85;
+}
+
+.calendar-repeat-summary {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--slate);
+}
+
+.calendar-custom-repeat {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(198, 228, 255, .04);
+}
+
+.calendar-custom-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  font-size: 13.5px;
+  color: var(--slate-light);
+}
+
+.calendar-custom-ends { align-items: flex-start; }
+.calendar-ends-options { display: flex; flex-direction: column; gap: 9px; }
+
+/* Fixed bases rather than the shared .calendar-input width, which is
+   100% and would put every one of these on a line of its own.
+   min-width as well as width, and flex-shrink off: inside .calendar-radio
+   these were being squeezed to a few pixels, which rendered the date box
+   as an empty pill with its mm/dd/yyyy mask clipped away entirely. */
+.calendar-custom-repeat .calendar-input-num {
+  flex: 0 0 auto; width: 72px; min-width: 72px; padding-left: 10px; padding-right: 6px;
+}
+.calendar-custom-repeat .calendar-input-unit {
+  flex: 0 0 auto; width: 116px; min-width: 116px;
+}
+.calendar-custom-repeat .calendar-input-inline {
+  flex: 0 0 auto; width: 168px; min-width: 168px;
+}
+/* The label wraps the control, so it has to be allowed to grow with it. */
+.calendar-ends-options .calendar-radio { flex-wrap: wrap; gap: 9px; }
+
+.calendar-daypicker { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.calendar-day-toggle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--slate-light);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .18s, border-color .18s, color .18s;
+}
+
+.calendar-day-toggle:hover { border-color: var(--slate-light); }
+
+.calendar-day-toggle.on {
+  background: var(--aee-accent);
+  border-color: var(--aee-accent);
+  color: var(--aee-nearblack);
+}
+
+.calendar-custom-actions { display: flex; align-items: center; gap: 14px; }
+
+/* The delete choice replaces the Delete button in place, so the event it
+   applies to stays visible while the question is on screen. */
+.calendar-delete-choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+}
+
+.calendar-delete-choice-label { color: var(--slate); }
+
+/* Doubled class so it beats .calendar-link-button's colour, which is
+   defined earlier in this file and would otherwise win on source order. */
+.calendar-link-button.calendar-link-danger.calendar-link-danger { color: #F87171; }

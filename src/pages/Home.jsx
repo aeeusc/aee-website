@@ -432,7 +432,6 @@ function Hero() {
           <Link className="ghost" to="/contact">Contact</Link>
         </div>
       </div>
-      <div className="scroll-hint">SCROLL</div>
     </section>
   );
 }

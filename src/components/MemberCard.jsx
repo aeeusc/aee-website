@@ -25,10 +25,36 @@ import { useState } from 'react';
 import { PlaceholderAvatar } from '../pages/Home';
 import './MemberCard.css';
 
+// Reads the calendar day out of a value and builds a LOCAL date from it.
+//
+// This exists because of a real off-by-one. member_since is a Postgres
+// DATE, which arrives as "2024-12-01T00:00:00.000Z". new Date() on that
+// gives UTC midnight, and toLocaleDateString then renders it in the
+// reader's timezone: anywhere west of Greenwich that is the PREVIOUS
+// day, so a join date entered as 1 December 2024 displayed as November
+// 2024 in Los Angeles.
+//
+// The same applies to the role_history timestamps, which the migration
+// set to UTC midnight of the intended day. Those were showing a month
+// early too.
+//
+// The fix is to stop treating these as instants. "The day someone
+// joined" has no timezone; it is a date on a calendar. Pulling the
+// Y-M-D apart and passing the pieces to the Date constructor builds
+// local midnight of that exact day, so nothing can shift it.
+function parseCalendarDay(value) {
+  if (!value) return null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value));
+  if (match) {
+    return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  }
+  const fallback = new Date(value);
+  return Number.isNaN(fallback.getTime()) ? null : fallback;
+}
+
 function formatJoinDate(createdAt) {
-  if (!createdAt) return null;
-  const d = new Date(createdAt);
-  if (Number.isNaN(d.getTime())) return null;
+  const d = parseCalendarDay(createdAt);
+  if (!d) return null;
   return d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 }
 
@@ -37,9 +63,8 @@ function formatJoinDate(createdAt) {
 // but two of them side by side in a "from – to" range gets wordy, so
 // past roles use the abbreviated month form instead.
 function formatMonthYear(dateStr) {
-  if (!dateStr) return null;
-  const d = new Date(dateStr);
-  if (Number.isNaN(d.getTime())) return null;
+  const d = parseCalendarDay(dateStr);
+  if (!d) return null;
   return d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
 }
 

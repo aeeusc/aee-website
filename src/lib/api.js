@@ -443,6 +443,18 @@ export function sendTestNewsletter(subject, blocks, to) {
   });
 }
 
+// The Quick News Blast counterpart. Same endpoint, different shape: it
+// sends `message` rather than `blocks`, so the backend renders the test
+// through the plain-text path that page actually uses instead of the
+// block renderer. A test that looks different from the real send is
+// worse than none.
+export function sendTestNewsletterText(subject, message, to) {
+  return apiRequest('/newsletter/send-test', {
+    method: 'POST',
+    body: JSON.stringify({ subject, message, to }),
+  });
+}
+
 export function sendNewsletterTemplate(subject, blocks) {
   return apiRequest('/newsletter/send-template', {
     method: 'POST',
@@ -469,22 +481,58 @@ export function draftNewsletterWithAI(prompt) {
 // src/pages/Calendar.jsx month-grid page rather than Portal.jsx's old
 // quarter-width CalendarPanel — the endpoints themselves are unchanged,
 // still just "give me every event," with month-grouping done client-side.
-export function getEvents() {
-  return apiRequest('/portal/events', { method: 'GET' });
+// Returns OCCURRENCES, not rows: the backend expands a repeating event
+// into the individual days it lands on within the window, each carrying
+// its own occurrence_id and occurrence_date. Callers can treat every
+// item as "one thing on one day" and never think about rules.
+//
+// from/to are optional YYYY-MM-DD bounds. Omitted, the backend picks a
+// wide default so paging around the month grid does not refetch.
+export function getEvents(from, to) {
+  const params = new URLSearchParams();
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  const qs = params.toString();
+  return apiRequest(`/portal/events${qs ? `?${qs}` : ''}`, { method: 'GET' });
 }
 
 // endAt is OPTIONAL (added 2026-08-12) — pass an ISO string for events
 // that have a known end time, or omit/pass undefined for a single-point
 // event (unchanged prior behavior).
-export function createEvent(title, description, eventAt, endAt) {
+// Takes an options object as of 2026-08-25, when location, all-day and
+// repeat rules arrived. Four positional arguments was already at the
+// limit of what reads clearly; seven would not have.
+//
+// allDay changes what eventAt/endAt mean: dates (YYYY-MM-DD) rather than
+// timestamps, because an all-day event has no time and turning one into
+// a timestamp is what puts it on the wrong day in another timezone.
+//
+// recurrence is null for a one-off, or { freq, interval, byDay, end }.
+// See the backend's recurrence.js for the shape.
+export function createEvent({
+  title, description, location, eventAt, endAt, allDay, recurrence,
+} = {}) {
   return apiRequest('/portal/events', {
     method: 'POST',
-    body: JSON.stringify({ title, description: description || undefined, eventAt, endAt: endAt || undefined }),
+    body: JSON.stringify({
+      title,
+      description: description || undefined,
+      location: location || undefined,
+      eventAt,
+      endAt: endAt || undefined,
+      allDay: Boolean(allDay),
+      recurrence: recurrence || undefined,
+    }),
   });
 }
 
-export function deleteEvent(id) {
-  return apiRequest(`/portal/events/${id}`, { method: 'DELETE' });
+// scope 'one' removes a single occurrence of a repeating event and needs
+// that occurrence's date; 'all' deletes the series. A one-off ignores
+// the distinction, since it has exactly one occurrence either way.
+export function deleteEvent(id, { scope = 'all', date } = {}) {
+  const params = new URLSearchParams({ scope });
+  if (date) params.set('date', date);
+  return apiRequest(`/portal/events/${id}?${params.toString()}`, { method: 'DELETE' });
 }
 
 // Minimal id/name list for the admin task-assignment dropdown — NOT the

@@ -19,7 +19,7 @@
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { sendNewsletter, getSubscribers, getCurrentUser } from '../lib/api';
+import { sendNewsletter, sendTestNewsletterText, getSubscribers, getCurrentUser } from '../lib/api';
 
 export default function NewsletterAdmin() {
   const [authCheck, setAuthCheck] = useState('checking'); // checking | ok | denied
@@ -27,6 +27,11 @@ export default function NewsletterAdmin() {
   const [message, setMessage] = useState('');
   const [sendStatus, setSendStatus] = useState('idle'); // idle | submitting | success | error
   const [sendFeedback, setSendFeedback] = useState('');
+  // Test send. Kept in its own status so a failed test never looks like a
+  // failed real send, and vice versa.
+  const [testEmail, setTestEmail] = useState('');
+  const [testStatus, setTestStatus] = useState('idle'); // idle | sending | sent | error
+  const [testFeedback, setTestFeedback] = useState('');
 
   const [subscriberCount, setSubscriberCount] = useState(null);
   const [countStatus, setCountStatus] = useState('idle'); // idle | loading | error
@@ -36,6 +41,29 @@ export default function NewsletterAdmin() {
       .then((data) => setAuthCheck(data?.user?.is_admin ? 'ok' : 'denied'))
       .catch(() => setAuthCheck('denied'));
   }, []);
+
+  async function handleTestSend() {
+    if (!subject.trim() || !message.trim()) {
+      setTestStatus('error');
+      setTestFeedback('Add a subject and a message first.');
+      return;
+    }
+    if (!testEmail.trim()) {
+      setTestStatus('error');
+      setTestFeedback('Enter an address to send the test to.');
+      return;
+    }
+    setTestStatus('sending');
+    setTestFeedback('');
+    try {
+      const data = await sendTestNewsletterText(subject, message, testEmail.trim());
+      setTestStatus('sent');
+      setTestFeedback(data?.message || `Test sent to ${testEmail.trim()}.`);
+    } catch (err) {
+      setTestStatus('error');
+      setTestFeedback(err.message || 'Could not send that test.');
+    }
+  }
 
   async function handleSend(e) {
     e.preventDefault();
@@ -137,6 +165,36 @@ export default function NewsletterAdmin() {
             />
           </label>
 
+          {/* Send yourself a copy first. This page can mail every
+              subscriber in two clicks and, until 2026-08-25, had no way
+              to check the result beforehand. The test goes through the
+              same plain-text path as the real send, so what lands in the
+              inbox is what everyone else would have got. */}
+          <div style={styles.testRow}>
+            <label htmlFor="qnb-test-email" style={styles.testLabel}>Send a test to</label>
+            <input
+              id="qnb-test-email"
+              type="email"
+              value={testEmail}
+              onChange={(e) => { setTestEmail(e.target.value); setTestStatus('idle'); }}
+              style={{ ...styles.input, ...styles.testInput }}
+              placeholder="you@usc.edu"
+            />
+            <button
+              type="button"
+              onClick={handleTestSend}
+              disabled={testStatus === 'sending'}
+              style={{ ...styles.pill, ...styles.testButton }}
+            >
+              {testStatus === 'sending' ? 'Sending…' : 'Send test'}
+            </button>
+          </div>
+          <p style={styles.testHint}>
+            Goes to that address only, subject-lined [TEST], and is not posted to the members portal.
+          </p>
+          {testStatus === 'error' && <p style={styles.error}>{testFeedback}</p>}
+          {testStatus === 'sent' && <p style={styles.success}>{testFeedback}</p>}
+
           {sendStatus === 'error' && (
             <p style={styles.error}>{sendFeedback}</p>
           )}
@@ -171,6 +229,39 @@ const colors = {
 };
 
 const styles = {
+  // The test row sits above the send button, because the sensible order
+  // is "check it yourself, then send it to everyone".
+  testRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    flexWrap: 'wrap',
+    marginTop: '4px',
+  },
+  testLabel: {
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
+    fontSize: '14px',
+    color: 'rgba(198,228,255,.92)',
+    whiteSpace: 'nowrap',
+  },
+  // Fixed basis rather than width:100%, which would claim the whole row
+  // and push the label and button onto lines of their own.
+  testInput: { flex: '0 0 240px', marginTop: 0 },
+  testButton: {
+    background: 'transparent',
+    color: '#FFFFFF',
+    border: '1px solid rgba(255,255,255,.38)',
+    cursor: 'pointer',
+    padding: '11px 20px',
+    fontSize: '14px',
+  },
+  testHint: {
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
+    fontSize: '12.5px',
+    lineHeight: 1.5,
+    color: 'rgba(198,228,255,.70)',
+    margin: '2px 0 0',
+  },
   page: {
     minHeight: '100vh',
     display: 'flex',

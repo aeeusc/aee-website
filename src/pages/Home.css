@@ -243,8 +243,10 @@
 .pill.lg { padding: 15px 30px; font-size: 15px; }
 .ghost { border: 1px solid rgba(255,255,255,.38); color: var(--white); border-radius: 999px; padding: 15px 30px; font-size: 15px; font-weight: 600; text-decoration: none; transition: border-color .2s, background .2s; display: inline-block; background: transparent; cursor: pointer; font-family: inherit; }
 .ghost:hover { border-color: rgba(255,255,255,.85); background: rgba(255,255,255,.06); }
-.scroll-hint { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 2; font-size: 11px; letter-spacing: .24em; color: rgba(255,255,255,.4); animation: bob 2.4s ease-in-out infinite; }
-@keyframes bob { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 6px); } }
+/* The SCROLL cue was removed 2026-08-26. The hero already ends with two
+   buttons and the page continues below them; a label telling people to
+   do the thing they were about to do anyway is noise, and on a phone it
+   sat close enough to the buttons to read as a third one. */
 
 /* ---------- ABOUT ---------- */
 .about { position: relative; padding: 150px 24px 32px; text-align: center; background: linear-gradient(180deg, var(--navy-950) 0%, #1F3160 60%, var(--navy-950) 100%); }
@@ -627,8 +629,17 @@
 .hero-event {
   display: flex;
   align-items: center;
+  /* justify-content and text-align both, deliberately.
+     justify-content centres the dot and the text as a pair inside the
+     row; text-align centres the text's own lines once it wraps. Without
+     the second one the line looked off-centre on a phone: the block was
+     centred but its two ragged lines were not, which is what Kev saw on
+     an iPhone. */
+  justify-content: center;
+  text-align: center;
   gap: 9px;
   margin: 0 0 20px;
+  max-width: 34ch;
   font-size: 14.5px;
   font-weight: 500;
   color: rgba(255,255,255,.86);
@@ -646,7 +657,10 @@
   box-shadow: 0 0 0 3px rgba(94, 141, 255, .22);
 }
 @media (max-width: 700px) {
-  .hero-event { font-size: 13.5px; align-items: flex-start; }
+  /* The dot stays on the first line rather than centring against a
+     two-line block, so it reads as a marker at the start of the sentence
+     instead of floating beside it. */
+  .hero-event { font-size: 13.5px; align-items: flex-start; max-width: 30ch; }
   .hero-event-dot { margin-top: 6px; }
 }
 
@@ -663,11 +677,16 @@
 .nr-feedback { margin-top: 8px; font-size: 13px; }
 .nr-feedback.success { color: var(--aee-accent); }
 .nr-feedback.error { color: #F87171; }
-.news-form { display: flex; }
-.news-form input { width: 280px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.14); border-right: none; border-radius: 10px 0 0 10px; padding: 12px 16px; font-size: 14px; color: var(--white); outline: none; font-family: inherit; }
+/* The joined input-and-button pair. Its 280px input plus the button's
+   padding came to more than a phone is wide, so on an iPhone the Join
+   button was clipped by the footer's overflow rather than wrapping.
+   min-width:0 lets the input shrink inside the flex row, which is what
+   an <input> will not do on its own. */
+.news-form { display: flex; max-width: 100%; }
+.news-form input { width: 280px; min-width: 0; flex: 1 1 auto; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.14); border-right: none; border-radius: 10px 0 0 10px; padding: 12px 16px; font-size: 14px; color: var(--white); outline: none; font-family: inherit; }
 .news-form input::placeholder { color: rgba(198,228,255,.6); }
 .news-form input:disabled { opacity: .6; }
-.news-form button { background: var(--white); color: var(--navy-950); border: none; border-radius: 0 10px 10px 0; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.news-form button { flex: 0 0 auto; white-space: nowrap; background: var(--white); color: var(--navy-950); border: none; border-radius: 0 10px 10px 0; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
 .news-form button:disabled { opacity: .6; cursor: default; }
 .foot-main { display: flex; justify-content: space-between; gap: 60px; padding: 52px 0 60px; flex-wrap: wrap; }
 .foot-brand { max-width: 320px; }

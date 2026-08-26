@@ -144,6 +144,14 @@ function formatTime(d) {
 // single point in time, same-day range, and multi-day range.
 function formatEventRange(ev) {
   const start = new Date(ev.event_at);
+  // An all-day event has timestamps only because the column needs them.
+  // Showing "12:00 AM - 11:59 PM" would be technically true and useless.
+  if (ev.all_day) {
+    const end = ev.end_at ? eventEnd(ev) : start;
+    if (sameDay(start, end)) return 'All day';
+    const dayOpts = { month: 'short', day: 'numeric' };
+    return `All day, ${start.toLocaleDateString(undefined, dayOpts)} to ${end.toLocaleDateString(undefined, dayOpts)}`;
+  }
   if (!ev.end_at) return formatTime(start);
 
   const end = eventEnd(ev);
@@ -151,6 +159,73 @@ function formatEventRange(ev) {
 
   const dayOpts = { month: 'short', day: 'numeric' };
   return `${start.toLocaleDateString(undefined, dayOpts)}, ${formatTime(start)} - ${end.toLocaleDateString(undefined, dayOpts)}, ${formatTime(end)}`;
+}
+
+// ─── Repeat rules ────────────────────────────────────────────────────────
+//
+// The shapes here match the backend's recurrence.js exactly. The preset
+// list is Google Calendar's, because that is what everybody on the board
+// already knows how to read: the options are phrased in terms of the day
+// you are adding the event to ("Weekly on Tuesday"), not in the abstract.
+
+const DAY_CODES = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+const DAY_LABELS = { SU: 'S', MO: 'M', TU: 'T', WE: 'W', TH: 'T', FR: 'F', SA: 'S' };
+const DAY_FULL = {
+  SU: 'Sunday', MO: 'Monday', TU: 'Tuesday', WE: 'Wednesday',
+  TH: 'Thursday', FR: 'Friday', SA: 'Saturday',
+};
+const WEEKDAYS = ['MO', 'TU', 'WE', 'TH', 'FR'];
+
+function repeatPresets(day) {
+  const code = DAY_CODES[day.getDay()];
+  const monthDay = day.getDate();
+  const monthName = day.toLocaleDateString(undefined, { month: 'long' });
+  return [
+    { key: 'none', label: 'Does not repeat', rule: null },
+    { key: 'daily', label: 'Daily', rule: { freq: 'DAILY', interval: 1, end: { type: 'never' } } },
+    {
+      key: 'weekly',
+      label: `Weekly on ${DAY_FULL[code]}`,
+      rule: { freq: 'WEEKLY', interval: 1, byDay: [code], end: { type: 'never' } },
+    },
+    {
+      key: 'monthly',
+      label: `Monthly on day ${monthDay}`,
+      rule: { freq: 'MONTHLY', interval: 1, end: { type: 'never' } },
+    },
+    {
+      key: 'yearly',
+      label: `Annually on ${monthName} ${monthDay}`,
+      rule: { freq: 'YEARLY', interval: 1, end: { type: 'never' } },
+    },
+    {
+      key: 'weekdays',
+      label: 'Every weekday (Monday to Friday)',
+      rule: { freq: 'WEEKLY', interval: 1, byDay: WEEKDAYS, end: { type: 'never' } },
+    },
+    { key: 'custom', label: 'Custom...', rule: null },
+  ];
+}
+
+// The same sentence the backend produces, built here so the form can
+// show what a custom rule means before it is saved.
+function describeRule(rule) {
+  if (!rule) return '';
+  const unit = { DAILY: 'day', WEEKLY: 'week', MONTHLY: 'month', YEARLY: 'year' }[rule.freq];
+  let text = rule.interval === 1 ? `Every ${unit}` : `Every ${rule.interval} ${unit}s`;
+  if (rule.freq === 'WEEKLY' && rule.byDay?.length) {
+    const isWeekdays = rule.byDay.length === 5 && WEEKDAYS.every((d) => rule.byDay.includes(d));
+    text = isWeekdays && rule.interval === 1
+      ? 'Every weekday'
+      : `${text} on ${rule.byDay.map((d) => DAY_FULL[d]).join(', ')}`;
+  }
+  if (rule.end?.type === 'on') text += `, until ${rule.end.until}`;
+  if (rule.end?.type === 'after') text += `, ${rule.end.count} times`;
+  return text;
+}
+
+function toDateValue(day) {
+  return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
 }
 
 const MAX_CHIPS_PER_DAY = 3;
@@ -196,6 +271,21 @@ export default function CalendarPage() {
   // form), which is why there's no start-date input to go with this.
   const [addEndDate, setAddEndDate] = useState('');
   const [addDescription, setAddDescription] = useState('');
+  const [addLocation, setAddLocation] = useState('');
+  const [addAllDay, setAddAllDay] = useState(false);
+  // Which preset is chosen. 'custom' means the panel below is open and
+  // customRule is the real answer.
+  const [addRepeat, setAddRepeat] = useState('none');
+  const [customRule, setCustomRule] = useState(null);
+  const [showCustom, setShowCustom] = useState(false);
+  // Working copy for the custom panel, so cancelling leaves the saved
+  // rule alone instead of half-editing it.
+  const [draftRule, setDraftRule] = useState({
+    freq: 'WEEKLY', interval: 1, byDay: [], end: { type: 'never', until: '', count: 10 },
+  });
+  // A repeating event is one row across many days, so deleting needs to
+  // ask which. This holds the occurrence currently being asked about.
+  const [deleteChoice, setDeleteChoice] = useState(null);
   const [addStatus, setAddStatus] = useState('idle'); // idle | submitting | error
   const [addError, setAddError] = useState('');
 
@@ -368,21 +458,45 @@ export default function CalendarPage() {
     // swapping start/end. Comparing full timestamps (not just the
     // time-of-day numbers it used to compare) is what makes this correct
     // for multi-day events: 9am Mar 6 IS after 5pm Mar 3.
-    if (endDate && endDate <= startDate) {
+    if (!addAllDay && endDate && endDate <= startDate) {
       setAddStatus('error');
       setAddError('The end must be after the start.');
       return;
     }
+    if (addAllDay && addEndDate && addEndDate < toDateValue(selectedDay)) {
+      setAddStatus('error');
+      setAddError('The end date must be on or after the start date.');
+      return;
+    }
+
+    const presets = repeatPresets(selectedDay);
+    const recurrence = addRepeat === 'custom'
+      ? customRule
+      : (presets.find((p) => p.key === addRepeat)?.rule || null);
 
     try {
-      await createEvent(
-        addTitle,
-        addDescription,
-        startDate.toISOString(),
-        endDate ? endDate.toISOString() : undefined
-      );
+      await createEvent({
+        title: addTitle,
+        description: addDescription,
+        location: addLocation,
+        allDay: addAllDay,
+        // All-day sends dates, not timestamps. The backend turns them
+        // into the span of that day in the club's timezone; sending a
+        // timestamp instead is what lands an event on the wrong day for
+        // anyone whose clock is not UTC.
+        eventAt: addAllDay ? toDateValue(selectedDay) : startDate.toISOString(),
+        endAt: addAllDay
+          ? (addEndDate || undefined)
+          : (endDate ? endDate.toISOString() : undefined),
+        recurrence,
+      });
       setAddTitle('');
       setAddDescription('');
+      setAddLocation('');
+      setAddAllDay(false);
+      setAddRepeat('none');
+      setCustomRule(null);
+      setShowCustom(false);
       setAddTime('12:00');
       setAddEndTime('');
       setAddEndDate('');
@@ -395,11 +509,13 @@ export default function CalendarPage() {
     }
   }
 
-  async function handleDeleteEvent(id) {
+  async function handleDeleteEvent(ev, scope = 'all') {
     try {
-      await deleteEvent(id);
+      await deleteEvent(ev.id, { scope, date: ev.occurrence_date });
+      setDeleteChoice(null);
       loadEvents();
     } catch (err) {
+      setDeleteChoice(null);
       setAddStatus('error');
       setAddError(err.message || 'Could not delete event.');
     }
@@ -491,7 +607,7 @@ export default function CalendarPage() {
                     <span className="calendar-day-chips">
                       {dayEvents.slice(0, MAX_CHIPS_PER_DAY).map((ev) => (
                         <span
-                          key={ev.id}
+                          key={ev.occurrence_id || ev.id}
                           className={`calendar-day-chip${isMultiDay(ev) ? ' multiday' : ''}`}
                         >
                           {ev.title}
@@ -546,30 +662,48 @@ export default function CalendarPage() {
                 onChange={(e) => setAddTitle(e.target.value)}
                 className="calendar-input"
               />
-              <label className="calendar-time-field">
-                Start time
+              {/* All day comes before the times because it decides
+                  whether there are any. Leaving the time fields on
+                  screen, greyed out, would just raise the question of
+                  what they still do. */}
+              <label className="calendar-checkbox">
                 <input
-                  type="time"
-                  required
-                  value={addTime}
-                  onChange={(e) => setAddTime(e.target.value)}
-                  className="calendar-input"
+                  type="checkbox"
+                  checked={addAllDay}
+                  onChange={(e) => setAddAllDay(e.target.checked)}
                 />
+                <span>All day</span>
               </label>
-              <label className="calendar-time-field">
-                End time (optional)
-                <input
-                  type="time"
-                  value={addEndTime}
-                  onChange={(e) => setAddEndTime(e.target.value)}
-                  className="calendar-input"
-                />
-              </label>
+
+              {!addAllDay && (
+                <>
+                  <label className="calendar-time-field">
+                    Start time
+                    <input
+                      type="time"
+                      required
+                      value={addTime}
+                      onChange={(e) => setAddTime(e.target.value)}
+                      className="calendar-input"
+                    />
+                  </label>
+                  <label className="calendar-time-field">
+                    End time (optional)
+                    <input
+                      type="time"
+                      value={addEndTime}
+                      onChange={(e) => setAddEndTime(e.target.value)}
+                      className="calendar-input"
+                    />
+                  </label>
+                </>
+              )}
+
               {/* Multi-day: leave blank for a normal same-day event.
                   min is the start day, so the date picker itself can't
                   produce a backwards range. */}
               <label className="calendar-time-field">
-                End date (optional, for multi-day events)
+                {addAllDay ? 'Last day (optional)' : 'End date (optional, for multi-day events)'}
                 <input
                   type="date"
                   min={dateKey(selectedDay)}
@@ -578,6 +712,200 @@ export default function CalendarPage() {
                   className="calendar-input"
                 />
               </label>
+
+              <label className="calendar-time-field">
+                Repeat
+                <select
+                  className="calendar-input"
+                  value={addRepeat}
+                  onChange={(e) => {
+                    const key = e.target.value;
+                    setAddRepeat(key);
+                    if (key === 'custom') {
+                      // Seed the panel from the day being added to, so
+                      // "repeats on" starts with the right box ticked.
+                      setDraftRule((r) => ({
+                        ...r,
+                        byDay: r.byDay.length ? r.byDay : [DAY_CODES[selectedDay.getDay()]],
+                      }));
+                      setShowCustom(true);
+                    } else {
+                      setShowCustom(false);
+                      setCustomRule(null);
+                    }
+                  }}
+                >
+                  {repeatPresets(selectedDay).map((preset) => (
+                    <option key={preset.key} value={preset.key}>{preset.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              {addRepeat === 'custom' && customRule && !showCustom && (
+                <p className="calendar-repeat-summary">
+                  {describeRule(customRule)}
+                  {' '}
+                  <button type="button" className="calendar-link-button" onClick={() => setShowCustom(true)}>
+                    Change
+                  </button>
+                </p>
+              )}
+
+              {showCustom && (
+                <div className="calendar-custom-repeat">
+                  <div className="calendar-custom-row">
+                    <span>Repeat every</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="365"
+                      className="calendar-input calendar-input-num"
+                      value={draftRule.interval}
+                      onChange={(e) => setDraftRule((r) => ({ ...r, interval: Number(e.target.value) || 1 }))}
+                    />
+                    <select
+                      className="calendar-input calendar-input-unit"
+                      value={draftRule.freq}
+                      onChange={(e) => setDraftRule((r) => ({ ...r, freq: e.target.value }))}
+                    >
+                      <option value="DAILY">{draftRule.interval === 1 ? 'day' : 'days'}</option>
+                      <option value="WEEKLY">{draftRule.interval === 1 ? 'week' : 'weeks'}</option>
+                      <option value="MONTHLY">{draftRule.interval === 1 ? 'month' : 'months'}</option>
+                      <option value="YEARLY">{draftRule.interval === 1 ? 'year' : 'years'}</option>
+                    </select>
+                  </div>
+
+                  {draftRule.freq === 'WEEKLY' && (
+                    <div className="calendar-custom-row calendar-custom-days">
+                      <span>Repeats on</span>
+                      <div className="calendar-daypicker">
+                        {DAY_CODES.map((code) => (
+                          <button
+                            key={code}
+                            type="button"
+                            /* aria-pressed rather than colour alone: the
+                               labels are single letters and two of them
+                               are "T", so the only thing distinguishing
+                               Tuesday from Thursday is position. */
+                            aria-pressed={draftRule.byDay.includes(code)}
+                            aria-label={DAY_FULL[code]}
+                            title={DAY_FULL[code]}
+                            className={`calendar-day-toggle${draftRule.byDay.includes(code) ? ' on' : ''}`}
+                            onClick={() => setDraftRule((r) => ({
+                              ...r,
+                              byDay: r.byDay.includes(code)
+                                ? r.byDay.filter((d) => d !== code)
+                                : DAY_CODES.filter((d) => d === code || r.byDay.includes(d)),
+                            }))}
+                          >
+                            {DAY_LABELS[code]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="calendar-custom-row calendar-custom-ends">
+                    <span>Ends</span>
+                    <div className="calendar-ends-options">
+                      <label className="calendar-radio">
+                        <input
+                          type="radio"
+                          name="repeat-ends"
+                          checked={draftRule.end.type === 'never'}
+                          onChange={() => setDraftRule((r) => ({ ...r, end: { ...r.end, type: 'never' } }))}
+                        />
+                        <span>Never</span>
+                      </label>
+                      <label className="calendar-radio">
+                        <input
+                          type="radio"
+                          name="repeat-ends"
+                          checked={draftRule.end.type === 'on'}
+                          onChange={() => setDraftRule((r) => ({
+                            ...r,
+                            end: { ...r.end, type: 'on', until: r.end.until || dateKey(selectedDay) },
+                          }))}
+                        />
+                        <span>On</span>
+                        <input
+                          type="date"
+                          className="calendar-input calendar-input-inline"
+                          min={dateKey(selectedDay)}
+                          value={draftRule.end.until || ''}
+                          onChange={(e) => setDraftRule((r) => ({
+                            ...r, end: { ...r.end, type: 'on', until: e.target.value },
+                          }))}
+                        />
+                      </label>
+                      <label className="calendar-radio">
+                        <input
+                          type="radio"
+                          name="repeat-ends"
+                          checked={draftRule.end.type === 'after'}
+                          onChange={() => setDraftRule((r) => ({ ...r, end: { ...r.end, type: 'after' } }))}
+                        />
+                        <span>After</span>
+                        <input
+                          type="number"
+                          min="1"
+                          max="750"
+                          className="calendar-input calendar-input-num"
+                          value={draftRule.end.count}
+                          onChange={(e) => setDraftRule((r) => ({
+                            ...r, end: { ...r.end, type: 'after', count: Number(e.target.value) || 1 },
+                          }))}
+                        />
+                        <span>times</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="calendar-custom-actions">
+                    <button
+                      type="button"
+                      className="calendar-pill calendar-pill-sm"
+                      onClick={() => {
+                        const rule = {
+                          freq: draftRule.freq,
+                          interval: draftRule.interval,
+                          byDay: draftRule.freq === 'WEEKLY'
+                            ? (draftRule.byDay.length ? draftRule.byDay : [DAY_CODES[selectedDay.getDay()]])
+                            : undefined,
+                          end: draftRule.end.type === 'on'
+                            ? { type: 'on', until: draftRule.end.until }
+                            : draftRule.end.type === 'after'
+                              ? { type: 'after', count: draftRule.end.count }
+                              : { type: 'never' },
+                        };
+                        setCustomRule(rule);
+                        setShowCustom(false);
+                      }}
+                    >
+                      Done
+                    </button>
+                    <button
+                      type="button"
+                      className="calendar-link-button"
+                      onClick={() => {
+                        setShowCustom(false);
+                        if (!customRule) setAddRepeat('none');
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <input
+                type="text"
+                placeholder="Add location (optional)"
+                value={addLocation}
+                onChange={(e) => setAddLocation(e.target.value)}
+                className="calendar-input"
+                maxLength={200}
+              />
               <input
                 type="text"
                 placeholder="Description (optional)"
@@ -599,7 +927,7 @@ export default function CalendarPage() {
           {status === 'ok' && selectedDayEvents.length > 0 && (
             <div className="calendar-event-list">
               {selectedDayEvents.map((ev) => (
-                <div key={ev.id} className="calendar-event-item">
+                <div key={ev.occurrence_id || ev.id} className="calendar-event-item">
                   <div className="calendar-event-time">
                     {formatEventRange(ev)}
                   </div>
@@ -608,16 +936,55 @@ export default function CalendarPage() {
                       {ev.title}
                       {isMultiDay(ev) && <span className="calendar-event-badge">Multi-day</span>}
                     </div>
+                    {ev.location && <p className="calendar-event-location">{ev.location}</p>}
+                    {ev.recurrence_text && (
+                      <p className="calendar-event-repeat">{ev.recurrence_text}</p>
+                    )}
                     {ev.description && <p className="calendar-event-description">{ev.description}</p>}
                   </div>
                   {user?.is_admin && (
-                    <button
-                      type="button"
-                      className="calendar-link-button"
-                      onClick={() => handleDeleteEvent(ev.id)}
-                    >
-                      Delete
-                    </button>
+                    deleteChoice === (ev.occurrence_id || ev.id) ? (
+                      /* A repeating event is one record standing for many
+                         days, so "Delete" is ambiguous and has to be
+                         asked rather than assumed. Inline rather than a
+                         modal: the answer is two words and the event it
+                         refers to should stay on screen while you pick. */
+                      <div className="calendar-delete-choice">
+                        <span className="calendar-delete-choice-label">Delete</span>
+                        <button
+                          type="button"
+                          className="calendar-link-button"
+                          onClick={() => handleDeleteEvent(ev, 'one')}
+                        >
+                          This event
+                        </button>
+                        <button
+                          type="button"
+                          className="calendar-link-button calendar-link-danger"
+                          onClick={() => handleDeleteEvent(ev, 'all')}
+                        >
+                          All events
+                        </button>
+                        <button
+                          type="button"
+                          className="calendar-link-button"
+                          onClick={() => setDeleteChoice(null)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="calendar-link-button"
+                        onClick={() => {
+                          if (ev.is_recurring) setDeleteChoice(ev.occurrence_id || ev.id);
+                          else handleDeleteEvent(ev, 'all');
+                        }}
+                      >
+                        Delete
+                      </button>
+                    )
                   )}
                 </div>
               ))}
@@ -682,7 +1049,7 @@ function TimeGrid({ days, eventsByDay, today, selectedDay, onSelectDay, showDayH
             return (
               <div className="calendar-timegrid-allday-col" key={dateKey(day)}>
                 {multi.map((ev) => (
-                  <div key={ev.id} className="calendar-allday-block" title={ev.title}>
+                  <div key={ev.occurrence_id || ev.id} className="calendar-allday-block" title={ev.title}>
                     {ev.title}
                   </div>
                 ))}
@@ -728,7 +1095,7 @@ function TimeGrid({ days, eventsByDay, today, selectedDay, onSelectDay, showDayH
                   const height = Math.max((rawDuration / 60) * HOUR_HEIGHT, MIN_BLOCK_HEIGHT);
                   return (
                     <div
-                      key={ev.id}
+                      key={ev.occurrence_id || ev.id}
                       className="calendar-timegrid-block"
                       style={{ top: `${top}px`, height: `${height}px` }}
                       title={`${ev.title}, ${formatEventRange(ev)}`}
