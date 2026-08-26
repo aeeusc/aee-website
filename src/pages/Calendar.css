@@ -536,6 +536,15 @@
 
 .calendar-error { color: #F87171; font-size: 13px; margin: 0 0 12px; }
 .calendar-error-sm { font-size: 12px; margin: 0; }
+/* Not an error: the calendar is working, it is just not showing every
+   far-future occurrence of every repeating series. Added 2026-08-26. */
+.calendar-notice {
+  color: var(--aee-grey, #5A6478);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 12px;
+  max-width: 60ch;
+}
 .calendar-muted { color: var(--slate); font-size: 13px; margin: 0; }
 
 .calendar-event-list { display: flex; flex-direction: column; gap: 14px; }

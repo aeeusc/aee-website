@@ -254,6 +254,10 @@ export default function CalendarPage() {
   const [status, setStatus] = useState('loading'); // loading | ok | error
   const [events, setEvents] = useState([]);
   const [error, setError] = useState('');
+  // The backend caps how many occurrences one request can return, and
+  // says so. Without showing it, a calendar that had quietly reached that
+  // cap would look complete. Added 2026-08-26.
+  const [truncated, setTruncated] = useState(false);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [addTitle, setAddTitle] = useState('');
@@ -307,6 +311,7 @@ export default function CalendarPage() {
     getEvents()
       .then((data) => {
         setEvents(data?.events || []);
+        setTruncated(Boolean(data?.truncated));
         setStatus('ok');
       })
       .catch((err) => {
@@ -580,6 +585,12 @@ export default function CalendarPage() {
         </div>
 
         {status === 'error' && <p className="calendar-error">{error}</p>}
+        {status === 'ok' && truncated && (
+          <p className="calendar-notice">
+            There are more repeating events than one view can show, so the furthest-out
+            dates are not listed. Everything around today is here.
+          </p>
+        )}
 
         {view === 'month' && (
           <div className="calendar-grid">
@@ -661,6 +672,7 @@ export default function CalendarPage() {
                 value={addTitle}
                 onChange={(e) => setAddTitle(e.target.value)}
                 className="calendar-input"
+                maxLength={200}
               />
               {/* All day comes before the times because it decides
                   whether there are any. Leaving the time fields on
@@ -912,6 +924,7 @@ export default function CalendarPage() {
                 value={addDescription}
                 onChange={(e) => setAddDescription(e.target.value)}
                 className="calendar-input"
+                maxLength={4000}
               />
               {addStatus === 'error' && <p className="calendar-error calendar-error-sm">{addError}</p>}
               <button type="submit" disabled={addStatus === 'submitting'} className="calendar-pill calendar-pill-sm">

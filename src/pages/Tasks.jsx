@@ -532,6 +532,7 @@ export default function TasksPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="tasks-input"
+              maxLength={200}
             />
 
             <div className="tasks-assignee-picker">
@@ -561,6 +562,7 @@ export default function TasksPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="tasks-input"
+              maxLength={4000}
             />
             <label className="tasks-due-label">
               Due date (optional)
