@@ -96,6 +96,11 @@ export default function AdminUsers() {
   const [editLinkedin, setEditLinkedin] = useState('');
   const [editInstagram, setEditInstagram] = useState('');
   const [editWebsite, setEditWebsite] = useState('');
+  // The date the person JOINED AEE, which is not the date their account
+  // was created. Added 2026-08-25: the backend has taken this since the
+  // column went in, but there was nowhere in the dashboard to set it, so
+  // the only way to correct anyone was a database console.
+  const [editMemberSince, setEditMemberSince] = useState('');
   const [editPhoto, setEditPhoto] = useState(null); // null = unchanged
   const [editPhotoPreview, setEditPhotoPreview] = useState('');
   const editPhotoInputRef = useRef(null);
@@ -133,6 +138,16 @@ export default function AdminUsers() {
     if (authCheck === 'ok') loadUsers();
   }, [authCheck]);
 
+// <input type="date"> only accepts YYYY-MM-DD. Postgres DATE columns come
+// back through node-postgres as a Date, which JSON turns into a full ISO
+// timestamp, so the first ten characters are the date part and the rest
+// has to go or the input silently renders blank.
+function toDateInput(value) {
+  if (!value) return '';
+  const s = String(value);
+  return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : '';
+}
+
   function startEdit(u) {
     setEditingId(u.id);
     setEditFirstName(u.first_name || '');
@@ -144,6 +159,7 @@ export default function AdminUsers() {
     setEditLinkedin(u.linkedin_url || '');
     setEditInstagram(u.instagram_url || '');
     setEditWebsite(u.website_url || '');
+    setEditMemberSince(toDateInput(u.member_since));
     // null means "photo not touched in this edit" — distinct from '' /
     // an explicit clear, which the save handler turns into a null on the
     // wire so the backend removes it.
@@ -173,6 +189,7 @@ export default function AdminUsers() {
         linkedinUrl: editLinkedin,
         instagramUrl: editInstagram,
         websiteUrl: editWebsite,
+        memberSince: editMemberSince,
       });
       // Photo is a separate request because it's a separate endpoint —
       // only sent when this edit actually touched it, so a routine name
@@ -339,8 +356,8 @@ export default function AdminUsers() {
         <h1 className="admin-users-title">Manage Accounts</h1>
         <p className="admin-users-sub">
           Edit any of a member's details: name, title, team, emails, social links, personal
-          website, or profile picture; reset a locked-out password; deactivate or reactivate
-          an account; show or hide them on the org chart; or change admin access.
+          website, join date, or profile picture; reset a locked-out password; deactivate or
+          reactivate an account; show or hide them on the org chart; or change admin access.
         </p>
 
         {resetResult && (
@@ -477,6 +494,23 @@ export default function AdminUsers() {
                           className="admin-users-input"
                           placeholder="Personal website (optional)"
                         />
+                        {/* Labelled, unlike every field above it. A date
+                            input renders as "mm/dd/yyyy" with no way to
+                            carry a placeholder, so without a label there
+                            is nothing on screen saying what the date is
+                            for. */}
+                        <label className="admin-users-field">
+                          <span className="admin-users-field-label">Member since</span>
+                          <input
+                            type="date"
+                            value={editMemberSince}
+                            onChange={(e) => setEditMemberSince(e.target.value)}
+                            className="admin-users-input"
+                          />
+                          <span className="admin-users-field-hint">
+                            When they joined AEE, not when this account was made. Leave blank to fall back to the account date.
+                          </span>
+                        </label>
                       </div>
                       {rowStatus[u.id] === 'error' && <p className="admin-users-row-error">{rowError[u.id]}</p>}
                       <div className="admin-users-edit-actions">

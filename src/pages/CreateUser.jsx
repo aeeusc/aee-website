@@ -88,6 +88,11 @@ export default function CreateUser() {
   // is ever sent (see lib/imageUpload.js) — a raw phone photo would blow
   // past the backend's size cap otherwise.
   const [websiteUrl, setWebsiteUrl] = useState('');
+  // When the person joined AEE, which is not when this account gets made.
+  // Optional: left blank the member card falls back to the account's
+  // creation date, which is right for somebody added the week they join
+  // and wrong for everyone entered later.
+  const [memberSince, setMemberSince] = useState('');
   const [photoDataUrl, setPhotoDataUrl] = useState('');
   const [photoError, setPhotoError] = useState('');
   const photoInputRef = useRef(null);
@@ -113,10 +118,10 @@ export default function CreateUser() {
     setErrorMessage('');
 
     try {
-      const data = await createUser(
+      const data = await createUser({
         firstName, lastName, email, uscEmail, title, team,
-        linkedinUrl, instagramUrl, websiteUrl, photoDataUrl
-      );
+        linkedinUrl, instagramUrl, websiteUrl, photoDataUrl, memberSince,
+      });
       setStatus('success');
       setResult({ username: data.username, generatedPassword: data.generatedPassword });
       setFirstName('');
@@ -128,6 +133,7 @@ export default function CreateUser() {
       setLinkedinUrl('');
       setInstagramUrl('');
       setWebsiteUrl('');
+      setMemberSince('');
       setPhotoDataUrl('');
       setPhotoError('');
     } catch (err) {
@@ -363,6 +369,21 @@ export default function CreateUser() {
                 />
               </label>
 
+              <label style={styles.label}>
+                Member since (optional)
+                <input
+                  type="date"
+                  value={memberSince}
+                  onChange={(e) => setMemberSince(e.target.value)}
+                  style={styles.input}
+                />
+                <span style={styles.hint}>
+                  When they joined AEE. Leave blank and their card will show
+                  today's date instead, which is usually not what you want for
+                  somebody who has been around a while.
+                </span>
+              </label>
+
               {status === 'error' && (
                 <p style={styles.error}>{errorMessage}</p>
               )}
@@ -451,6 +472,17 @@ const styles = {
     fontFamily: "'Libre Franklin', -apple-system, sans-serif",
     color: colors.slate,
     fontSize: '14px',
+  },
+  // Sits under a field to say something the label cannot. Smaller and
+  // dimmer than the label so it reads as a note rather than a second
+  // question.
+  hint: {
+    fontFamily: "'Libre Franklin', -apple-system, sans-serif",
+    fontSize: '12px',
+    lineHeight: 1.5,
+    color: colors.slate,
+    opacity: .78,
+    marginTop: '-2px',
   },
   input: {
     background: 'rgba(255,255,255,.05)',

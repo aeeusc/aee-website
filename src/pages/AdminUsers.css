@@ -323,3 +323,30 @@ select.admin-users-input { cursor: pointer; }
   gap: 8px;
   flex-wrap: wrap;
 }
+
+
+/* A labelled field inside the inline edit form. Everything else in that
+   form is a placeholder-only input, which works for text and does not
+   work for a date: <input type="date"> shows its own mm/dd/yyyy mask and
+   ignores placeholder entirely, so an unlabelled one is just a date box
+   with no stated purpose. Added 2026-08-25 with "Member since". */
+.admin-users-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  grid-column: 1 / -1;
+  margin-top: 2px;
+}
+
+.admin-users-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--slate-light);
+}
+
+.admin-users-field-hint {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--slate);
+}

@@ -143,10 +143,15 @@ export function getCurrentUser() {
 // account is never left half-made (created, but the picture silently
 // failed) — if the image is bad the whole create is rejected and the
 // admin fixes it before anything is written.
-export function createUser(
+// Takes an options object rather than positional arguments. It was
+// positional up to 2026-08-25, and adding a join date would have made it
+// eleven in a row: at that length a caller who miscounts sends a URL as a
+// photo and finds out at runtime. There is one call site, so the change
+// is cheap and the mistake becomes impossible.
+export function createUser({
   firstName, lastName, email, uscEmail, title, team,
-  linkedinUrl, instagramUrl, websiteUrl, photoDataUrl
-) {
+  linkedinUrl, instagramUrl, websiteUrl, photoDataUrl, memberSince,
+} = {}) {
   return apiRequest('/auth/admin/create-user', {
     method: 'POST',
     body: JSON.stringify({
@@ -155,6 +160,7 @@ export function createUser(
       instagramUrl: instagramUrl || undefined,
       websiteUrl: websiteUrl || undefined,
       photoDataUrl: photoDataUrl || undefined,
+      memberSince: memberSince || undefined,
     }),
   });
 }
@@ -187,13 +193,13 @@ export function getAllUsers() {
 // what lets an admin remove a stale LinkedIn link rather than only ever
 // overwrite it. uscEmail and title are required and cannot be cleared.
 export function updateUser(id, {
-  firstName, lastName, title, team, hideFromOrgChart,
+  firstName, lastName, title, team, hideFromOrgChart, memberSince,
   email, uscEmail, linkedinUrl, instagramUrl, websiteUrl,
 } = {}) {
   return apiRequest(`/auth/admin/users/${id}`, {
     method: 'PUT',
     body: JSON.stringify({
-      firstName, lastName, title, team, hideFromOrgChart,
+      firstName, lastName, title, team, hideFromOrgChart, memberSince,
       email, uscEmail, linkedinUrl, instagramUrl, websiteUrl,
     }),
   });
