@@ -90,13 +90,13 @@ const RESULTS = [
   {
     team: 'MECC',
     what: 'Marine Energy Collegiate Competition',
-    where: 'Portland, May 2026',
+    where: 'Portland, Oregon',
     awards: ['Won the competition outright, national champions'],
   },
   {
     team: 'ShadeLA',
     what: 'Shade structure design and build',
-    where: 'Los Angeles, autumn 2025',
+    where: 'Los Angeles, California',
     awards: ['2nd place out of 50 teams'],
   },
   {
