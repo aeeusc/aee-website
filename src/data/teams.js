@@ -136,7 +136,7 @@ export const TEAMS = [
     // paragraphs saying the same thing is how a page starts feeling like
     // filler.
     detail: [
-      'The work runs from design and CAD through manufacturer coordination, campus siting and facilities approval, and funding. It is a full build rather than a concept: the tables are meant to be standing on campus and in use.',
+      'The work runs from design and CAD through manufacturer coordination, campus siting and facilities approval, and funding. It is a full build rather than a concept: the tables will be standing on campus and in use this school year.',
       'The case for them came from the people they are for. AEE surveyed more than a thousand USC students, and almost all of them said they would use a shaded outdoor workspace with power.',
     ],
   },
