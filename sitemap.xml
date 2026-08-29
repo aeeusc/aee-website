@@ -22,4 +22,49 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- The two public forms. Both are real pages a stranger is meant to
+       land on, and neither was listed here. -->
+  <url>
+    <loc>https://aeeusc.com/interest</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://aeeusc.com/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- One page per design team, added 2026-08-29 (see src/data/teams.js
+       for the list these mirror). These are the pages most likely to be
+       searched for by name: someone who heard about the Collegiate Wind
+       Competition team, or about CHARGED, is searching for that phrase
+       and not for "AEE at USC". Adding a team means adding a line here
+       as well; nothing generates this file. -->
+  <url>
+    <loc>https://aeeusc.com/teams/marine-energy</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://aeeusc.com/teams/wind</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://aeeusc.com/teams/hydropower</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://aeeusc.com/teams/charged</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://aeeusc.com/teams/shade-zones</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
 </urlset>
