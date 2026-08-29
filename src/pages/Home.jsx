@@ -435,7 +435,7 @@ function Connections() {
 
   return (
     <section className="connections">
-      <div className="label">OUR CONNECTIONS</div>
+      <div className="label">OUR STUDENTS WORK WITH</div>
       <div className="marquee">
         <div className="track">
           {items.map(({ name, logo, href, solid }, i) => (
