@@ -382,7 +382,7 @@ export function PlaceholderAvatar({ size = 32 }) {
 // The one thing the club wants a first-time visitor to know today. Set
 // to null when there's nothing on. Added 2026-08-24 for the USC
 // involvement fair.
-export const NEXT_EVENT = "Come find us at the USC involvement fair on Wednesday 26 August, 11am to 2pm.";
+export const NEXT_EVENT = null;
 
 // ─── Hero ───────────────────────────────────────────────────────────────────
 
