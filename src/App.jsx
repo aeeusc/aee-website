@@ -1,6 +1,14 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { useLayoutEffect } from 'react'
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useLocation,
+  useNavigationType,
+} from 'react-router-dom'
 import Home from './pages/Home'
 import About from './pages/About'
+import Team from './pages/Team'
 import Login from './pages/Login'
 import CreateUser from './pages/CreateUser'
 import Dashboard from './pages/Dashboard'
@@ -31,6 +39,46 @@ import './App.css'
 // this normalizes both cases.
 const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/'
 
+// Start a new page at the top of it.
+//
+// Added 2026-08-29, while building the team subpages, but this was never
+// specific to them: React Router does not touch the scroll position on
+// navigation, and nothing here did either. Clicking "About" from the
+// footer of a long homepage landed you in the footer of the About page,
+// looking at whatever happened to be at that scroll offset.
+//
+// Three details, each of which the obvious version gets wrong:
+//
+//   behavior: 'instant' — src/index.css sets `scroll-behavior: smooth`
+//   on the whole document for the in-page anchor links, and a plain
+//   window.scrollTo(0, 0) inherits it. So the reset ANIMATED: measured
+//   at roughly two seconds gliding up through the new page's content
+//   before settling, which reads as the page moving on its own rather
+//   than as a page that opened at the top. 'instant' overrides the CSS
+//   for this one call and leaves the anchors alone.
+//
+//   Skipped on POP — the back button should return you to where you
+//   were, which is the one time the browser's own restoration is right.
+//
+//   Skipped when there is a hash, because a link to /#teams is asking
+//   for a specific place on the page and scrolling to the top would
+//   cancel exactly what was clicked.
+//
+//   useLayoutEffect, not useEffect: it runs before the browser paints,
+//   so the new page is never shown at the old offset first.
+function ScrollToTop() {
+  const { pathname, hash } = useLocation()
+  const navigationType = useNavigationType()
+
+  useLayoutEffect(() => {
+    if (navigationType === 'POP') return
+    if (hash) return
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [pathname, hash, navigationType])
+
+  return null
+}
+
 function App() {
   return (
     <BrowserRouter basename={basename}>
@@ -41,9 +89,20 @@ function App() {
           "aeeusc.com says..." popup instead of something styled to match
           the site. */}
       <ConfirmProvider>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
+        {/* One page per design team, added 2026-08-29. The slug is
+            matched against src/data/teams.js, which is also what the
+            homepage accordion and the About page's results list read —
+            so a team exists in one place and shows up in three.
+            An unknown slug renders Team.jsx's own "no team by that name"
+            branch with links to the real ones, rather than falling
+            through to the site-wide 404, because a stale team link is
+            almost always someone looking for a team that still exists
+            under a different name. */}
+        <Route path="/teams/:slug" element={<Team />} />
         {/* The two public forms, added 2026-08-24 — these replaced a
             Google Form and a mailto: link, and unlike everything below
             they work without a session. */}

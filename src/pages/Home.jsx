@@ -19,6 +19,7 @@
 // visual design.
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { TEAMS as TEAM_DATA } from "../data/teams";
 import { subscribeToNewsletter, getCurrentUser } from "../lib/api";
 // No THREE.js/SVGLoader imports here — the interactive atom sphere and
 // the whole About section moved to their own page (About.jsx) when About
@@ -83,36 +84,24 @@ const PARTNERS = [
   { name: "Vatn Systems", logo: asset("/logos/vatn.png"), href: "https://www.vatnsystems.com" },
 ];
 
-const TEAMS = [
-  {
-    key: "wind",
-    title: "Collegiate Wind Competition Team",
-    meta: "U.S. DEPT. OF ENERGY · NATIONAL COMPETITION",
-    img: asset("/images/wind.webp"),
-    desc: "Our Collegiate Wind Competition Team designs and builds small-scale wind turbines to compete in the U.S. Department of Energy's national competition. Students gain hands-on experience in aerodynamic design, structural analysis, and energy systems engineering.",
-  },
-  {
-    key: "marine",
-    title: "Marine Energy Collegiate Competition Team",
-    meta: "U.S. DEPT. OF ENERGY · NATIONAL COMPETITION",
-    img: asset("/images/marine.jpg"),
-    desc: "We are currently prototyping our Oscillating Water Column (OWC), which utilizes incoming waves to pressurize a column of air, spinning a turbine and generating electricity for battery storage. We are currently exploring the technologies behind underwater data centers, desalination facilities, and remote coastal communities.",
-  },
-  {
-    key: "hydro",
-    title: "Hydropower Collegiate Competition Team",
-    meta: "U.S. DEPT. OF ENERGY · NATIONAL COMPETITION",
-    img: asset("/images/hydro.jpg"),
-    desc: "HCC is a design competition aimed at creating low impact hydropower energy source using existing infrastructure. We are looking to use a Pumped Storage Hydropower system that could serve regions of California typically excluded from renewable energy initiatives.",
-  },
-  {
-    key: "solar",
-    title: "CHARGED",
-    meta: "CAMPUS INITIATIVE · INDUSTRY-MENTORED",
-    img: asset("/images/solar.jpg"),
-    desc: "CHARGED is working hard to bring 100% student designed outdoor tables with solar-powered charging capabilities to the USC community. We are designing our tables from the ground up with industry and manufacturer mentorship.",
-  },
-];
+// The design teams moved to src/data/teams.js on 2026-08-29, so this
+// accordion, the About page's results list and the per-team subpages at
+// /teams/<slug> all read one definition instead of three.
+//
+// They had already drifted, and visibly: this file described CHARGED as
+// the solar tables initiative, which is right, while About.jsx called it
+// a "battery and storage design team," which is not. Both were live at
+// the same time on the same site.
+//
+// asset() is applied here rather than baked into the data file, because
+// BASE_URL is a Vite build concern and not a fact about a team.
+//
+// Filtered on onHomepage: every team has a subpage, but these cards are
+// built around a full-bleed photograph and a card with no artwork reads
+// as a broken image rather than as a team.
+const TEAMS = TEAM_DATA
+  .filter((t) => t.onHomepage)
+  .map((t) => ({ ...t, img: t.img ? asset(t.img) : null }));
 
 // Reordered/edited 2026-08-11 per Kev's explicit feedback:
 //  - Mitch Kirby steps down from President, stays on as "Founder & Advisor."
@@ -516,13 +505,28 @@ function DesignTeams() {
                 <h3>{team.title}</h3>
                 <div className="meta">{team.meta}</div>
                 <p>{team.desc}</p>
-                <Link
-                  className="ghost sm"
-                  to="/interest"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  Join this team
-                </Link>
+                {/* Two ways out of an open card, added 2026-08-29.
+                    "Join this team" was the only one, which meant the
+                    three sentences above were the end of the road for
+                    anyone who wanted to know more before committing to a
+                    form. The team page carries the same description plus
+                    what the team has actually won. */}
+                <div className="dt-actions">
+                  <Link
+                    className="ghost sm"
+                    to={`/teams/${team.slug}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Team page
+                  </Link>
+                  <Link
+                    className="ghost sm"
+                    to="/interest"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Join this team
+                  </Link>
+                </div>
               </div>
             </div>
           );

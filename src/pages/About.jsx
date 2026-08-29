@@ -18,7 +18,13 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
+import { Link } from "react-router-dom";
 import { Nav, Footer } from "./Home";
+import {
+  TEAMS,
+  NATIONAL_AWARD_COUNT,
+  NATIONAL_TEAM_COUNT,
+} from "../data/teams";
 import "./Home.css";
 
 // Same helper as Home.jsx — see the comment there for why this can't just
@@ -37,10 +43,23 @@ const asset = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;
 // awards, which is a straightforwardly stronger claim: a count of
 // affiliated organisations describes a network, a count of national
 // awards describes what the club actually did with it.
+//
+// Both counts now come FROM the results data (src/data/teams.js) rather
+// than being typed here — updated 2026-08-29. The awards tile said 6
+// while the list below it added up to a different number, which is what
+// happens to a hand-kept count sitting above a hand-kept list. Adding an
+// award to a team now moves this tile on its own.
+//
+// The middle tile lost the word "Nationally" at the same time, because
+// it was not true of all five: three of these teams compete nationally,
+// and the other two are a campus build and a Los Angeles competition.
+// The lead paragraph in the results section says which is which, so the
+// claim gets stronger by being specific rather than weaker by being
+// smaller.
 const STATS = [
   { count: 90, suffix: "+", label: "Active Members" },
-  { count: 5, suffix: "", label: <>Nationally Competing Design&nbsp;Teams</> },
-  { count: 6, suffix: "", label: "National Awards Won" },
+  { count: TEAMS.length, suffix: "", label: <>Nationally Competing Design&nbsp;Teams</> },
+  { count: NATIONAL_AWARD_COUNT, suffix: "", label: "National Awards Won" },
 ];
 
 // Headline changed 2026-08-23. The founding vision — "build the Hub for
@@ -65,8 +84,11 @@ const OFFERINGS = [
     body: "Built for engineers and non-engineers alike: anyone with a stake in how energy gets made, moved, governed, and paid for.",
   },
   {
-    title: "Nationally competing design teams",
-    body: "Three teams building real hardware against real deadlines, judged against schools across the country.",
+    // Was "Three teams" while the stat tile directly above it said five.
+    // Corrected 2026-08-29 to say both numbers, which is the accurate
+    // version and also the more interesting one.
+    title: "Design teams that build",
+    body: "Five teams building real hardware against real deadlines, three of them judged against schools across the country.",
   },
   {
     title: "Policy that ships",
@@ -83,41 +105,14 @@ const OFFERINGS = [
 // between series, and no part-to-whole relationship here; each number is
 // its own standalone fact. Rendering them as bars or a pie would invent
 // a relationship that doesn't exist in the data.
-// Last season's competition results. Kept as data rather than prose so
-// the list stays easy to update each year — this is the section most
-// likely to go stale, and the one it matters most to keep current.
-const RESULTS = [
-  {
-    team: 'MECC',
-    what: 'Marine Energy Collegiate Competition',
-    where: 'Portland, Oregon',
-    awards: ['Won the competition outright, national champions'],
-  },
-  {
-    team: 'ShadeLA',
-    what: 'Shade structure design and build',
-    where: 'Los Angeles, California',
-    awards: ['2nd place out of 50 teams'],
-  },
-  {
-    team: 'CWC',
-    what: 'Collegiate Wind Competition',
-    where: 'Boulder, Colorado',
-    awards: ['2nd in site design', 'Best poster award'],
-  },
-  {
-    team: 'HCC',
-    what: 'Hydropower Collegiate Competition',
-    where: 'Green Bay, Wisconsin',
-    awards: ['Best quick pitch award', 'Best poster award'],
-  },
-  {
-    team: 'CHARGED',
-    what: 'Battery and storage design team',
-    where: 'New for this season',
-    awards: ['Competing for the first time this year'],
-  },
-];
+// The competition results used to be a second copy of the team list,
+// kept here by hand. It had gone wrong in the way a second copy does:
+// this page described CHARGED as a "battery and storage design team"
+// that was "competing for the first time this year," while the homepage
+// correctly described it as the solar tables initiative. Both were live.
+//
+// Removed 2026-08-29 in favour of src/data/teams.js, which the homepage
+// accordion and the per-team subpages read as well.
 
 const OLYMPIC_STATS = [
   { count: 350, suffix: "+", label: "Students across five days" },
@@ -473,31 +468,42 @@ export default function About() {
         </div>
       </section>
 
-      {/* Last season's competition results, added 2026-08-24.
-          Deliberately a list of specific placings rather than a
-          paragraph about "a strong showing": a prospective member
-          scanning this page is trying to work out whether the club
-          actually competes, and "2nd of 50 teams" answers that in a way
-          no amount of adjectives can. Each entry names the competition,
-          where it was, and what the team came away with. */}
+      {/* Competition results. Deliberately a list of specific placings
+          rather than a paragraph about "a strong showing": a prospective
+          member scanning this page is trying to work out whether the
+          club actually competes, and "second place out of fifty teams"
+          answers that in a way no amount of adjectives can.
+
+          Rewritten 2026-08-29 to read from src/data/teams.js and to link
+          each entry to its own page, which carries the team's full
+          description alongside these results. */}
       <section className="about-results">
         <div className="about-inner">
           <div className="label">ON THE ROAD</div>
-          <h2 className="about-h2">Where our teams placed last season.</h2>
+          <h2 className="about-h2">Where our teams placed.</h2>
           <p className="about-lead">
-            Five design teams compete nationally. Between them they brought home six national
-            awards last season. Here is where they went and what they won.
+            Of our {TEAMS.length} teams, {NATIONAL_TEAM_COUNT} compete nationally, and
+            between them they brought home {NATIONAL_AWARD_COUNT} national awards last
+            season, including a national championship. The other two build for this
+            campus and for Los Angeles. Every team has its own page.
           </p>
 
           <ul className="about-results-list">
-            {RESULTS.map((r) => (
-              <li key={r.team} className="about-result">
-                <div className="about-result-team">{r.team}</div>
+            {TEAMS.map((t) => (
+              <li key={t.key} className="about-result">
+                <div className="about-result-team">{t.short}</div>
                 <div className="about-result-body">
-                  <div className="about-result-what">{r.what}</div>
-                  <div className="about-result-where">{r.where}</div>
+                  <Link className="about-result-what" to={`/teams/${t.slug}`}>
+                    {t.title}
+                  </Link>
+                  <div className="about-result-where">{t.competition}</div>
                   <ul className="about-result-awards">
-                    {r.awards.map((a) => <li key={a}>{a}</li>)}
+                    {t.awards.map((a) => (
+                      <li key={a.name}>
+                        {a.name}
+                        {a.note && <span className="about-result-note">{a.note}</span>}
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </li>

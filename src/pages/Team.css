@@ -1,0 +1,369 @@
+/* src/pages/Team.css
+ *
+ * The per-team subpages at /teams/<slug>. Home.css is imported first by
+ * Team.jsx, so .label, .about-h2, .about-lead, .about-inner and .ghost
+ * are already defined and are reused here rather than redeclared — the
+ * point of these pages is to look like the rest of the site, and the
+ * fastest way to drift is to write a second set of heading styles.
+ *
+ * Colours come from the brand tokens in src/index.css. No green: the
+ * 2026 brand guide retired it.
+ */
+
+/* ---------- Hero ---------- */
+
+/* Tall enough to feel like a page opening rather than a banner, but
+   capped in vh so it does not fill a laptop screen and hide the fact
+   that there is anything below it. */
+.team-hero {
+  position: relative;
+  min-height: min(58vh, 460px);
+  display: flex;
+  align-items: flex-end;
+  padding: 140px 40px 52px;
+  overflow: hidden;
+  background: var(--navy-900, #1F3160);
+}
+
+/* The photograph, cropped by the container rather than letterboxed. */
+.team-hero-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* These are photographs of hardware in daylight, and white type on top
+     of one is unreadable without help. The scrim below does most of the
+     work; this takes the edge off the brightest areas first so the scrim
+     does not have to be heavy enough to hide the picture. */
+  filter: saturate(.85) brightness(.62);
+}
+
+/* A vertical gradient rather than a flat overlay: the type sits at the
+   bottom, so that is where the darkening needs to be, and a flat wash
+   dark enough for legibility there would flatten the whole image. */
+.team-hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(24, 32, 50, .30) 0%,
+    rgba(24, 32, 50, .62) 55%,
+    rgba(24, 32, 50, .93) 100%
+  );
+}
+
+/* Without artwork the same block still needs shape, so it gets a soft
+   brand-blue wash instead of a photograph. ShadeLA renders through this
+   branch today. */
+.team-hero.no-art {
+  background:
+    radial-gradient(120% 140% at 12% 0%, rgba(94, 141, 255, .22) 0%, rgba(94, 141, 255, 0) 58%),
+    linear-gradient(160deg, var(--navy-900, #1F3160) 0%, var(--navy-950, #182032) 78%);
+  min-height: min(46vh, 380px);
+}
+
+.team-hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.team-back {
+  display: inline-block;
+  margin-bottom: 22px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--slate-light, #C6E4FF);
+  text-decoration: none;
+  opacity: .85;
+  transition: opacity .2s;
+}
+.team-back:hover { opacity: 1; text-decoration: underline; }
+.team-back::before { content: '\2190'; margin-right: 8px; }
+
+.team-meta {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--slate-light, #C6E4FF);
+}
+
+.team-title {
+  margin: 12px 0 0;
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
+  font-weight: 700;
+  /* clamp rather than a breakpoint: "Marine Energy Collegiate
+     Competition Team" and "CHARGED" are very different lengths and both
+     have to sit in this space without one of them wrapping badly. */
+  font-size: clamp(30px, 4.4vw, 56px);
+  letter-spacing: -.025em;
+  line-height: 1.05;
+  color: var(--white, #fff);
+  max-width: 18ch;
+}
+
+.team-where {
+  margin-top: 16px;
+  font-size: 15px;
+  color: var(--slate-light, #C6E4FF);
+}
+
+/* ---------- The organiser's mark ---------- */
+
+/* A credit, not decoration. Laid out as a label above a plate so it
+   reads as "this competition was run by them" rather than as a logo
+   AEE has helped itself to. */
+.team-org {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 26px;
+  text-decoration: none;
+}
+.team-org-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--slate-light, #C6E4FF);
+  opacity: .8;
+}
+/* The plate carries the mark's own field colour, set inline from the
+   data so it travels with the logo rather than being hardcoded here.
+   The artwork is a flat field with the wordmark on it, so the plate's
+   padding extends that field with no visible seam. */
+.team-org-plate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+  border-radius: 10px;
+  transition: transform .22s, box-shadow .22s;
+}
+.team-org-plate img {
+  display: block;
+  /* Capped at its own pixel width. The source is a screenshot of the
+     mark rather than the vector, so scaling it UP is the one thing that
+     would visibly hurt it. Swap in an SVG and this cap can go. */
+  width: 176px;
+  max-width: 100%;
+  height: auto;
+}
+.team-org:hover .team-org-plate {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .32);
+}
+.team-org:focus-visible .team-org-plate {
+  outline: 2px solid var(--white, #fff);
+  outline-offset: 3px;
+}
+
+/* ---------- Body sections ---------- */
+
+.team-section { padding: 72px 40px; }
+.team-section + .team-section { padding-top: 0; }
+
+.team-desc {
+  margin: 20px 0 0;
+  max-width: 760px;
+  /* Slightly larger than body copy elsewhere: on this page the team's
+     own description IS the content, not a caption under something. */
+  font-size: 17.5px;
+  line-height: 1.72;
+  color: var(--slate-light, #C6E4FF);
+}
+
+.team-detail {
+  margin: 20px 0 0;
+  max-width: 760px;
+  font-size: 16px;
+  line-height: 1.72;
+  color: var(--slate, #5A6478);
+}
+
+/* ---------- Stat tiles ---------- */
+
+.team-facts {
+  margin-top: 30px;
+  display: grid;
+  /* auto-fit so three tiles sit in a row on a laptop and stack on a
+     phone without a breakpoint of their own. minmax's floor is what
+     stops the longest label squeezing its tile into a column of single
+     words. */
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 18px;
+  max-width: 900px;
+}
+.team-fact {
+  border: 1px solid var(--line, rgba(255,255,255,.14));
+  border-radius: 16px;
+  background: rgba(255,255,255,.02);
+  padding: 28px 24px 24px;
+  /* Grid children default to min-width:auto, which lets a long unbroken
+     label push the whole track wider than the page. */
+  min-width: 0;
+}
+.team-fact-value {
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 42px;
+  line-height: 1;
+  letter-spacing: -.02em;
+  color: var(--white, #fff);
+}
+.team-fact-label {
+  margin-top: 12px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--slate, #5A6478);
+}
+
+/* ---------- Awards ---------- */
+
+.team-awards {
+  margin: 30px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+  max-width: 760px;
+}
+.team-award {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  border: 1px solid var(--line, rgba(255,255,255,.14));
+  /* The accent edge is what makes a list of awards read as a list of
+     awards rather than as bullet points. */
+  border-left: 3px solid var(--aee-accent, #5E8DFF);
+  border-radius: 12px;
+  background: rgba(255,255,255,.025);
+  padding: 18px 22px;
+}
+.team-award-name {
+  font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--white, #fff);
+}
+.team-award-note {
+  font-size: 14.5px;
+  color: var(--slate, #5A6478);
+}
+
+/* The outside write-up of a result. Understated on purpose: it is a
+   footnote to the awards above it, not a call to action competing with
+   "Join this team" further down. */
+.team-source {
+  display: inline-block;
+  margin-top: 22px;
+  font-size: 14px;
+  color: var(--slate-light, #C6E4FF);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, .28);
+  padding-bottom: 2px;
+  transition: color .2s, border-color .2s;
+}
+.team-source::after { content: ' \2197'; opacity: .7; }
+.team-source:hover {
+  color: var(--white, #fff);
+  border-color: rgba(255, 255, 255, .7);
+}
+
+/* ---------- Next steps ---------- */
+
+.team-next { padding-bottom: 96px; }
+
+.team-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--line, rgba(255,255,255,.14));
+  padding-top: 44px;
+}
+.team-cta .about-lead { margin-top: 12px; max-width: 560px; }
+.team-cta .ghost { flex: none; }
+
+.team-others-label { display: block; margin-top: 56px; }
+
+.team-others {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+.team-other {
+  display: block;
+  min-width: 0;
+  border: 1px solid var(--line, rgba(255,255,255,.14));
+  border-radius: 14px;
+  background: rgba(255,255,255,.015);
+  padding: 18px 20px;
+  text-decoration: none;
+  transition: border-color .22s, transform .22s, background .22s;
+}
+.team-other:hover {
+  border-color: rgba(255,255,255,.42);
+  background: rgba(255,255,255,.05);
+  transform: translateY(-3px);
+}
+.team-other-short {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--aee-accent, #5E8DFF);
+}
+.team-other-title {
+  display: block;
+  margin-top: 8px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--white, #fff);
+}
+
+/* ---------- Unknown slug ---------- */
+
+.team-missing { padding: 180px 40px 120px; }
+.team-missing-list {
+  margin: 26px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+.team-missing-list a {
+  color: var(--slate-light, #C6E4FF);
+  font-size: 16px;
+}
+
+/* ---------- Phone ---------- */
+
+@media (max-width: 760px) {
+  .team-hero { padding: 120px 20px 40px; min-height: min(50vh, 380px); }
+  .team-hero.no-art { min-height: auto; }
+  .team-title { max-width: none; }
+  .team-section { padding: 52px 20px; }
+  .team-next { padding-bottom: 72px; }
+  .team-cta { align-items: flex-start; }
+  /* Full width, because a pill button floating alone next to nothing on
+     a phone reads as a stray element rather than the point of the
+     section. */
+  .team-cta .ghost { width: 100%; text-align: center; }
+  .team-fact-value { font-size: 36px; }
+  .team-org { margin-top: 22px; }
+  .team-org-plate { padding: 10px 14px; }
+  .team-org-plate img { width: 150px; }
+  .team-award { padding: 16px 18px; }
+  .team-missing { padding: 140px 20px 90px; }
+}

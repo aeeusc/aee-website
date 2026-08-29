@@ -321,7 +321,29 @@
   letter-spacing: -.01em;
   color: var(--white);
 }
-.about-result-what { font-size: 16px; font-weight: 600; color: var(--white); }
+/* Now a link to the team's own page (2026-08-29). display:inline-block
+   so the underline on hover sits under the title only, rather than
+   stretching across the whole row the way it would on a block element. */
+.about-result-what {
+  display: inline-block;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--white);
+  text-decoration: none;
+  transition: color .2s;
+}
+.about-result-what:hover { color: var(--aee-tint, #C6E4FF); text-decoration: underline; }
+/* The little caret is what tells you the title is a link before you
+   hover it — on a list of plain white headings, one of them being
+   clickable is otherwise invisible. */
+.about-result-what::after {
+  content: '\2192';
+  margin-left: 8px;
+  opacity: .55;
+  transition: transform .2s, opacity .2s;
+  display: inline-block;
+}
+.about-result-what:hover::after { opacity: 1; transform: translateX(3px); }
 .about-result-where {
   font-size: 13.5px;
   color: var(--slate);
@@ -341,6 +363,15 @@
   font-size: 15px;
   color: var(--slate-light);
   line-height: 1.5;
+}
+/* The qualifier on an award, e.g. "National champions" under a first
+   place. Its own line and its own colour, so the award itself stays the
+   thing you read first. */
+.about-result-note {
+  display: block;
+  font-size: 13.5px;
+  color: var(--slate);
+  margin-top: 2px;
 }
 /* A small filled marker rather than a bullet - these are awards, and a
    list of wins deserves to look like a list of wins. */
@@ -548,7 +579,20 @@
 .exp h3 { font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif; font-size: 32px; font-weight: 900; text-transform: uppercase; letter-spacing: -.02em; line-height: 1.06; }
 .exp .meta { margin-top: 10px; font-size: 12px; letter-spacing: .18em; color: var(--slate); }
 .exp p { margin-top: 18px; font-size: 16px; line-height: 1.7; color: var(--slate-light); max-width: 600px; }
-.exp .ghost.sm { margin-top: 26px; padding: 11px 22px; font-size: 14px; align-self: flex-start; }
+.exp .ghost.sm { padding: 11px 22px; font-size: 14px; align-self: flex-start; }
+/* Two buttons in an open card as of 2026-08-29 (team page + join). The
+   row owns the top margin that used to sit on the button itself, and
+   wraps rather than shrinking them, so a narrow card stacks the two
+   instead of squeezing both onto one line. align-self keeps the row from
+   stretching to the card's full width, which is what the flex column
+   above would otherwise do to it. */
+.exp .dt-actions {
+  margin-top: 26px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-self: flex-start;
+}
 .dt-close { position: absolute; top: 18px; right: 20px; z-index: 3; width: 36px; height: 36px; border: 1px solid rgba(255,255,255,.25); border-radius: 50%; background: rgba(24,32,50,.4); color: var(--white); font-size: 15px; display: none; align-items: center; justify-content: center; cursor: pointer; transition: border-color .2s; }
 .dt-close:hover { border-color: rgba(255,255,255,.7); }
 .dt-card.open .dt-close { display: flex; }
