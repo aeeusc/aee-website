@@ -2,7 +2,38 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/assets/logo-BytoK1qK.svg" />
+    <!-- Favicons. Rebuilt 2026-08-29 because Google was showing the grey
+         globe placeholder next to aeeusc.com instead of the logo, and
+         there were three independent reasons for it:
+
+         1. The path was wrong. It read href="public/logo.svg", but Vite
+            copies the CONTENTS of public/ to the site root, so the file
+            is served at /logo.svg. It was also relative, so from
+            /teams/charged the browser asked for
+            /teams/public/logo.svg. It 404'd from every URL on the site.
+
+         2. The format. Google Search does not use SVG favicons at all:
+            it supports BMP, GIF, ICO, PNG, JPEG, PPM and TIFF. A correct
+            path to an SVG would still have shown the globe.
+
+         3. The artwork. logo.svg is a WHITE mark on transparency inside
+            an A4 portrait page. Google requires a square, and a white
+            mark on transparency is invisible against the white search
+            result row anyway.
+
+         So these are square PNGs and an ICO, generated from that same
+         logo on the brand blue the guide calls "the mark's own field",
+         with the mark inset to two thirds so it survives being cropped
+         to a circle. Paths are absolute, which matters on a site with
+         nested routes.
+
+         Google reads the favicon from the HOME PAGE only, and re-crawls
+         on its own schedule: expect days to weeks, not minutes. -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- SEO — added 2026-08-08. This is a client-rendered SPA (no
@@ -31,7 +62,19 @@
       content="A USC student organization designing real renewable energy systems through nationally competing design teams and industry partnerships."
     />
     <meta property="og:url" content="https://aeeusc.com/" />
-    <meta property="og:image" content="https://aeeusc.com/logo.svg" />
+
+    <!-- og:image and twitter:image pointed at /logo.svg until 2026-08-29.
+         The path was right, unlike the favicon's, but essentially no
+         link-preview service renders SVG: Facebook, LinkedIn, Slack,
+         Discord and iMessage all want PNG or JPEG. They also want a card
+         around 1.91:1, and logo.svg is a portrait A4 page holding a
+         white mark on transparency. So shared links showed no image at
+         all. og-card.png is 1200x630, built from the same logo and the
+         site's own two fonts. -->
+    <meta property="og:image" content="https://aeeusc.com/og-card.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="AEE at USC, the Association of Energy Engineers" />
 
     <!-- Twitter/X card — falls back to the Open Graph tags above on most
          platforms, but Twitter/X specifically wants its own tag names. -->
@@ -41,7 +84,7 @@
       name="twitter:description"
       content="A USC student organization designing real renewable energy systems through nationally competing design teams and industry partnerships."
     />
-    <meta name="twitter:image" content="https://aeeusc.com/logo.svg" />
+    <meta name="twitter:image" content="https://aeeusc.com/og-card.png" />
 
     <!-- Brand typefaces are self-hosted via @fontsource and imported in
          src/main.jsx, so there is deliberately no Google Fonts link here:
@@ -68,6 +111,35 @@
           );
         }
       })(window.location);
+    </script>
+
+    <!-- Organization markup, added 2026-08-29. Separate from the
+         favicon above and worth having for the same reason: the favicon
+         is the small icon beside the search result, while `logo` here is
+         what Google can use for a knowledge panel, and `alternateName`
+         is how it learns that "AEE" and the full name are the same
+         organization. Structured data is a signal, not a guarantee. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Association of Energy Engineers at USC",
+        "alternateName": ["AEE at USC", "AEE USC", "AEE"],
+        "url": "https://aeeusc.com/",
+        "logo": "https://aeeusc.com/icon-512.png",
+        "image": "https://aeeusc.com/og-card.png",
+        "description": "A student organization at the University of Southern California designing real renewable energy systems through nationally competing design teams and industry partnerships.",
+        "foundingDate": "2024",
+        "sameAs": [
+          "https://www.instagram.com/aeeusc",
+          "https://www.linkedin.com/company/association-of-energy-engineers-usc/"
+        ],
+        "parentOrganization": {
+          "@type": "CollegeOrUniversity",
+          "name": "University of Southern California",
+          "url": "https://www.usc.edu/"
+        }
+      }
     </script>
     <script type="module" crossorigin src="/assets/index-CpspsCB1.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-BFoEFDr1.css">
