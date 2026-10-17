@@ -57,7 +57,7 @@ const asset = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;
 // claim gets stronger by being specific rather than weaker by being
 // smaller.
 const STATS = [
-  { count: 90, suffix: "+", label: "Active Members" },
+  { count: 175, suffix: "+", label: "Active Members" },
   { count: TEAMS.length, suffix: "", label: <>Nationally Competing Design&nbsp;Teams</> },
   { count: NATIONAL_AWARD_COUNT, suffix: "", label: "National Awards Won" },
 ];
