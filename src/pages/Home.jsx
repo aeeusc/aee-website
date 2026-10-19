@@ -163,10 +163,11 @@ const BOARD = [
   { n: "David Moseley", r: "Vice President", img: asset("/eboard/davidmoseley.jpg"), li: "https://www.linkedin.com/in/davidmmoseley/", ig: "https://www.instagram.com/downtowndave004/" },
   { n: "Alex Geschwill", r: "Executive Coordinator", img: asset("/eboard/alexgeschwill.jpg"), li: "https://www.linkedin.com/in/alexandra-geschwill/", ig: "https://www.instagram.com/alex_geschwill/" },
   { n: "Jordyn Wetherbee", r: "Executive Project Director", img: asset("/eboard/jordynwetherbee.jpg"), li: "https://www.linkedin.com/in/jordyn-wetherbee/", ig: "https://www.instagram.com/wetherbee.09/" },
-  { n: "Jainam Jain", r: "Director of Outreach", img: asset("/eboard/jainamjain.png"), li: "https://www.linkedin.com/in/jainam-jain-937a13214/", ig: "https://www.instagram.com/jainamtjain/" },
+   { n: "Aryan Gopalakrishnan", r: "Treasurer", img: asset("/eboard/AryanGopalakrishnam.jpg"), li: "https://www.linkedin.com/in/aryangopalakrishnan/", ig: "https://www.instagram.com/aryangopala/" },
+  { n: "Jainam Jain", r: "Director of Outreach", img: asset("/eboard/jainamjain.jpg"), li: "https://www.linkedin.com/in/jainam-jain-937a13214/", ig: "https://www.instagram.com/jainamtjain/" },
   { n: "Sam Gold", r: "Director of Membership", img: asset("/eboard/samgold.jpg"), li: "https://www.linkedin.com/in/sam-j-gold/", ig: "https://www.instagram.com/s.am.gold/" },
-  // Ellis's handle was the one gap in the whole list — filled 2026-08-24.
   { n: "Ellis Fertig", r: "Policy Consortium Director", img: asset("/eboard/ellisfertig.jpg"), li: "https://www.linkedin.com/in/ellis-fertig-4512b232b/", ig: "https://www.instagram.com/elllisperl/" },
+  { n: "Connor Warren", r: "Events and Logistics Director", img: asset("/eboard/ConnorWarren.jpg"), li: "https://www.linkedin.com/in/connor-warren-ba79983a3/", ig: "https://www.instagram.com/connor_b_warren06/" },
   { n: "Daniela Lopez Escalante", r: "Director of Brand", img: asset("/eboard/daniela.jpg"), li: "https://www.linkedin.com/in/daniela-lopez-escalante-839a4038a/", ig: "https://www.instagram.com/monkeezlol/" },
   { n: "Mitchell Kirby", r: "Founder & Advisor", img: asset("/eboard/mitchkirby.jpg"), li: "https://www.linkedin.com/in/mitchell-kirby/", ig: "https://www.instagram.com/mitchkirb/" },
 ];
