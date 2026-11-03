@@ -36,12 +36,12 @@
     <priority>0.7</priority>
   </url>
 
-  <!-- One page per design team, added 2026-08-29 (see src/data/teams.js
-       for the list these mirror). These are the pages most likely to be
-       searched for by name: someone who heard about the Collegiate Wind
-       Competition team, or about CHARGED, is searching for that phrase
-       and not for "AEE at USC". Adding a team means adding a line here
-       as well; nothing generates this file. -->
+  <!-- One page per design team, added 2026-08-29, STEP and T-ReX added
+       2026-11-02 (see src/data/teams.js for the list these mirror). These
+       are the pages most likely to be searched for by name: someone who
+       heard about the CWC+ team, or about CHARGED, is searching for that
+       phrase and not for "AEE at USC". Adding a team means adding a line
+       here as well; nothing generates this file. -->
   <url>
     <loc>https://aeeusc.com/teams/marine-energy</loc>
     <changefreq>monthly</changefreq>
@@ -59,6 +59,16 @@
   </url>
   <url>
     <loc>https://aeeusc.com/teams/charged</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://aeeusc.com/teams/step</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://aeeusc.com/teams/t-rex</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
