@@ -385,6 +385,11 @@
   border-radius: 2px;
   background: rgba(94,141,255,.85);
 }
+/* A first-season team has no wins to mark yet, so its one line gets a
+   hollow marker and the grey of a note rather than the filled square
+   that means "an award". */
+.about-result-pending { color: var(--slate); }
+.about-result-pending::before { background: transparent; border: 1px solid rgba(94,141,255,.7); }
 
 @media (max-width: 700px) {
   .about-results { padding: 0 20px 88px; }
@@ -566,6 +571,16 @@
 .dt-card .grad { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(24,32,50,.02) 30%, rgba(24,32,50,.92) 100%); transition: background .5s; }
 .dt-card .tt { position: absolute; left: 24px; right: 24px; bottom: 24px; font-family: 'League Spartan', 'Libre Franklin', system-ui, sans-serif; font-size: 18.5px; font-weight: 800; text-transform: uppercase; line-height: 1.35; letter-spacing: -.005em; transition: opacity .25s ease .5s; }
 .dt-card .tt span { padding: 3px 8px; margin-left: -8px; background: transparent; border-radius: 3px; transition: background .22s, color .22s; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+/* Six cards in the row as of 2026-11-02 (STEP and T-ReX joined). Above
+   1200px a closed card is still wide enough for the longest single word
+   in a title (REPURPOSING, COMPETITION) at 18.5px. Below that, down to
+   the 900px stack breakpoint, the card narrows to 127-175px, so the
+   closed title scales with the viewport and the side insets tighten.
+   Measured in Chromium: no word overflows at 901, 920, 1000, 1100,
+   1150, 1200 or 1201. */
+@media (max-width: 1200px) and (min-width: 901px) {
+  .dt-card .tt { font-size: clamp(13px, 1.5vw, 18.5px); left: 16px; right: 16px; bottom: 20px; }
+}
 .dt-card:not(.open):hover .tt span { background: var(--white); color: var(--ink); }
 .dt-grid.has-open .dt-card:not(.open) { flex: .55; }
 .dt-grid.has-open .dt-card:not(.open) img.bg { filter: brightness(.28); }

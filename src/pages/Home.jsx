@@ -99,9 +99,16 @@ const PARTNERS = [
 // Filtered on onHomepage: every team has a subpage, but these cards are
 // built around a full-bleed photograph and a card with no artwork reads
 // as a broken image rather than as a team.
+//
+// `cardImg` (added 2026-11-02) is a stand-in picture for a team that has
+// no photograph yet: it feeds this card only, so the team page keeps its
+// typographic hero. See the field note in src/data/teams.js.
 const TEAMS = TEAM_DATA
   .filter((t) => t.onHomepage)
-  .map((t) => ({ ...t, img: t.img ? asset(t.img) : null }));
+  .map((t) => {
+    const pic = t.cardImg || t.img;
+    return { ...t, img: pic ? asset(pic) : null };
+  });
 
 // Reordered/edited 2026-08-11 per Kev's explicit feedback:
 //  - Mitch Kirby steps down from President, stays on as "Founder & Advisor."
@@ -170,6 +177,7 @@ const BOARD = [
   { n: "Connor Warren", r: "Events and Logistics Director", img: asset("/eboard/ConnorWarren.jpg"), li: "https://www.linkedin.com/in/connor-warren-ba79983a3/", ig: "https://www.instagram.com/connor_b_warren06/" },
   { n: "Daniela Lopez Escalante", r: "Director of Brand", img: asset("/eboard/daniela.jpg"), li: "https://www.linkedin.com/in/daniela-lopez-escalante-839a4038a/", ig: "https://www.instagram.com/monkeezlol/" },
   { n: "Mitchell Kirby", r: "Founder & Advisor", img: asset("/eboard/mitchkirby.jpg"), li: "https://www.linkedin.com/in/mitchell-kirby/", ig: "https://www.instagram.com/mitchkirb/" },
+  { n: "Kelly Twomey Sanders", r: "Advisor", img: asset("/eboard/kellysanders.jpg"), li: "https://www.linkedin.com/in/kellytwomeysanders/" },
 ];
 
 // ─── Nav + mobile menu ──────────────────────────────────────────────────────
@@ -505,7 +513,10 @@ function DesignTeams() {
               <div className="exp">
                 <h3>{team.title}</h3>
                 <div className="meta">{team.meta}</div>
-                <p>{team.desc}</p>
+                {/* `blurb` is a short, verbatim excerpt for this card;
+                    the full description lives on the team page. See the
+                    field note in src/data/teams.js. */}
+                <p>{team.blurb || team.desc}</p>
                 {/* Two ways out of an open card, added 2026-08-29.
                     "Join this team" was the only one, which meant the
                     three sentences above were the end of the road for

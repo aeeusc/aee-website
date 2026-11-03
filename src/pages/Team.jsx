@@ -13,16 +13,19 @@
 // About page.
 //
 // These pages put the two together. Each one is the team's own
-// description, verbatim, followed by what that team came away with and
-// where. Nothing here is written about a team that the team did not say
-// about itself — the prose comes from src/data/teams.js, which is the
-// single source both this page and the homepage read.
+// description, verbatim, then what they are building this season, then
+// what that team came away with and where, what is next on the calendar,
+// and who else has written about them. Nothing here is written about a
+// team that the team did not say about itself — the prose comes from
+// src/data/teams.js, which is the single source both this page and the
+// homepage read.
 //
-// One component, five routes. The teams differ in what they have rather
+// One component, seven routes. The teams differ in what they have rather
 // than in shape: CHARGED has survey figures and a two-paragraph story,
-// ShadeLA has no photograph yet. Each of those is a conditional block
-// here rather than a separate file, so a team gaining a photo or losing
-// a competition is a data edit and not a new component.
+// STEP and T-ReX have no photograph and no results yet, only MECC, HCC
+// and ShadeLA have press. Each of those is a conditional block here
+// rather than a separate file, so a team gaining a photo, a result or a
+// write-up is a data edit and not a new component.
 import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Nav, Footer } from './Home';
@@ -137,6 +140,21 @@ export default function Team() {
         </div>
       </section>
 
+      {/* What they are building right now. Kept apart from the
+          description above because it is the part that goes stale: the
+          description says what the team is for, this says what is on
+          the bench this year, and a reader deciding whether to join
+          wants both. Teams fill this in each autumn on the form. */}
+      {team.working && (
+        <section className="team-section team-working-section">
+          <div className="about-inner">
+            <div className="label">THIS SEASON</div>
+            <h2 className="about-h2">What we are working on.</h2>
+            <p className="team-working">{team.working}</p>
+          </div>
+        </section>
+      )}
+
       {/* Stat tiles, for a team that has numbers worth leading with.
           Only CHARGED does today. These are plain figures rather than a
           chart on purpose: three standalone facts have no trend and no
@@ -181,20 +199,64 @@ export default function Team() {
                 </li>
               ))}
             </ul>
-            {/* Somebody else's write-up of the same result. A club page
-                saying it won something is a claim; the organiser's own
-                announcement saying so is evidence, and linking it costs
-                one line. */}
-            {team.source && (
-              <a
-                className="team-source"
-                href={team.source.href}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {team.source.label}
-              </a>
+          </div>
+        </section>
+      )}
+
+      {/* The next date on the calendar. One name, one place, one time,
+          because that is the whole question ("when do they compete?")
+          and a paragraph would bury it. `where` and `note` are
+          optional: HCC's organisers have not announced a venue yet, and
+          saying so plainly beats leaving the line out and looking like
+          the team has nothing coming. */}
+      {team.next && (
+        <section className="team-section team-upcoming-section">
+          <div className="about-inner">
+            <div className="label">NEXT COMPETITION</div>
+            <h2 className="about-h2">{team.next.name}</h2>
+            <div className="team-upcoming">
+              {team.next.where && (
+                <span className="team-upcoming-where">{team.next.where}</span>
+              )}
+              {team.next.where && team.next.when && (
+                <span className="team-upcoming-sep" aria-hidden="true">·</span>
+              )}
+              {team.next.when && (
+                <span className="team-upcoming-when">{team.next.when}</span>
+              )}
+            </div>
+            {team.next.note && (
+              <p className="team-upcoming-note">{team.next.note}</p>
             )}
+          </div>
+        </section>
+      )}
+
+      {/* Somebody else's write-up. A club page saying it won something is
+          a claim; the organiser's own announcement saying so is evidence.
+          Hidden entirely when a team has none rather than showing an
+          empty heading: a "Press" section with nothing under it reads as
+          "nobody has written about us". */}
+      {team.press && team.press.length > 0 && (
+        <section className="team-section team-press-section">
+          <div className="about-inner">
+            <div className="label">PRESS</div>
+            <h2 className="about-h2">What others have written.</h2>
+            <ul className="team-press">
+              {team.press.map((p) => (
+                <li className="team-press-item" key={p.href}>
+                  <a
+                    className="team-press-link"
+                    href={p.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <span className="team-press-outlet">{p.outlet}</span>
+                    <span className="team-press-label">{p.label}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
       )}

@@ -24,7 +24,18 @@ import {
   TEAMS,
   NATIONAL_AWARD_COUNT,
   NATIONAL_TEAM_COUNT,
+  AWARDED_NATIONAL_TEAM_COUNT,
+  NEW_NATIONAL_TEAM_COUNT,
+  LOCAL_TEAM_COUNT,
 } from "../data/teams";
+
+// Small numbers read better as words in running prose ("seven teams",
+// not "7 teams"), but the counts have to come from the data, not be
+// typed, or they go stale the way the awards tile once did. Falls back
+// to digits past ten, which this club will not reach for a while.
+const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+const numberWord = (n) => WORDS[n] ?? String(n);
+const Numberword = (n) => { const w = numberWord(n); return w[0].toUpperCase() + w.slice(1); };
 import "./Home.css";
 
 // Same helper as Home.jsx — see the comment there for why this can't just
@@ -50,15 +61,17 @@ const asset = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;
 // happens to a hand-kept count sitting above a hand-kept list. Adding an
 // award to a team now moves this tile on its own.
 //
-// The middle tile lost the word "Nationally" at the same time, because
-// it was not true of all five: three of these teams compete nationally,
-// and the other two are a campus build and a Los Angeles competition.
-// The lead paragraph in the results section says which is which, so the
-// claim gets stronger by being specific rather than weaker by being
-// smaller.
+// The middle tile counts the teams that actually compete nationally
+// (updated 2026-11-02, when STEP and T-ReX joined the list and the
+// count went from five to seven). It used to count every team under a
+// "Nationally Competing" label, which was not true of CHARGED or
+// ShadeLA: one is a campus build and the other a Los Angeles
+// competition. The lead paragraph in the results section says which is
+// which, so the claim gets stronger by being specific rather than weaker
+// by being smaller.
 const STATS = [
   { count: 175, suffix: "+", label: "Active Members" },
-  { count: TEAMS.length, suffix: "", label: <>Nationally Competing Design&nbsp;Teams</> },
+  { count: NATIONAL_TEAM_COUNT, suffix: "", label: <>Nationally Competing Design&nbsp;Teams</> },
   { count: NATIONAL_AWARD_COUNT, suffix: "", label: "National Awards Won" },
 ];
 
@@ -85,10 +98,11 @@ const OFFERINGS = [
   },
   {
     // Was "Three teams" while the stat tile directly above it said five.
-    // Corrected 2026-08-29 to say both numbers, which is the accurate
-    // version and also the more interesting one.
+    // Corrected 2026-08-29 to say both numbers, and 2026-11-02 to read
+    // them from the data instead of typing them: all five national teams
+    // compete in U.S. Department of Energy programs.
     title: "Design teams that build",
-    body: "Five teams building real hardware against real deadlines, three of them judged against schools across the country.",
+    body: `${Numberword(TEAMS.length)} teams building real hardware against real deadlines, ${numberWord(NATIONAL_TEAM_COUNT)} of them in national Department of Energy competitions.`,
   },
   {
     title: "Policy that ships",
@@ -482,10 +496,14 @@ export default function About() {
           <div className="label">ON THE ROAD</div>
           <h2 className="about-h2">Where our teams placed.</h2>
           <p className="about-lead">
-            Of our {TEAMS.length} teams, {NATIONAL_TEAM_COUNT} compete nationally, and
-            between them they brought home {NATIONAL_AWARD_COUNT} national awards last
-            season, including a national championship. The other two build for this
-            campus and for Los Angeles. Every team has its own page.
+            Of our {TEAMS.length} teams, {NATIONAL_TEAM_COUNT} compete nationally.
+            {" "}{Numberword(AWARDED_NATIONAL_TEAM_COUNT)} of them brought home {NATIONAL_AWARD_COUNT} national
+            awards last season, including a national championship
+            {NEW_NATIONAL_TEAM_COUNT > 0 && (
+              <>, and {numberWord(NEW_NATIONAL_TEAM_COUNT)} {NEW_NATIONAL_TEAM_COUNT === 1 ? "is" : "are"} competing for the first time this year</>
+            )}.
+            The other {numberWord(LOCAL_TEAM_COUNT)} build for this campus and for Los Angeles.
+            Every team has its own page.
           </p>
 
           <ul className="about-results-list">
@@ -504,6 +522,16 @@ export default function About() {
                         {a.note && <span className="about-result-note">{a.note}</span>}
                       </li>
                     ))}
+                    {/* A team in its first season has nothing to list yet.
+                        Saying so, with the next date, beats an empty
+                        gap that reads as "this team has not done
+                        anything." */}
+                    {t.awards.length === 0 && t.next && (
+                      <li className="about-result-pending">
+                        First season. Next up: {t.next.name}
+                        {t.next.when && <span className="about-result-note">{t.next.when}</span>}
+                      </li>
+                    )}
                   </ul>
                 </div>
               </li>
